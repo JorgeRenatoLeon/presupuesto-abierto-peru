@@ -1,0 +1,5971 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {
+    "refinement": {
+      "direct_calls_verified": 11,
+      "primitive_nodes_removed": [],
+      "semantic_edges_refined": 2
+    },
+    "directed": true
+  },
+  "nodes": [
+    {
+      "label": "settings.local.json",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L1",
+      "id": "claude_settings_local",
+      "community": 15,
+      "norm_label": "settings.local.json"
+    },
+    {
+      "label": "permissions",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2",
+      "id": "claude_settings_local_permissions",
+      "community": 15,
+      "norm_label": "permissions"
+    },
+    {
+      "label": "allow",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "id": "claude_settings_local_permissions_allow",
+      "community": 15,
+      "norm_label": "allow"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L1",
+      "id": "alertas_page",
+      "community": 0,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L4",
+      "id": "alertas_page_metadata",
+      "community": 0,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "AlertasPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L6",
+      "id": "alertas_page_alertaspage",
+      "community": 0,
+      "norm_label": "alertaspage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L1",
+      "id": "id_page",
+      "community": 0,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "ENT_DIR",
+      "file_type": "code",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L9",
+      "id": "id_page_ent_dir",
+      "community": 0,
+      "norm_label": "ent_dir"
+    },
+    {
+      "label": "generateStaticParams()",
+      "file_type": "code",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L13",
+      "id": "id_page_generatestaticparams",
+      "community": 0,
+      "norm_label": "generatestaticparams()"
+    },
+    {
+      "label": "generateMetadata()",
+      "file_type": "code",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L20",
+      "id": "id_page_generatemetadata",
+      "community": 0,
+      "norm_label": "generatemetadata()"
+    },
+    {
+      "label": "Payload",
+      "file_type": "code",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L32",
+      "id": "id_page_payload",
+      "community": 0,
+      "norm_label": "payload"
+    },
+    {
+      "label": "EntidadPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L40",
+      "id": "id_page_entidadpage",
+      "community": 0,
+      "norm_label": "entidadpage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "id": "explorar_page",
+      "community": 9,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L7",
+      "id": "explorar_page_metadata",
+      "community": 9,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "ExplorarPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L9",
+      "id": "explorar_page_explorarpage",
+      "community": 0,
+      "norm_label": "explorarpage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L1",
+      "id": "guia_page",
+      "community": 12,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L1",
+      "id": "guia_page_metadata",
+      "community": 12,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "PASOS",
+      "file_type": "code",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L3",
+      "id": "guia_page_pasos",
+      "community": 12,
+      "norm_label": "pasos"
+    },
+    {
+      "label": "FAQ",
+      "file_type": "code",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L30",
+      "id": "guia_page_faq",
+      "community": 12,
+      "norm_label": "faq"
+    },
+    {
+      "label": "GuiaPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L53",
+      "id": "guia_page_guiapage",
+      "community": 12,
+      "norm_label": "guiapage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "id": "ingresos_page",
+      "community": 0,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L9",
+      "id": "ingresos_page_metadata",
+      "community": 0,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "IngresosPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L11",
+      "id": "ingresos_page_ingresospage",
+      "community": 0,
+      "norm_label": "ingresospage()"
+    },
+    {
+      "label": "layout.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L1",
+      "id": "app_layout",
+      "community": 11,
+      "norm_label": "layout.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L6",
+      "id": "app_layout_metadata",
+      "community": 11,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "RootLayout()",
+      "file_type": "code",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L12",
+      "id": "app_layout_rootlayout",
+      "community": 11,
+      "norm_label": "rootlayout()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "id": "metodologia_page",
+      "community": 0,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "metadata",
+      "file_type": "code",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L3",
+      "id": "metodologia_page_metadata",
+      "community": 0,
+      "norm_label": "metadata"
+    },
+    {
+      "label": "MetodologiaPage()",
+      "file_type": "code",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L5",
+      "id": "metodologia_page_metodologiapage",
+      "community": 0,
+      "norm_label": "metodologiapage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L1",
+      "id": "app_page",
+      "community": 0,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "Home()",
+      "file_type": "code",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L12",
+      "id": "app_page_home",
+      "community": 0,
+      "norm_label": "home()"
+    },
+    {
+      "label": "AlertaCard.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/AlertaCard.tsx",
+      "source_location": "L1",
+      "id": "components_alertacard",
+      "community": 0,
+      "norm_label": "alertacard.tsx"
+    },
+    {
+      "label": "AlertaCard()",
+      "file_type": "code",
+      "source_file": "apps/web/components/AlertaCard.tsx",
+      "source_location": "L7",
+      "id": "components_alertacard_alertacard",
+      "community": 0,
+      "norm_label": "alertacard()"
+    },
+    {
+      "label": "Explorador.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L1",
+      "id": "components_explorador",
+      "community": 9,
+      "norm_label": "explorador.tsx"
+    },
+    {
+      "label": "Vista",
+      "file_type": "code",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L7",
+      "id": "components_explorador_vista",
+      "community": 9,
+      "norm_label": "vista"
+    },
+    {
+      "label": "norm()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L10",
+      "id": "components_explorador_norm",
+      "community": 9,
+      "norm_label": "norm()"
+    },
+    {
+      "label": "Explorador()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L12",
+      "id": "components_explorador_explorador",
+      "community": 9,
+      "norm_label": "explorador()"
+    },
+    {
+      "label": "FiltroAlertas.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L1",
+      "id": "components_filtroalertas",
+      "community": 0,
+      "norm_label": "filtroalertas.tsx"
+    },
+    {
+      "label": "REGLAS",
+      "file_type": "code",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L7",
+      "id": "components_filtroalertas_reglas",
+      "community": 0,
+      "norm_label": "reglas"
+    },
+    {
+      "label": "FiltroAlertas()",
+      "file_type": "code",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L16",
+      "id": "components_filtroalertas_filtroalertas",
+      "community": 0,
+      "norm_label": "filtroalertas()"
+    },
+    {
+      "label": "Grafico.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L1",
+      "id": "components_grafico",
+      "community": 0,
+      "norm_label": "grafico.tsx"
+    },
+    {
+      "label": "GraficoContraste()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L4",
+      "id": "components_grafico_graficocontraste",
+      "community": 0,
+      "norm_label": "graficocontraste()"
+    },
+    {
+      "label": "GraficoMensual()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L55",
+      "id": "components_grafico_graficomensual",
+      "community": 0,
+      "norm_label": "graficomensual()"
+    },
+    {
+      "label": "Nav.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L1",
+      "id": "components_nav",
+      "community": 11,
+      "norm_label": "nav.tsx"
+    },
+    {
+      "label": "enlaces",
+      "file_type": "code",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L6",
+      "id": "components_nav_enlaces",
+      "community": 11,
+      "norm_label": "enlaces"
+    },
+    {
+      "label": "activo()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L14",
+      "id": "components_nav_activo",
+      "community": 11,
+      "norm_label": "activo()"
+    },
+    {
+      "label": "TopNav()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L19",
+      "id": "components_nav_topnav",
+      "community": 11,
+      "norm_label": "topnav()"
+    },
+    {
+      "label": "BottomNav()",
+      "file_type": "code",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L32",
+      "id": "components_nav_bottomnav",
+      "community": 11,
+      "norm_label": "bottomnav()"
+    },
+    {
+      "label": "ui.tsx",
+      "file_type": "code",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L1",
+      "id": "components_ui",
+      "community": 0,
+      "norm_label": "ui.tsx"
+    },
+    {
+      "label": "KpiCard()",
+      "file_type": "code",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L4",
+      "id": "components_ui_kpicard",
+      "community": 0,
+      "norm_label": "kpicard()"
+    },
+    {
+      "label": "Lectura()",
+      "file_type": "code",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L14",
+      "id": "components_ui_lectura",
+      "community": 0,
+      "norm_label": "lectura()"
+    },
+    {
+      "label": "BarraProgreso()",
+      "file_type": "code",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L24",
+      "id": "components_ui_barraprogreso",
+      "community": 0,
+      "norm_label": "barraprogreso()"
+    },
+    {
+      "label": "FilaItem",
+      "file_type": "code",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L33",
+      "id": "components_ui_filaitem",
+      "community": 9,
+      "norm_label": "filaitem"
+    },
+    {
+      "label": "ListaBarras()",
+      "file_type": "code",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L42",
+      "id": "components_ui_listabarras",
+      "community": 0,
+      "norm_label": "listabarras()"
+    },
+    {
+      "label": "data.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L1",
+      "id": "lib_data",
+      "community": 0,
+      "norm_label": "data.ts"
+    },
+    {
+      "label": "hasRealData()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L12",
+      "id": "lib_data_hasrealdata",
+      "community": 0,
+      "norm_label": "hasrealdata()"
+    },
+    {
+      "label": "resolveDataDir()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L18",
+      "id": "lib_data_resolvedatadir",
+      "community": 0,
+      "norm_label": "resolvedatadir()"
+    },
+    {
+      "label": "DATA_DIR",
+      "file_type": "code",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L27",
+      "id": "lib_data_data_dir",
+      "community": 0,
+      "norm_label": "data_dir"
+    },
+    {
+      "label": "cache",
+      "file_type": "code",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L31",
+      "id": "lib_data_cache",
+      "community": 0,
+      "norm_label": "cache"
+    },
+    {
+      "label": "load()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L33",
+      "id": "lib_data_load",
+      "community": 0,
+      "norm_label": "load()"
+    },
+    {
+      "label": "types.ts",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L1",
+      "id": "lib_types",
+      "community": 0,
+      "norm_label": "types.ts"
+    },
+    {
+      "label": "ResumenAnual",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L1",
+      "id": "lib_types_resumenanual",
+      "community": 0,
+      "norm_label": "resumenanual"
+    },
+    {
+      "label": "SerieNacional",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L5",
+      "id": "lib_types_serienacional",
+      "community": 0,
+      "norm_label": "serienacional"
+    },
+    {
+      "label": "PorFuncion",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L6",
+      "id": "lib_types_porfuncion",
+      "community": 9,
+      "norm_label": "porfuncion"
+    },
+    {
+      "label": "PorDepartamento",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L7",
+      "id": "lib_types_pordepartamento",
+      "community": 9,
+      "norm_label": "pordepartamento"
+    },
+    {
+      "label": "TopEntidad",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L8",
+      "id": "lib_types_topentidad",
+      "community": 0,
+      "norm_label": "topentidad"
+    },
+    {
+      "label": "EntidadIndex",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L9",
+      "id": "lib_types_entidadindex",
+      "community": 9,
+      "norm_label": "entidadindex"
+    },
+    {
+      "label": "Alerta",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L13",
+      "id": "lib_types_alerta",
+      "community": 0,
+      "norm_label": "alerta"
+    },
+    {
+      "label": "Meta",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L18",
+      "id": "lib_types_meta",
+      "community": 0,
+      "norm_label": "meta"
+    },
+    {
+      "label": "IngresoResumen",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L19",
+      "id": "lib_types_ingresoresumen",
+      "community": 0,
+      "norm_label": "ingresoresumen"
+    },
+    {
+      "label": "IngresoPorFuente",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L22",
+      "id": "lib_types_ingresoporfuente",
+      "community": 0,
+      "norm_label": "ingresoporfuente"
+    },
+    {
+      "label": "IngresoPorGenerica",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L23",
+      "id": "lib_types_ingresoporgenerica",
+      "community": 0,
+      "norm_label": "ingresoporgenerica"
+    },
+    {
+      "label": "IngresoPorNivel",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L24",
+      "id": "lib_types_ingresopornivel",
+      "community": 0,
+      "norm_label": "ingresopornivel"
+    },
+    {
+      "label": "ContrasteMensual",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L25",
+      "id": "lib_types_contrastemensual",
+      "community": 0,
+      "norm_label": "contrastemensual"
+    },
+    {
+      "label": "fmtSoles()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L28",
+      "id": "lib_types_fmtsoles",
+      "community": 0,
+      "norm_label": "fmtsoles()"
+    },
+    {
+      "label": "fmtPct()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L36",
+      "id": "lib_types_fmtpct",
+      "community": 0,
+      "norm_label": "fmtpct()"
+    },
+    {
+      "label": "MESES",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L39",
+      "id": "lib_types_meses",
+      "community": 0,
+      "norm_label": "meses"
+    },
+    {
+      "label": "latestYear()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L42",
+      "id": "lib_types_latestyear",
+      "community": 0,
+      "norm_label": "latestyear()"
+    },
+    {
+      "label": "interpretarAvance()",
+      "file_type": "code",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L47",
+      "id": "lib_types_interpretaravance",
+      "community": 0,
+      "norm_label": "interpretaravance()"
+    },
+    {
+      "label": "next-env.d.ts",
+      "file_type": "code",
+      "source_file": "apps/web/next-env.d.ts",
+      "source_location": "L1",
+      "id": "web_next_env_d",
+      "community": 18,
+      "norm_label": "next-env.d.ts"
+    },
+    {
+      "label": "next.config.mjs",
+      "file_type": "code",
+      "source_file": "apps/web/next.config.mjs",
+      "source_location": "L1",
+      "id": "web_next_config",
+      "community": 17,
+      "norm_label": "next.config.mjs"
+    },
+    {
+      "label": "nextConfig",
+      "file_type": "code",
+      "source_file": "apps/web/next.config.mjs",
+      "source_location": "L2",
+      "id": "web_next_config_nextconfig",
+      "community": 17,
+      "norm_label": "nextconfig"
+    },
+    {
+      "label": "package.json",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L1",
+      "id": "web_package",
+      "community": 5,
+      "norm_label": "package.json"
+    },
+    {
+      "label": "name",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L2",
+      "id": "web_package_name",
+      "community": 5,
+      "norm_label": "name"
+    },
+    {
+      "label": "version",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L3",
+      "id": "web_package_version",
+      "community": 5,
+      "norm_label": "version"
+    },
+    {
+      "label": "private",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L4",
+      "id": "web_package_private",
+      "community": 5,
+      "norm_label": "private"
+    },
+    {
+      "label": "scripts",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L5",
+      "id": "web_package_scripts",
+      "community": 5,
+      "norm_label": "scripts"
+    },
+    {
+      "label": "predev",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L6",
+      "id": "web_package_scripts_predev",
+      "community": 5,
+      "norm_label": "predev"
+    },
+    {
+      "label": "dev",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L7",
+      "id": "web_package_scripts_dev",
+      "community": 5,
+      "norm_label": "dev"
+    },
+    {
+      "label": "prebuild",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L8",
+      "id": "web_package_scripts_prebuild",
+      "community": 5,
+      "norm_label": "prebuild"
+    },
+    {
+      "label": "build",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L9",
+      "id": "web_package_scripts_build",
+      "community": 5,
+      "norm_label": "build"
+    },
+    {
+      "label": "serve",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L10",
+      "id": "web_package_scripts_serve",
+      "community": 5,
+      "norm_label": "serve"
+    },
+    {
+      "label": "dependencies",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L12",
+      "id": "web_package_dependencies",
+      "community": 5,
+      "norm_label": "dependencies"
+    },
+    {
+      "label": "next",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L13",
+      "id": "web_package_dependencies_next",
+      "community": 5,
+      "norm_label": "next"
+    },
+    {
+      "label": "react",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L14",
+      "id": "web_package_dependencies_react",
+      "community": 5,
+      "norm_label": "react"
+    },
+    {
+      "label": "react-dom",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L15",
+      "id": "web_package_dependencies_react_dom",
+      "community": 5,
+      "norm_label": "react-dom"
+    },
+    {
+      "label": "devDependencies",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L17",
+      "id": "web_package_devdependencies",
+      "community": 5,
+      "norm_label": "devdependencies"
+    },
+    {
+      "label": "@types/node",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L18",
+      "id": "web_package_devdependencies_types_node",
+      "community": 5,
+      "norm_label": "@types/node"
+    },
+    {
+      "label": "@types/react",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L19",
+      "id": "web_package_devdependencies_types_react",
+      "community": 5,
+      "norm_label": "@types/react"
+    },
+    {
+      "label": "typescript",
+      "file_type": "code",
+      "source_file": "apps/web/package.json",
+      "source_location": "L20",
+      "id": "web_package_devdependencies_typescript",
+      "community": 5,
+      "norm_label": "typescript"
+    },
+    {
+      "label": "sync-data.mjs",
+      "file_type": "code",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L1",
+      "id": "scripts_sync_data",
+      "community": 14,
+      "norm_label": "sync-data.mjs"
+    },
+    {
+      "label": "here",
+      "file_type": "code",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L6",
+      "id": "scripts_sync_data_here",
+      "community": 14,
+      "norm_label": "here"
+    },
+    {
+      "label": "src",
+      "file_type": "code",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L7",
+      "id": "scripts_sync_data_src",
+      "community": 14,
+      "norm_label": "src"
+    },
+    {
+      "label": "dest",
+      "file_type": "code",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L8",
+      "id": "scripts_sync_data_dest",
+      "community": 14,
+      "norm_label": "dest"
+    },
+    {
+      "label": "required",
+      "file_type": "code",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L19",
+      "id": "scripts_sync_data_required",
+      "community": 14,
+      "norm_label": "required"
+    },
+    {
+      "label": "tsconfig.json",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L1",
+      "id": "web_tsconfig",
+      "community": 2,
+      "norm_label": "tsconfig.json"
+    },
+    {
+      "label": "compilerOptions",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L2",
+      "id": "web_tsconfig_compileroptions",
+      "community": 2,
+      "norm_label": "compileroptions"
+    },
+    {
+      "label": "lib",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L3",
+      "id": "web_tsconfig_compileroptions_lib",
+      "community": 2,
+      "norm_label": "lib"
+    },
+    {
+      "label": "allowJs",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L8",
+      "id": "web_tsconfig_compileroptions_allowjs",
+      "community": 2,
+      "norm_label": "allowjs"
+    },
+    {
+      "label": "skipLibCheck",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L9",
+      "id": "web_tsconfig_compileroptions_skiplibcheck",
+      "community": 2,
+      "norm_label": "skiplibcheck"
+    },
+    {
+      "label": "target",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L10",
+      "id": "web_tsconfig_compileroptions_target",
+      "community": 2,
+      "norm_label": "target"
+    },
+    {
+      "label": "strict",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L11",
+      "id": "web_tsconfig_compileroptions_strict",
+      "community": 2,
+      "norm_label": "strict"
+    },
+    {
+      "label": "noEmit",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L12",
+      "id": "web_tsconfig_compileroptions_noemit",
+      "community": 2,
+      "norm_label": "noemit"
+    },
+    {
+      "label": "esModuleInterop",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L13",
+      "id": "web_tsconfig_compileroptions_esmoduleinterop",
+      "community": 2,
+      "norm_label": "esmoduleinterop"
+    },
+    {
+      "label": "module",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L14",
+      "id": "web_tsconfig_compileroptions_module",
+      "community": 2,
+      "norm_label": "module"
+    },
+    {
+      "label": "moduleResolution",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L15",
+      "id": "web_tsconfig_compileroptions_moduleresolution",
+      "community": 2,
+      "norm_label": "moduleresolution"
+    },
+    {
+      "label": "resolveJsonModule",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L16",
+      "id": "web_tsconfig_compileroptions_resolvejsonmodule",
+      "community": 2,
+      "norm_label": "resolvejsonmodule"
+    },
+    {
+      "label": "isolatedModules",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L17",
+      "id": "web_tsconfig_compileroptions_isolatedmodules",
+      "community": 2,
+      "norm_label": "isolatedmodules"
+    },
+    {
+      "label": "jsx",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L18",
+      "id": "web_tsconfig_compileroptions_jsx",
+      "community": 2,
+      "norm_label": "jsx"
+    },
+    {
+      "label": "incremental",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L19",
+      "id": "web_tsconfig_compileroptions_incremental",
+      "community": 2,
+      "norm_label": "incremental"
+    },
+    {
+      "label": "plugins",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L20",
+      "id": "web_tsconfig_compileroptions_plugins",
+      "community": 2,
+      "norm_label": "plugins"
+    },
+    {
+      "label": "paths",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L25",
+      "id": "web_tsconfig_compileroptions_paths",
+      "community": 2,
+      "norm_label": "paths"
+    },
+    {
+      "label": "@/*",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L26",
+      "id": "web_tsconfig_paths",
+      "community": 2,
+      "norm_label": "@/*"
+    },
+    {
+      "label": "downlevelIteration",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L30",
+      "id": "web_tsconfig_compileroptions_downleveliteration",
+      "community": 2,
+      "norm_label": "downleveliteration"
+    },
+    {
+      "label": "include",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L32",
+      "id": "web_tsconfig_include",
+      "community": 2,
+      "norm_label": "include"
+    },
+    {
+      "label": "exclude",
+      "file_type": "code",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L38",
+      "id": "web_tsconfig_exclude",
+      "community": 2,
+      "norm_label": "exclude"
+    },
+    {
+      "label": "aggregate.py",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L1",
+      "id": "pipeline_aggregate",
+      "community": 7,
+      "norm_label": "aggregate.py"
+    },
+    {
+      "label": "_records()",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L15",
+      "id": "pipeline_aggregate_records",
+      "community": 7,
+      "norm_label": "_records()"
+    },
+    {
+      "label": "aggregate()",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L51",
+      "id": "pipeline_aggregate_aggregate",
+      "community": 7,
+      "norm_label": "aggregate()"
+    },
+    {
+      "label": "_build_ingreso_tables()",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L123",
+      "id": "pipeline_aggregate_build_ingreso_tables",
+      "community": 7,
+      "norm_label": "_build_ingreso_tables()"
+    },
+    {
+      "label": "DuckDBPyConnection",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L123",
+      "id": "pipeline_aggregate_py_duckdbpyconnection",
+      "community": 7,
+      "norm_label": "duckdbpyconnection"
+    },
+    {
+      "label": "_export_json()",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L140",
+      "id": "pipeline_aggregate_export_json",
+      "community": 7,
+      "norm_label": "_export_json()"
+    },
+    {
+      "label": "_export_entidades()",
+      "file_type": "code",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L204",
+      "id": "pipeline_aggregate_export_entidades",
+      "community": 7,
+      "norm_label": "_export_entidades()"
+    },
+    {
+      "label": "Build the serving layer from Parquet: DuckDB tables + JSON extracts for the web app.",
+      "file_type": "rationale",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L1",
+      "id": "pipeline_aggregate_rationale_1",
+      "community": 7,
+      "norm_label": "build the serving layer from parquet: duckdb tables + json extracts for the web"
+    },
+    {
+      "label": "DataFrame -> list of dicts with NaN/NaT converted to None (valid JSON).",
+      "file_type": "rationale",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L16",
+      "id": "pipeline_aggregate_rationale_16",
+      "community": 7,
+      "norm_label": "dataframe -> list of dicts with nan/nat converted to none (valid json)."
+    },
+    {
+      "label": "Small JSON extracts so the web app can render without a DB connection (MVP).",
+      "file_type": "rationale",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L141",
+      "id": "pipeline_aggregate_rationale_141",
+      "community": 7,
+      "norm_label": "small json extracts so the web app can render without a db connection (mvp)."
+    },
+    {
+      "label": "entidades.json (search index) + one JSON per entity with series and breakdowns.",
+      "file_type": "rationale",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L205",
+      "id": "pipeline_aggregate_rationale_205",
+      "community": 7,
+      "norm_label": "entidades.json (search index) + one json per entity with series and breakdowns."
+    },
+    {
+      "label": "alerts.py",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L1",
+      "id": "pipeline_alerts",
+      "community": 10,
+      "norm_label": "alerts.py"
+    },
+    {
+      "label": "_fmt()",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L33",
+      "id": "pipeline_alerts_fmt",
+      "community": 10,
+      "norm_label": "_fmt()"
+    },
+    {
+      "label": "_db()",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L42",
+      "id": "pipeline_alerts_db",
+      "community": 10,
+      "norm_label": "_db()"
+    },
+    {
+      "label": "DuckDBPyConnection",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L42",
+      "id": "pipeline_alerts_py_duckdbpyconnection",
+      "community": 10,
+      "norm_label": "duckdbpyconnection"
+    },
+    {
+      "label": "compute_alerts()",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L50",
+      "id": "pipeline_alerts_compute_alerts",
+      "community": 10,
+      "norm_label": "compute_alerts()"
+    },
+    {
+      "label": "_snapshot_diff()",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L170",
+      "id": "pipeline_alerts_snapshot_diff",
+      "community": 10,
+      "norm_label": "_snapshot_diff()"
+    },
+    {
+      "label": "_persist()",
+      "file_type": "code",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L212",
+      "id": "pipeline_alerts_persist",
+      "community": 10,
+      "norm_label": "_persist()"
+    },
+    {
+      "label": "Alert engine — Etapa 1 rules from 'Problemática y Requisitos':  R1 PIM_CAMBIO",
+      "file_type": "rationale",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L1",
+      "id": "pipeline_alerts_rationale_1",
+      "community": 10,
+      "norm_label": "alert engine — etapa 1 rules from 'problematica y requisitos':  r1 pim_cambio"
+    },
+    {
+      "label": "R1b: PIM changes between pipeline runs (catches changes the monthly grain misses).",
+      "file_type": "rationale",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L171",
+      "id": "pipeline_alerts_rationale_171",
+      "community": 10,
+      "norm_label": "r1b: pim changes between pipeline runs (catches changes the monthly grain misses"
+    },
+    {
+      "label": "config.py",
+      "file_type": "code",
+      "source_file": "pipeline/config.py",
+      "source_location": "L1",
+      "id": "pipeline_config",
+      "community": 3,
+      "norm_label": "config.py"
+    },
+    {
+      "label": "candidate_files()",
+      "file_type": "code",
+      "source_file": "pipeline/config.py",
+      "source_location": "L18",
+      "id": "pipeline_config_candidate_files",
+      "community": 3,
+      "norm_label": "candidate_files()"
+    },
+    {
+      "label": "ingreso_candidate_files()",
+      "file_type": "code",
+      "source_file": "pipeline/config.py",
+      "source_location": "L31",
+      "id": "pipeline_config_ingreso_candidate_files",
+      "community": 3,
+      "norm_label": "ingreso_candidate_files()"
+    },
+    {
+      "label": "Pipeline configuration: paths, dataset definitions, schema.",
+      "file_type": "rationale",
+      "source_file": "pipeline/config.py",
+      "source_location": "L1",
+      "id": "pipeline_config_rationale_1",
+      "community": 3,
+      "norm_label": "pipeline configuration: paths, dataset definitions, schema."
+    },
+    {
+      "label": "download.py",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L1",
+      "id": "pipeline_download",
+      "community": 3,
+      "norm_label": "download.py"
+    },
+    {
+      "label": "_head()",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L18",
+      "id": "pipeline_download_head",
+      "community": 3,
+      "norm_label": "_head()"
+    },
+    {
+      "label": "Session",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L18",
+      "id": "session",
+      "community": 3,
+      "norm_label": "session"
+    },
+    {
+      "label": "catalog()",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L36",
+      "id": "pipeline_download_catalog",
+      "community": 3,
+      "norm_label": "catalog()"
+    },
+    {
+      "label": "download()",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L54",
+      "id": "pipeline_download_download",
+      "community": 3,
+      "norm_label": "download()"
+    },
+    {
+      "label": "Path",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L54",
+      "id": "pipeline_download_py_path",
+      "community": 3,
+      "norm_label": "path"
+    },
+    {
+      "label": "_download_file()",
+      "file_type": "code",
+      "source_file": "pipeline/download.py",
+      "source_location": "L101",
+      "id": "pipeline_download_download_file",
+      "community": 3,
+      "norm_label": "_download_file()"
+    },
+    {
+      "label": "Catalog and download MEF gasto files. HEAD-based catalog, resumable downloads.",
+      "file_type": "rationale",
+      "source_file": "pipeline/download.py",
+      "source_location": "L1",
+      "id": "pipeline_download_rationale_1",
+      "community": 3,
+      "norm_label": "catalog and download mef gasto files. head-based catalog, resumable downloads."
+    },
+    {
+      "label": "Probe the file server for existing files. Writes data/raw/catalog.json.",
+      "file_type": "rationale",
+      "source_file": "pipeline/download.py",
+      "source_location": "L37",
+      "id": "pipeline_download_rationale_37",
+      "community": 3,
+      "norm_label": "probe the file server for existing files. writes data/raw/catalog.json."
+    },
+    {
+      "label": "Download a year's data (dataset: gasto | ingreso).",
+      "file_type": "rationale",
+      "source_file": "pipeline/download.py",
+      "source_location": "L55",
+      "id": "pipeline_download_rationale_55",
+      "community": 3,
+      "norm_label": "download a year's data (dataset: gasto | ingreso).      gasto default: <year>-ga"
+    },
+    {
+      "label": "normalize.py",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L1",
+      "id": "pipeline_normalize",
+      "community": 4,
+      "norm_label": "normalize.py"
+    },
+    {
+      "label": "_csv_columns()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L28",
+      "id": "pipeline_normalize_csv_columns",
+      "community": 4,
+      "norm_label": "_csv_columns()"
+    },
+    {
+      "label": "DuckDBPyConnection",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L28",
+      "id": "pipeline_normalize_py_duckdbpyconnection",
+      "community": 4,
+      "norm_label": "duckdbpyconnection"
+    },
+    {
+      "label": "Path",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L28",
+      "id": "pipeline_normalize_py_path",
+      "community": 4,
+      "norm_label": "path"
+    },
+    {
+      "label": "_repair_encoding()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L35",
+      "id": "pipeline_normalize_repair_encoding",
+      "community": 4,
+      "norm_label": "_repair_encoding()"
+    },
+    {
+      "label": "_detect_format()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L55",
+      "id": "pipeline_normalize_detect_format",
+      "community": 4,
+      "norm_label": "_detect_format()"
+    },
+    {
+      "label": "_read_diario()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L63",
+      "id": "pipeline_normalize_read_diario",
+      "community": 4,
+      "norm_label": "_read_diario()"
+    },
+    {
+      "label": "_read_devengado_mensual()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L75",
+      "id": "pipeline_normalize_read_devengado_mensual",
+      "community": 4,
+      "norm_label": "_read_devengado_mensual()"
+    },
+    {
+      "label": "normalize()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L116",
+      "id": "pipeline_normalize_normalize",
+      "community": 4,
+      "norm_label": "normalize()"
+    },
+    {
+      "label": "_detect_ingreso_format()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L156",
+      "id": "pipeline_normalize_detect_ingreso_format",
+      "community": 4,
+      "norm_label": "_detect_ingreso_format()"
+    },
+    {
+      "label": "normalize_ingreso()",
+      "file_type": "code",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L164",
+      "id": "pipeline_normalize_normalize_ingreso",
+      "community": 4,
+      "norm_label": "normalize_ingreso()"
+    },
+    {
+      "label": "Normalize raw MEF CSVs into typed, encoding-repaired Parquet partitioned by year.",
+      "file_type": "rationale",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L1",
+      "id": "pipeline_normalize_rationale_1",
+      "community": 4,
+      "norm_label": "normalize raw mef csvs into typed, encoding-repaired parquet partitioned by year"
+    },
+    {
+      "label": "Fix mojibake via ftfy on the *distinct* values (cheap), applied as UPDATEs.",
+      "file_type": "rationale",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L36",
+      "id": "pipeline_normalize_rationale_36",
+      "community": 4,
+      "norm_label": "fix mojibake via ftfy on the *distinct* values (cheap), applied as updates."
+    },
+    {
+      "label": "Unpivot MONTO_DEVENGADO_<MES> -> (MES_EJE, MONTO_DEVENGADO) monthly rows.",
+      "file_type": "rationale",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L76",
+      "id": "pipeline_normalize_rationale_76",
+      "community": 4,
+      "norm_label": "unpivot monto_devengado_<mes> -> (mes_eje, monto_devengado) monthly rows.      s"
+    },
+    {
+      "label": "Read raw CSV(s) for a year -> single typed canonical Parquet file.",
+      "file_type": "rationale",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L117",
+      "id": "pipeline_normalize_rationale_117",
+      "community": 4,
+      "norm_label": "read raw csv(s) for a year -> single typed canonical parquet file."
+    },
+    {
+      "label": "Raw ingreso CSV(s) -> canonical monthly Parquet (ANO_EJE/MES_EJE naming,     con",
+      "file_type": "rationale",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L165",
+      "id": "pipeline_normalize_rationale_165",
+      "community": 4,
+      "norm_label": "raw ingreso csv(s) -> canonical monthly parquet (ano_eje/mes_eje naming,     con"
+    },
+    {
+      "label": "qa.py",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L1",
+      "id": "pipeline_qa",
+      "community": 1,
+      "norm_label": "qa.py"
+    },
+    {
+      "label": "_db()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L46",
+      "id": "pipeline_qa_db",
+      "community": 1,
+      "norm_label": "_db()"
+    },
+    {
+      "label": "DuckDBPyConnection",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L46",
+      "id": "pipeline_qa_py_duckdbpyconnection",
+      "community": 1,
+      "norm_label": "duckdbpyconnection"
+    },
+    {
+      "label": "Report",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L54",
+      "id": "pipeline_qa_report",
+      "community": 1,
+      "norm_label": "report"
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L55",
+      "id": "pipeline_qa_report_init",
+      "community": 1,
+      "norm_label": ".__init__()"
+    },
+    {
+      "label": ".add()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L58",
+      "id": "pipeline_qa_report_add",
+      "community": 1,
+      "norm_label": ".add()"
+    },
+    {
+      "label": ".failed()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L64",
+      "id": "pipeline_qa_report_failed",
+      "community": 1,
+      "norm_label": ".failed()"
+    },
+    {
+      "label": ".skipped_external()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L68",
+      "id": "pipeline_qa_report_skipped_external",
+      "community": 1,
+      "norm_label": ".skipped_external()"
+    },
+    {
+      "label": ".save()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L71",
+      "id": "pipeline_qa_report_save",
+      "community": 1,
+      "norm_label": ".save()"
+    },
+    {
+      "label": "_coherence()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L90",
+      "id": "pipeline_qa_coherence",
+      "community": 1,
+      "norm_label": "_coherence()"
+    },
+    {
+      "label": "_has_table()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L181",
+      "id": "pipeline_qa_has_table",
+      "community": 1,
+      "norm_label": "_has_table()"
+    },
+    {
+      "label": "_fetch()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L190",
+      "id": "pipeline_qa_fetch",
+      "community": 1,
+      "norm_label": "_fetch()"
+    },
+    {
+      "label": "_page_numbers()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L209",
+      "id": "pipeline_qa_page_numbers",
+      "community": 1,
+      "norm_label": "_page_numbers()"
+    },
+    {
+      "label": "_match()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L223",
+      "id": "pipeline_qa_match",
+      "community": 1,
+      "norm_label": "_match()"
+    },
+    {
+      "label": "_reconcile()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L241",
+      "id": "pipeline_qa_reconcile",
+      "community": 1,
+      "norm_label": "_reconcile()"
+    },
+    {
+      "label": "qa()",
+      "file_type": "code",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L265",
+      "id": "pipeline_qa_qa",
+      "community": 1,
+      "norm_label": "qa()"
+    },
+    {
+      "label": "Automatic QA: internal coherence checks + external reconciliation vs Consulta Amigable.",
+      "file_type": "rationale",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L1",
+      "id": "pipeline_qa_rationale_1",
+      "community": 1,
+      "norm_label": "automatic qa: internal coherence checks + external reconciliation vs consulta am"
+    },
+    {
+      "label": "All numeric tokens in the page that look like money amounts (>= 1e6).",
+      "file_type": "rationale",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L210",
+      "id": "pipeline_qa_rationale_210",
+      "community": 1,
+      "norm_label": "all numeric tokens in the page that look like money amounts (>= 1e6)."
+    },
+    {
+      "label": "run.py",
+      "file_type": "code",
+      "source_file": "pipeline/run.py",
+      "source_location": "L1",
+      "id": "pipeline_run",
+      "community": 8,
+      "norm_label": "run.py"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "pipeline/run.py",
+      "source_location": "L6",
+      "id": "pipeline_run_main",
+      "community": 8,
+      "norm_label": "main()"
+    },
+    {
+      "label": "_require_year()",
+      "file_type": "code",
+      "source_file": "pipeline/run.py",
+      "source_location": "L73",
+      "id": "pipeline_run_require_year",
+      "community": 8,
+      "norm_label": "_require_year()"
+    },
+    {
+      "label": "CLI orchestrator: python run.py {catalog|download|normalize|aggregate|validate|all}",
+      "file_type": "rationale",
+      "source_file": "pipeline/run.py",
+      "source_location": "L1",
+      "id": "pipeline_run_rationale_1",
+      "community": 8,
+      "norm_label": "cli orchestrator: python run.py {catalog|download|normalize|aggregate|validate|a"
+    },
+    {
+      "label": "test_alerts.py",
+      "file_type": "code",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L1",
+      "id": "pipeline_test_alerts",
+      "community": 13,
+      "norm_label": "test_alerts.py"
+    },
+    {
+      "label": "build_synthetic()",
+      "file_type": "code",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L12",
+      "id": "pipeline_test_alerts_build_synthetic",
+      "community": 13,
+      "norm_label": "build_synthetic()"
+    },
+    {
+      "label": "Path",
+      "file_type": "code",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L12",
+      "id": "pipeline_test_alerts_py_path",
+      "community": 13,
+      "norm_label": "path"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L39",
+      "id": "pipeline_test_alerts_main",
+      "community": 13,
+      "norm_label": "main()"
+    },
+    {
+      "label": "Synthetic test: each alert rule must fire on crafted data. Run: python3 test_alerts.py",
+      "file_type": "rationale",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L1",
+      "id": "pipeline_test_alerts_rationale_1",
+      "community": 13,
+      "norm_label": "synthetic test: each alert rule must fire on crafted data. run: python3 test_ale"
+    },
+    {
+      "label": "validate.py",
+      "file_type": "code",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L1",
+      "id": "pipeline_validate",
+      "community": 8,
+      "norm_label": "validate.py"
+    },
+    {
+      "label": "validate()",
+      "file_type": "code",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L9",
+      "id": "pipeline_validate_validate",
+      "community": 8,
+      "norm_label": "validate()"
+    },
+    {
+      "label": "Path",
+      "file_type": "code",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L9",
+      "id": "pipeline_validate_py_path",
+      "community": 8,
+      "norm_label": "path"
+    },
+    {
+      "label": "validate_ingreso()",
+      "file_type": "code",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L71",
+      "id": "pipeline_validate_validate_ingreso",
+      "community": 8,
+      "norm_label": "validate_ingreso()"
+    },
+    {
+      "label": "Validation: raw CSV vs Parquet vs serving tables must agree.",
+      "file_type": "rationale",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L1",
+      "id": "pipeline_validate_rationale_1",
+      "community": 8,
+      "norm_label": "validation: raw csv vs parquet vs serving tables must agree."
+    },
+    {
+      "label": "Refresh budget data workflow",
+      "file_type": "code",
+      "source_file": ".github/workflows/refresh-data.yml",
+      "source_location": "L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "workflows_refresh_data",
+      "community": 6,
+      "norm_label": "refresh budget data workflow"
+    },
+    {
+      "label": "Presupuesto Abierto Perú README",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "root_readme",
+      "community": 6,
+      "norm_label": "presupuesto abierto peru readme"
+    },
+    {
+      "label": "Web app README",
+      "file_type": "document",
+      "source_file": "apps/web/README.md",
+      "source_location": "L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "web_readme",
+      "community": 6,
+      "norm_label": "web app readme"
+    },
+    {
+      "label": "Data Dictionary: Gasto e Ingreso Presupuestal",
+      "file_type": "document",
+      "source_file": "docs/data-dictionary.md",
+      "source_location": "L1",
+      "source_url": "https://datosabiertos.mef.gob.pe/dataset/presupuesto-y-ejecucion-de-gasto",
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "docs_data_dictionary",
+      "community": 6,
+      "norm_label": "data dictionary: gasto e ingreso presupuestal"
+    },
+    {
+      "label": "Design notes from paper wireframes to the web app",
+      "file_type": "document",
+      "source_file": "docs/design-notes.md",
+      "source_location": "L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "docs_design_notes",
+      "community": 6,
+      "norm_label": "design notes from paper wireframes to the web app"
+    },
+    {
+      "label": "Pipeline Python dependencies",
+      "file_type": "code",
+      "source_file": "pipeline/requirements.txt",
+      "source_location": "L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "pipeline_requirements",
+      "community": 6,
+      "norm_label": "pipeline python dependencies"
+    },
+    {
+      "label": "Presupuesto Abierto Perú app icon",
+      "file_type": "image",
+      "source_file": "apps/web/app/icon.svg",
+      "source_location": "L1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "app_icon",
+      "community": 16,
+      "norm_label": "presupuesto abierto peru app icon"
+    },
+    {
+      "label": "MEF budget and expenditure open data",
+      "file_type": "concept",
+      "source_file": "README.md",
+      "source_location": "L9",
+      "source_url": "https://datosabiertos.mef.gob.pe/dataset/presupuesto-y-ejecucion-de-gasto",
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "mef_budget_data",
+      "community": 6,
+      "norm_label": "mef budget and expenditure open data"
+    },
+    {
+      "label": "Budget ETL pipeline",
+      "file_type": "concept",
+      "source_file": "README.md",
+      "source_location": "L5",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "budget_data_pipeline",
+      "community": 6,
+      "norm_label": "budget etl pipeline"
+    },
+    {
+      "label": "Serving JSON data artifacts",
+      "file_type": "concept",
+      "source_file": "apps/web/README.md",
+      "source_location": "L28",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "serving_json_artifacts",
+      "community": 6,
+      "norm_label": "serving json data artifacts"
+    },
+    {
+      "label": "Budget phase and monthly-versus-annual semantics",
+      "file_type": "concept",
+      "source_file": "docs/data-dictionary.md",
+      "source_location": "L7",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "budget_phase_semantics",
+      "community": 6,
+      "norm_label": "budget phase and monthly-versus-annual semantics"
+    },
+    {
+      "label": "Citizen-facing budget exploration UI",
+      "file_type": "concept",
+      "source_file": "docs/design-notes.md",
+      "source_location": "L5",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "citizen_facing_budget_ui",
+      "community": 6,
+      "norm_label": "citizen-facing budget exploration ui"
+    },
+    {
+      "label": "Red rounded-square icon with white S/ currency mark",
+      "file_type": "image",
+      "source_file": "apps/web/app/icon.svg",
+      "source_location": "L2-L3",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "peru_currency_icon",
+      "community": 16,
+      "norm_label": "red rounded-square icon with white s/ currency mark"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "claude_settings_local",
+      "target": "claude_settings_local_permissions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "claude_settings_local_permissions",
+      "target": "claude_settings_local_permissions_allow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "alertas_page_alertaspage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "alertas_page_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "components_filtroalertas",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "components_filtroalertas_filtroalertas",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "lib_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "alertas_page",
+      "target": "lib_types_alerta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/alertas/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "alertas_page_alertaspage",
+      "target": "lib_data_load"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_alertacard_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_grafico",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_grafico_graficomensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_ui",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_ui_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_ui_lectura",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "components_ui_listabarras",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "id_page_ent_dir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "id_page_entidadpage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "id_page_generatemetadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "id_page_generatestaticparams",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "id_page_payload",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_data_data_dir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_types_alerta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_types_fmtpct",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_types_fmtsoles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_types_interpretaravance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "id_page",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "id_page_entidadpage",
+      "target": "lib_data_load"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "id_page_entidadpage",
+      "target": "lib_types_fmtpct"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "id_page_entidadpage",
+      "target": "lib_types_fmtsoles"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/entidad/[id]/page.tsx",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "id_page_entidadpage",
+      "target": "lib_types_interpretaravance"
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "components_explorador",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "components_explorador_explorador",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "explorar_page_explorarpage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "explorar_page_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_types_entidadindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_types_latestyear",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_types_pordepartamento",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_types_porfuncion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "explorar_page",
+      "target": "lib_types_resumenanual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "explorar_page_explorarpage",
+      "target": "lib_data_load"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/explorar/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "explorar_page_explorarpage",
+      "target": "lib_types_latestyear"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "guia_page",
+      "target": "guia_page_faq",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "guia_page",
+      "target": "guia_page_guiapage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "guia_page",
+      "target": "guia_page_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/guia/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "guia_page",
+      "target": "guia_page_pasos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "components_grafico",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "components_grafico_graficocontraste",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "components_ui",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "components_ui_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "components_ui_lectura",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "components_ui_listabarras",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "ingresos_page_ingresospage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "ingresos_page_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_contrastemensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_fmtpct",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_fmtsoles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_ingresoporfuente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_ingresoporgenerica",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_ingresopornivel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_ingresoresumen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_latestyear",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "ingresos_page",
+      "target": "lib_types_resumenanual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "ingresos_page_ingresospage",
+      "target": "lib_data_load"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "ingresos_page_ingresospage",
+      "target": "lib_types_fmtpct"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "ingresos_page_ingresospage",
+      "target": "lib_types_fmtsoles"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/ingresos/page.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "ingresos_page_ingresospage",
+      "target": "lib_types_latestyear"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_layout",
+      "target": "app_layout_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "app_layout",
+      "target": "app_layout_rootlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_layout",
+      "target": "components_nav",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_layout",
+      "target": "components_nav_bottomnav",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/layout.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_layout",
+      "target": "components_nav_topnav",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "lib_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "lib_types_latestyear",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "lib_types_meta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "lib_types_resumenanual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "metodologia_page_metadata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "metodologia_page",
+      "target": "metodologia_page_metodologiapage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "metodologia_page_metodologiapage",
+      "target": "lib_data_load"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/metodologia/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "metodologia_page_metodologiapage",
+      "target": "lib_types_latestyear"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "app_page_home",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_alertacard_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_grafico",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_grafico_graficocontraste",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_grafico_graficomensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_ui",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_ui_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_ui_lectura",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "components_ui_listabarras",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_alerta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_contrastemensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_fmtpct",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_fmtsoles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_ingresoresumen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_interpretaravance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_latestyear",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_porfuncion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_resumenanual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_page",
+      "target": "lib_types_serienacional",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "app_page_home",
+      "target": "lib_data_load"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "app_page_home",
+      "target": "lib_types_fmtpct"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "app_page_home",
+      "target": "lib_types_fmtsoles"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "app_page_home",
+      "target": "lib_types_interpretaravance"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/page.tsx",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "app_page_home",
+      "target": "lib_types_latestyear"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/AlertaCard.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_alertacard",
+      "target": "components_alertacard_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/AlertaCard.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_alertacard",
+      "target": "lib_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/AlertaCard.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_alertacard",
+      "target": "lib_types_alerta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/AlertaCard.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_alertacard",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_filtroalertas",
+      "target": "components_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_filtroalertas",
+      "target": "components_alertacard_alertacard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "components_explorador_explorador",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "components_explorador_norm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "components_explorador_vista",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "components_ui",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "components_ui_filaitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "components_ui_listabarras",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "lib_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "lib_types_entidadindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "lib_types_pordepartamento",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Explorador.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_explorador",
+      "target": "lib_types_porfuncion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "components_filtroalertas",
+      "target": "components_filtroalertas_filtroalertas",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_filtroalertas",
+      "target": "components_filtroalertas_reglas",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_filtroalertas",
+      "target": "lib_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/FiltroAlertas.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_filtroalertas",
+      "target": "lib_types_alerta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_grafico",
+      "target": "components_grafico_graficocontraste",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "components_grafico",
+      "target": "components_grafico_graficomensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "components_grafico",
+      "target": "lib_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "components_grafico",
+      "target": "lib_types_fmtsoles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Grafico.tsx",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "components_grafico",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "components_nav",
+      "target": "components_nav_activo",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "components_nav",
+      "target": "components_nav_bottomnav",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_nav",
+      "target": "components_nav_enlaces",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/Nav.tsx",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "components_nav",
+      "target": "components_nav_topnav",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "components_ui_barraprogreso",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "components_ui_filaitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "components_ui_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "components_ui_lectura",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "components_ui_listabarras",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "lib_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "lib_types_fmtpct",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/components/ui.tsx",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "components_ui",
+      "target": "lib_types_fmtsoles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "lib_data",
+      "target": "lib_data_cache",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "lib_data",
+      "target": "lib_data_data_dir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "lib_data",
+      "target": "lib_data_hasrealdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "lib_data",
+      "target": "lib_data_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "lib_data",
+      "target": "lib_data_resolvedatadir",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "lib_data",
+      "target": "lib_types",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/data.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "lib_data_resolvedatadir",
+      "target": "lib_data_hasrealdata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_alerta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_contrastemensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_entidadindex",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_fmtpct",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_fmtsoles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_ingresoporfuente",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_ingresoporgenerica",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_ingresopornivel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_ingresoresumen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_interpretaravance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_latestyear",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_meses",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_meta",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_pordepartamento",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_porfuncion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_resumenanual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_serienacional",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/lib/types.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "lib_types",
+      "target": "lib_types_topentidad",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/next.config.mjs",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "web_next_config",
+      "target": "web_next_config_nextconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "web_package",
+      "target": "web_package_dependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "web_package",
+      "target": "web_package_devdependencies",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "web_package",
+      "target": "web_package_name",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "web_package",
+      "target": "web_package_private",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "web_package",
+      "target": "web_package_scripts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "web_package",
+      "target": "web_package_version",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "web_package_scripts",
+      "target": "web_package_scripts_build",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "web_package_scripts",
+      "target": "web_package_scripts_dev",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "web_package_scripts",
+      "target": "web_package_scripts_prebuild",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "web_package_scripts",
+      "target": "web_package_scripts_predev",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "web_package_scripts",
+      "target": "web_package_scripts_serve",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "web_package_dependencies",
+      "target": "web_package_dependencies_next",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "web_package_dependencies",
+      "target": "web_package_dependencies_react",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "web_package_dependencies",
+      "target": "web_package_dependencies_react_dom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "web_package_devdependencies",
+      "target": "web_package_devdependencies_types_node",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "web_package_devdependencies",
+      "target": "web_package_devdependencies_types_react",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/package.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "web_package_devdependencies",
+      "target": "web_package_devdependencies_typescript",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "scripts_sync_data",
+      "target": "scripts_sync_data_dest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "scripts_sync_data",
+      "target": "scripts_sync_data_here",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "scripts_sync_data",
+      "target": "scripts_sync_data_required",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/scripts/sync-data.mjs",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "scripts_sync_data",
+      "target": "scripts_sync_data_src",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "web_tsconfig",
+      "target": "web_tsconfig_compileroptions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "web_tsconfig",
+      "target": "web_tsconfig_exclude",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "web_tsconfig",
+      "target": "web_tsconfig_include",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_allowjs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_downleveliteration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_esmoduleinterop",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_incremental",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_isolatedmodules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_jsx",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_lib",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_module",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_moduleresolution",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_noemit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_paths",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_plugins",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_resolvejsonmodule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_skiplibcheck",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_strict",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions",
+      "target": "web_tsconfig_compileroptions_target",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps/web/tsconfig.json",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "web_tsconfig_compileroptions_paths",
+      "target": "web_tsconfig_paths",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "pipeline_aggregate",
+      "target": "pipeline_aggregate_aggregate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L123",
+      "weight": 1.0,
+      "source": "pipeline_aggregate",
+      "target": "pipeline_aggregate_build_ingreso_tables",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L204",
+      "weight": 1.0,
+      "source": "pipeline_aggregate",
+      "target": "pipeline_aggregate_export_entidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "pipeline_aggregate",
+      "target": "pipeline_aggregate_export_json",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "pipeline_aggregate",
+      "target": "pipeline_aggregate_records",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_rationale_1",
+      "target": "pipeline_aggregate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L222",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_export_entidades",
+      "target": "pipeline_aggregate_records",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L160",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_export_json",
+      "target": "pipeline_aggregate_records",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_rationale_16",
+      "target": "pipeline_aggregate_records",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_aggregate",
+      "target": "pipeline_aggregate_build_ingreso_tables",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_aggregate",
+      "target": "pipeline_aggregate_export_json",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_aggregate_aggregate"
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L123",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_build_ingreso_tables",
+      "target": "pipeline_aggregate_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L204",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_export_entidades",
+      "target": "pipeline_aggregate_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_export_json",
+      "target": "pipeline_aggregate_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_export_json",
+      "target": "pipeline_aggregate_export_entidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_rationale_141",
+      "target": "pipeline_aggregate_export_json",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/aggregate.py",
+      "source_location": "L205",
+      "weight": 1.0,
+      "source": "pipeline_aggregate_rationale_205",
+      "target": "pipeline_aggregate_export_entidades",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "pipeline_alerts",
+      "target": "pipeline_alerts_compute_alerts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "pipeline_alerts",
+      "target": "pipeline_alerts_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "pipeline_alerts",
+      "target": "pipeline_alerts_fmt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L212",
+      "weight": 1.0,
+      "source": "pipeline_alerts",
+      "target": "pipeline_alerts_persist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L170",
+      "weight": 1.0,
+      "source": "pipeline_alerts",
+      "target": "pipeline_alerts_snapshot_diff",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_alerts_rationale_1",
+      "target": "pipeline_alerts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "pipeline_alerts_compute_alerts",
+      "target": "pipeline_alerts_fmt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L202",
+      "weight": 1.0,
+      "source": "pipeline_alerts_snapshot_diff",
+      "target": "pipeline_alerts_fmt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "pipeline_alerts_compute_alerts",
+      "target": "pipeline_alerts_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "pipeline_alerts_db",
+      "target": "pipeline_alerts_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L174",
+      "weight": 1.0,
+      "source": "pipeline_alerts_snapshot_diff",
+      "target": "pipeline_alerts_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "pipeline_alerts_compute_alerts",
+      "target": "pipeline_alerts_persist",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "pipeline_alerts_compute_alerts",
+      "target": "pipeline_alerts_snapshot_diff",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_alerts_compute_alerts"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/alerts.py",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "pipeline_alerts_rationale_171",
+      "target": "pipeline_alerts_snapshot_diff",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/config.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "pipeline_config",
+      "target": "pipeline_config_candidate_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/config.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "pipeline_config",
+      "target": "pipeline_config_ingreso_candidate_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/config.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_config_rationale_1",
+      "target": "pipeline_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/download.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "pipeline_download_catalog",
+      "target": "pipeline_config_candidate_files"
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/download.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "pipeline_download_catalog",
+      "target": "pipeline_config_ingreso_candidate_files"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "pipeline_download",
+      "target": "pipeline_download_catalog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "pipeline_download",
+      "target": "pipeline_download_download",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "pipeline_download",
+      "target": "pipeline_download_download_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "pipeline_download",
+      "target": "pipeline_download_head",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_download_rationale_1",
+      "target": "pipeline_download",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "pipeline_download_catalog",
+      "target": "pipeline_download_head",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "pipeline_download_head",
+      "target": "session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "pipeline_download_catalog",
+      "target": "session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "source": "pipeline_download_download",
+      "target": "session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "pipeline_download_download_file",
+      "target": "session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "pipeline_download_download",
+      "target": "pipeline_download_catalog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "pipeline_download_rationale_37",
+      "target": "pipeline_download_catalog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_download_catalog"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "pipeline_download_download",
+      "target": "pipeline_download_download_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "pipeline_download_download",
+      "target": "pipeline_download_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "pipeline_download_rationale_55",
+      "target": "pipeline_download_download",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_download_download"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/download.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "pipeline_download_download_file",
+      "target": "pipeline_download_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_csv_columns",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_detect_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_detect_ingreso_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_normalize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_normalize_ingreso",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_read_devengado_mensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_read_diario",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "pipeline_normalize",
+      "target": "pipeline_normalize_repair_encoding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_normalize_rationale_1",
+      "target": "pipeline_normalize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "pipeline_normalize_csv_columns",
+      "target": "pipeline_normalize_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "pipeline_normalize_csv_columns",
+      "target": "pipeline_normalize_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L124",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize",
+      "target": "pipeline_normalize_csv_columns",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L173",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize_ingreso",
+      "target": "pipeline_normalize_csv_columns",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "pipeline_normalize_read_devengado_mensual",
+      "target": "pipeline_normalize_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "pipeline_normalize_read_diario",
+      "target": "pipeline_normalize_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "pipeline_normalize_repair_encoding",
+      "target": "pipeline_normalize_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize",
+      "target": "pipeline_normalize_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize_ingreso",
+      "target": "pipeline_normalize_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize",
+      "target": "pipeline_normalize_repair_encoding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L226",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize_ingreso",
+      "target": "pipeline_normalize_repair_encoding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "pipeline_normalize_rationale_36",
+      "target": "pipeline_normalize_repair_encoding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L125",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize",
+      "target": "pipeline_normalize_detect_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L132",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize",
+      "target": "pipeline_normalize_read_diario",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L134",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize",
+      "target": "pipeline_normalize_read_devengado_mensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "pipeline_normalize_rationale_76",
+      "target": "pipeline_normalize_read_devengado_mensual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "pipeline_normalize_rationale_117",
+      "target": "pipeline_normalize_normalize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_normalize_normalize"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L174",
+      "weight": 1.0,
+      "source": "pipeline_normalize_normalize_ingreso",
+      "target": "pipeline_normalize_detect_ingreso_format",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/normalize.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "pipeline_normalize_rationale_165",
+      "target": "pipeline_normalize_normalize_ingreso",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_normalize_normalize_ingreso"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_coherence",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L190",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_fetch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L181",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_has_table",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L223",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_match",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L209",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_page_numbers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L265",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_qa",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L241",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_reconcile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "pipeline_qa",
+      "target": "pipeline_qa_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_qa_rationale_1",
+      "target": "pipeline_qa",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "pipeline_qa_coherence",
+      "target": "pipeline_qa_db",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "pipeline_qa_db",
+      "target": "pipeline_qa_py_duckdbpyconnection",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "pipeline_qa_coherence",
+      "target": "pipeline_qa_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L223",
+      "weight": 1.0,
+      "source": "pipeline_qa_match",
+      "target": "pipeline_qa_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L267",
+      "weight": 1.0,
+      "source": "pipeline_qa_qa",
+      "target": "pipeline_qa_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L241",
+      "weight": 1.0,
+      "source": "pipeline_qa_reconcile",
+      "target": "pipeline_qa_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "pipeline_qa_report",
+      "target": "pipeline_qa_report_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "pipeline_qa_report",
+      "target": "pipeline_qa_report_failed",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "pipeline_qa_report",
+      "target": "pipeline_qa_report_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "pipeline_qa_report",
+      "target": "pipeline_qa_report_save",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "pipeline_qa_report",
+      "target": "pipeline_qa_report_skipped_external",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "pipeline_qa_coherence",
+      "target": "pipeline_qa_report_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L225",
+      "weight": 1.0,
+      "source": "pipeline_qa_match",
+      "target": "pipeline_qa_report_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L250",
+      "weight": 1.0,
+      "source": "pipeline_qa_reconcile",
+      "target": "pipeline_qa_report_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "pipeline_qa_qa",
+      "target": "pipeline_qa_report_save",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "pipeline_qa_coherence",
+      "target": "pipeline_qa_has_table",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L268",
+      "weight": 1.0,
+      "source": "pipeline_qa_qa",
+      "target": "pipeline_qa_coherence",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L242",
+      "weight": 1.0,
+      "source": "pipeline_qa_reconcile",
+      "target": "pipeline_qa_fetch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L210",
+      "weight": 1.0,
+      "source": "pipeline_qa_rationale_210",
+      "target": "pipeline_qa_page_numbers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L245",
+      "weight": 1.0,
+      "source": "pipeline_qa_reconcile",
+      "target": "pipeline_qa_page_numbers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L246",
+      "weight": 1.0,
+      "source": "pipeline_qa_reconcile",
+      "target": "pipeline_qa_match",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/qa.py",
+      "source_location": "L270",
+      "weight": 1.0,
+      "source": "pipeline_qa_qa",
+      "target": "pipeline_qa_reconcile",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_qa_qa"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/run.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "pipeline_run",
+      "target": "pipeline_run_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/run.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "pipeline_run",
+      "target": "pipeline_run_require_year",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/run.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_run_rationale_1",
+      "target": "pipeline_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/run.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_run_require_year",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_validate_validate"
+    },
+    {
+      "relation": "calls",
+      "context": "direct_call_verified",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "pipeline/run.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "pipeline_run_main",
+      "target": "pipeline_validate_validate_ingreso"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "pipeline_test_alerts",
+      "target": "pipeline_test_alerts_build_synthetic",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "pipeline_test_alerts",
+      "target": "pipeline_test_alerts_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_test_alerts_rationale_1",
+      "target": "pipeline_test_alerts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "pipeline_test_alerts_build_synthetic",
+      "target": "pipeline_test_alerts_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "pipeline_test_alerts_main",
+      "target": "pipeline_test_alerts_build_synthetic",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/test_alerts.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "pipeline_test_alerts_main",
+      "target": "pipeline_test_alerts_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "pipeline_validate",
+      "target": "pipeline_validate_validate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "pipeline_validate",
+      "target": "pipeline_validate_validate_ingreso",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "pipeline_validate_rationale_1",
+      "target": "pipeline_validate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "pipeline_validate_validate",
+      "target": "pipeline_validate_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "pipeline/validate.py",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "pipeline_validate_validate_ingreso",
+      "target": "pipeline_validate_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".github/workflows/refresh-data.yml",
+      "source_location": "L26-L32",
+      "weight": 1.0,
+      "source": "workflows_refresh_data",
+      "target": "budget_data_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".github/workflows/refresh-data.yml",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "workflows_refresh_data",
+      "target": "pipeline_requirements"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".github/workflows/refresh-data.yml",
+      "source_location": "L47-L51",
+      "weight": 1.0,
+      "source": "workflows_refresh_data",
+      "target": "serving_json_artifacts"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "L5-L6",
+      "weight": 1.0,
+      "source": "root_readme",
+      "target": "budget_data_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "root_readme",
+      "target": "docs_design_notes"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": "L9-L11",
+      "weight": 1.0,
+      "source": "root_readme",
+      "target": "mef_budget_data"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/README.md",
+      "source_location": "L4-L5",
+      "weight": 1.0,
+      "source": "web_readme",
+      "target": "budget_data_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/README.md",
+      "source_location": "L28-L29",
+      "weight": 1.0,
+      "source": "web_readme",
+      "target": "serving_json_artifacts"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/data-dictionary.md",
+      "source_location": "L3-L5",
+      "weight": 1.0,
+      "source": "docs_data_dictionary",
+      "target": "budget_data_pipeline"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/data-dictionary.md",
+      "source_location": "L7-L24",
+      "weight": 1.0,
+      "source": "docs_data_dictionary",
+      "target": "budget_phase_semantics",
+      "context": "defines_budget_semantics"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/data-dictionary.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "docs_data_dictionary",
+      "target": "mef_budget_data"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/design-notes.md",
+      "source_location": "L5-L29",
+      "weight": 1.0,
+      "source": "docs_design_notes",
+      "target": "citizen_facing_budget_ui"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/app/icon.svg",
+      "source_location": "L1-L3",
+      "weight": 1.0,
+      "source": "app_icon",
+      "target": "peru_currency_icon",
+      "context": "depicts_visual_asset"
+    }
+  ],
+  "hyperedges": []
+}

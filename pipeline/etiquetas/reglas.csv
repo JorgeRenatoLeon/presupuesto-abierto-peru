@@ -1,0 +1,25 @@
+etiqueta,accion,prefijo,especifica_det_nombre,nota
+sector_privado,incluye,2.3.1,,Compra de bienes
+sector_privado,incluye,2.3.2,,Contratación de servicios
+sector_privado,excluye,2.3.2.1,,Viajes: pasajes y viáticos del personal
+sector_privado,excluye,2.3.2.9,,Locación de servicios por persona natural
+sector_privado,excluye,2.3.2.10,,Propinas a voluntarios
+sector_privado,excluye,2.3.2.7.3.2,,Servicios realizados por personas naturales
+sector_privado,excluye,2.3.2.7.12,,Locación de servicios (FAG / personal altamente calificado)
+sector_privado,excluye,2.3.2.7.14.98,,Otros servicios desarrollados por personas naturales
+sector_privado,incluye,2.6,COSTO DE CONSTRUCCION POR CONTRATA,Obras por contrata
+sector_privado,incluye,2.6,GASTO% POR LA CONTRATACION DE SERVICIOS,Servicios contratados en proyectos de inversión
+sector_privado,incluye,2.6,GASTO% POR LA COMPRA DE BIENES,Bienes comprados en proyectos de inversión
+sector_privado,incluye,2.6.3,,"Vehículos, maquinaria y equipo"
+sector_privado,incluye,2.5.1.2,,Subsidios a empresas privadas
+sector_privado,incluye,2.5.5.1.3.1,,Sentencias y laudos a personas jurídicas
+obras_por_contrata,incluye,2.6,COSTO DE CONSTRUCCION POR CONTRATA,
+obras_administracion_directa,incluye,2.6,COSTO DE CONSTRUCCION POR ADMINISTRACION DIRECTA%,
+servicios_profesionales,incluye,2.3.2.7,,
+locadores,incluye,2.3.2.9,,
+locadores,incluye,2.3.2.7.12,,
+locadores,incluye,2.3.2.7.3.2,,
+locadores,incluye,2.3.2.7.14.98,,
+subsidios_empresas_privadas,incluye,2.5.1.2,,
+laudos_y_sentencias,incluye,2.5.5.1,,
+sin_fines_de_lucro,incluye,2.5.2,,

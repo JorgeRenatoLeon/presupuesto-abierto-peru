@@ -1,0 +1,9 @@
+etiqueta,nombre,descripcion,confianza
+sector_privado,Pagos a empresas y proveedores privados (aproximado),"Compras de bienes y servicios a terceros, obras por contrata, estudios y servicios contratados en inversiones, compra de vehículos y equipos, subsidios a empresas privadas y laudos o sentencias pagados a personas jurídicas. Excluye locadores y otros pagos a personas naturales, y viajes. Es una aproximación: el clasificador dice en qué se gasta, no quién cobra (algunos proveedores de servicios básicos son empresas públicas).",media
+obras_por_contrata,Obras por contrata,Construcción ejecutada por empresas contratistas.,alta
+obras_administracion_directa,Obras por administración directa,"Construcción ejecutada por la propia entidad con su personal, bienes y servicios.",alta
+servicios_profesionales,Servicios profesionales y técnicos,"Consultorías, estudios, asesorías y otros servicios técnicos contratados (a empresas o a personas).",media
+locadores,Locadores de servicios (personas naturales),Pagos a personas naturales contratadas por locación de servicios u otros servicios personales.,alta
+subsidios_empresas_privadas,Subsidios a empresas privadas,Subsidios a empresas privadas no financieras.,alta
+laudos_y_sentencias,Sentencias judiciales y laudos arbitrales,"Pagos ordenados por sentencias judiciales y laudos arbitrales, incluidos los que se pagan a empresas contratistas.",alta
+sin_fines_de_lucro,Transferencias a instituciones sin fines de lucro,Transferencias corrientes y de capital a instituciones sin fines de lucro.,alta

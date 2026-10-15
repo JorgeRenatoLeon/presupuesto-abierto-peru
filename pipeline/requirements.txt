@@ -1,0 +1,7 @@
+# Tested with duckdb 1.5.6, pandas 3.0.6, huggingface_hub 2.0.0 (2026-09).
+# Upper bounds keep the unattended daily job from breaking on a major release.
+duckdb>=1.5,<2
+pandas>=2.2,<4
+requests>=2.31,<3
+ftfy>=6.1,<7
+huggingface_hub>=2.0,<3

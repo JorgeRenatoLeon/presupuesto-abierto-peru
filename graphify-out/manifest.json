@@ -1,0 +1,192 @@
+{
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/.claude/settings.local.json": {
+    "mtime": 1784909157.52033,
+    "ast_hash": "35d397c85a5ea6a0a6e4dd5b7e09e568",
+    "semantic_hash": "35d397c85a5ea6a0a6e4dd5b7e09e568"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/alertas/page.tsx": {
+    "mtime": 1784902571.6981003,
+    "ast_hash": "ba6112d508bc74f04a0991022f210f56",
+    "semantic_hash": "ba6112d508bc74f04a0991022f210f56"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/entidad/[id]/page.tsx": {
+    "mtime": 1785137412.142986,
+    "ast_hash": "75dbb49dd459c2522a3e8d16c5f2ca87",
+    "semantic_hash": "75dbb49dd459c2522a3e8d16c5f2ca87"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/explorar/page.tsx": {
+    "mtime": 1785137425.4281824,
+    "ast_hash": "bb4863a53c80fda3500652682c6092ca",
+    "semantic_hash": "bb4863a53c80fda3500652682c6092ca"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/guia/page.tsx": {
+    "mtime": 1784910343.6203072,
+    "ast_hash": "a90853ce7137cb6a57c38fc0b76baf9a",
+    "semantic_hash": "a90853ce7137cb6a57c38fc0b76baf9a"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/ingresos/page.tsx": {
+    "mtime": 1784910332.806787,
+    "ast_hash": "0859cf285e6e50607a6ad0e5bcb1da56",
+    "semantic_hash": "0859cf285e6e50607a6ad0e5bcb1da56"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/layout.tsx": {
+    "mtime": 1784902571.6974413,
+    "ast_hash": "f80a0a34241375c606c08661807df5b4",
+    "semantic_hash": "f80a0a34241375c606c08661807df5b4"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/metodologia/page.tsx": {
+    "mtime": 1784910352.7068663,
+    "ast_hash": "4d24cb2f6cf613cd3f3ed2883e385cfe",
+    "semantic_hash": "4d24cb2f6cf613cd3f3ed2883e385cfe"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/page.tsx": {
+    "mtime": 1784910338.9046185,
+    "ast_hash": "bdc7bc118b68884422570c819177897b",
+    "semantic_hash": "bdc7bc118b68884422570c819177897b"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/components/AlertaCard.tsx": {
+    "mtime": 1784902571.6898654,
+    "ast_hash": "36d6b8114b00454f83a30c412d520d1b",
+    "semantic_hash": "36d6b8114b00454f83a30c412d520d1b"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/components/Explorador.tsx": {
+    "mtime": 1785137444.4607747,
+    "ast_hash": "0c18a8d2461a3f6730db265b33e7e464",
+    "semantic_hash": "0c18a8d2461a3f6730db265b33e7e464"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/components/FiltroAlertas.tsx": {
+    "mtime": 1785137485.339812,
+    "ast_hash": "b01da317a162da938eaafad409439bdd",
+    "semantic_hash": "b01da317a162da938eaafad409439bdd"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/components/Grafico.tsx": {
+    "mtime": 1784903414.885335,
+    "ast_hash": "6f9b6b9034617bf9d54db1e89c3ebae7",
+    "semantic_hash": "6f9b6b9034617bf9d54db1e89c3ebae7"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/components/Nav.tsx": {
+    "mtime": 1784903456.6237376,
+    "ast_hash": "5bcac614d134b46256c13ca41ed953a8",
+    "semantic_hash": "5bcac614d134b46256c13ca41ed953a8"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/components/ui.tsx": {
+    "mtime": 1784902571.6873658,
+    "ast_hash": "5d046598560ff579b2e8bc31d351bd22",
+    "semantic_hash": "5d046598560ff579b2e8bc31d351bd22"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/lib/data.ts": {
+    "mtime": 1785137389.1124032,
+    "ast_hash": "1d8bc38abc97811943097d46be56415e",
+    "semantic_hash": "1d8bc38abc97811943097d46be56415e"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/lib/types.ts": {
+    "mtime": 1785137496.9307623,
+    "ast_hash": "3b62735eeab1745e66fc53ab0c61e645",
+    "semantic_hash": "3b62735eeab1745e66fc53ab0c61e645"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/next-env.d.ts": {
+    "mtime": 1784902571.6856196,
+    "ast_hash": "b5ed9dd8b4c5ba8e5ab8e6a379c15838",
+    "semantic_hash": "b5ed9dd8b4c5ba8e5ab8e6a379c15838"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/next.config.mjs": {
+    "mtime": 1784902571.693771,
+    "ast_hash": "f0cfa207fd2847f0c6d5145c69f86c42",
+    "semantic_hash": "f0cfa207fd2847f0c6d5145c69f86c42"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/package.json": {
+    "mtime": 1785137362.8312018,
+    "ast_hash": "d4f06c6d723a95963b3c7d7597883c21",
+    "semantic_hash": "d4f06c6d723a95963b3c7d7597883c21"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/scripts/sync-data.mjs": {
+    "mtime": 1784903492.3382165,
+    "ast_hash": "ddc196f9fc47b2f958909587aea29596",
+    "semantic_hash": "ddc196f9fc47b2f958909587aea29596"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/tsconfig.json": {
+    "mtime": 1784902571.6904197,
+    "ast_hash": "a4f0d7983333c7814f163bb66ffafd73",
+    "semantic_hash": "a4f0d7983333c7814f163bb66ffafd73"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/aggregate.py": {
+    "mtime": 1785137620.5790231,
+    "ast_hash": "047c1913a144643153ba1d2605a63e93",
+    "semantic_hash": "047c1913a144643153ba1d2605a63e93"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/alerts.py": {
+    "mtime": 1784901654.811311,
+    "ast_hash": "6a5e1b34a50878ea073c9d7439909091",
+    "semantic_hash": "6a5e1b34a50878ea073c9d7439909091"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/config.py": {
+    "mtime": 1784903202.5545156,
+    "ast_hash": "eb98d2eced0fc4888e3d13c992997a77",
+    "semantic_hash": "eb98d2eced0fc4888e3d13c992997a77"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/download.py": {
+    "mtime": 1784903308.966834,
+    "ast_hash": "961349873ee7d9c1974026c1b2f807d3",
+    "semantic_hash": "961349873ee7d9c1974026c1b2f807d3"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/normalize.py": {
+    "mtime": 1784908255.345934,
+    "ast_hash": "df79ee3042b21bf698176f67b560973b",
+    "semantic_hash": "df79ee3042b21bf698176f67b560973b"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/qa.py": {
+    "mtime": 1784910283.7811508,
+    "ast_hash": "e5c4a3d7e1d0da44c34466380f24adf2",
+    "semantic_hash": "e5c4a3d7e1d0da44c34466380f24adf2"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/run.py": {
+    "mtime": 1784910293.9127593,
+    "ast_hash": "689040ef364a7bddf312582c3ceb2b84",
+    "semantic_hash": "689040ef364a7bddf312582c3ceb2b84"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/test_alerts.py": {
+    "mtime": 1784901677.1620202,
+    "ast_hash": "9218d6027644e4dfc377de388e59cd90",
+    "semantic_hash": "9218d6027644e4dfc377de388e59cd90"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/validate.py": {
+    "mtime": 1784903345.3839023,
+    "ast_hash": "03dd3ffe8d2b4fc57b5a908de40da9a6",
+    "semantic_hash": "03dd3ffe8d2b4fc57b5a908de40da9a6"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/.github/workflows/refresh-data.yml": {
+    "mtime": 1784910355.4733093,
+    "ast_hash": "29c4ebb919ea7e965675a636b71cf697",
+    "semantic_hash": "29c4ebb919ea7e965675a636b71cf697"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/README.md": {
+    "mtime": 1784910410.6492386,
+    "ast_hash": "a48860eb07be2abbaa997f94f9fd7d62",
+    "semantic_hash": "a48860eb07be2abbaa997f94f9fd7d62"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/README.md": {
+    "mtime": 1785137525.3794656,
+    "ast_hash": "14eddf04ff38e01dbcc8d46f5cd0c984",
+    "semantic_hash": "14eddf04ff38e01dbcc8d46f5cd0c984"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/docs/data-dictionary.md": {
+    "mtime": 1784903617.2336597,
+    "ast_hash": "37b6618f83001675c8e12f69077e2a96",
+    "semantic_hash": "37b6618f83001675c8e12f69077e2a96"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/docs/design-notes.md": {
+    "mtime": 1784902205.7349155,
+    "ast_hash": "802877f573d753306cc9228af569cc17",
+    "semantic_hash": "802877f573d753306cc9228af569cc17"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/pipeline/requirements.txt": {
+    "mtime": 1784898285.6361182,
+    "ast_hash": "f0fce1ff685b0480b6f68a16f3de0d35",
+    "semantic_hash": "f0fce1ff685b0480b6f68a16f3de0d35"
+  },
+  "/Users/jorgeleonchumpitaz/Documents/Proyectos/Sistema Presupuesto Nacional/presupuesto-app/apps/web/app/icon.svg": {
+    "mtime": 1785137498.7900157,
+    "ast_hash": "726d6517a47aafb5203b4f6e0069b7e8",
+    "semantic_hash": "726d6517a47aafb5203b4f6e0069b7e8"
+  }
+}
