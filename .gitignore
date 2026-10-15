@@ -1,0 +1,13 @@
+data/
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.next/
+out/
+apps/web/public/data/
+.DS_Store
+*.duckdb
+*.duckdb.wal
