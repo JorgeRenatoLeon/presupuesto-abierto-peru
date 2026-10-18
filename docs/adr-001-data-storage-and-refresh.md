@@ -105,3 +105,8 @@ Changes:
   2026 look +3.8% instead of +9.0%. Pages name the real cut ("al 17 de octubre").
 - Verified on the real 17 Oct files before release: PIA identical to the 3 Sep monthly snapshot
   (S/ 257,561,619,143.00), January–August spending within 0.004%, 99.8% of line keys matched.
+- Consulta Amigable is a month-end snapshot ("Última actualización: 30 de septiembre de 2026"),
+  not live. QA reads its TOTAL row by label and compares flows over the months it covers: on
+  2026-10-18 spending for January–September matched to 0.004%; revenue differed 2.75% (late
+  entries for past months), reported as WARN. The earlier check took the closest number on
+  the page, which for devengado was CA's "compromiso mensual" column.

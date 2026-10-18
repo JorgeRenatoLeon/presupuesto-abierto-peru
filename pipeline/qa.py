@@ -5,31 +5,33 @@ Two layers, one command (`python run.py qa --year 2026`):
 1. COHERENCE (offline, always runs): cross-table consistency, month coverage,
    plausibility ranges, JSON export integrity. FAIL here = real data bug.
 
-2. RECONCILIATION (network): fetches the Consulta Amigable *mensual* pages
-   (same monthly cut as our default source files) and value-matches our national
-   PIA / PIM / devengado (gasto) and PIA / PIM / recaudado (ingreso) against the
-   numbers in the page. Column-order independent: we check that each of our
-   values appears among the page's numeric tokens within tolerance, so MEF
-   layout changes don't break the check. Unreachable page = SKIPPED (exit 0)
-   unless --strict; a value mismatch = FAIL.
+2. RECONCILIATION (network): fetches the Consulta Amigable *mensual* pages and
+   compares our national PIA / PIM / devengado (gasto) and PIA / PIM / recaudado
+   (ingreso) with the page's TOTAL row, read by label (if MEF changes the layout,
+   the closest number on the page). CA is a month-end snapshot (its note gives the
+   date) while MEF's daily file runs ahead, so flows are summed over the months CA
+   covers. Unreachable page = SKIPPED (exit 0) unless --strict; a value mismatch = FAIL.
 
 Output: console report + data/serving/qa_report.json (consumed by /metodologia later).
 """
 import json
 import re
 import time
-from pathlib import Path
+from datetime import date, datetime
+from html import unescape
 
 import duckdb
 
-from config import SERVING
+import lake
+from config import SERVING, MESES
 
 # --- Tolerances ---
 TOL_INTERNAL = 0.01          # absolute soles, cross-table sums must match to the centavo
-TOL_CA_REL = 0.005           # 0.5% vs Consulta Amigable for PIA (fixed all year: cut-independent)
-# PIM and execution are compared with CA's *live* numbers, while our source file was cut hours or
-# days earlier (MEF's daily file, Oct 2026: devengado differed 0.83% with a one-day gap). Up to 5%
-# is reported as WARN naming the cut; more than that is a real error (PIA off by 362% on 2026-10-18).
+TOL_CA_REL = 0.005           # 0.5% vs Consulta Amigable: PIA, and flows over the months CA covers
+# CA publishes month-end snapshots ("Última actualización: 30 de septiembre de 2026") while MEF's daily
+# file runs ahead (17 Oct). PIM changes every day and late entries keep filling past months (revenue
+# especially: 2.75% for January-September 2026, spending 0.004%), so up to 5% is a WARN naming both
+# cuts; more than that is a real error (PIA off by 362% on 2026-10-18).
 TOL_CA_REL_CORTE = 0.05
 TOL_GIRADO_REL = 0.02        # girado may lag devengado slightly in weird ways
 ENTITY_RANGE = (2000, 4000)  # plausible count of ejecutoras
@@ -103,6 +105,12 @@ def _coherence(rep: Report, year: int) -> dict:
         return vals
     mes_ult, pia, pim, dev, gir = r
     vals.update(mes_ult=mes_ult, pia=pia, pim=pim, devengado=dev, girado=gir)
+    # for the reconciliation: flows by month, and the date each dataset's file was published
+    vals["devengado_mes"] = _por_mes(con, "fact_nacional_mes", "devengado", year)
+    vals["recaudado_mes"] = _por_mes(con, "fact_ing_nacional_mes", "recaudado", year)
+    m = lake.load_manifest()
+    vals["corte"] = {ds: datetime.strptime(p, "%Y%m%dT%H%M%SZ").date()
+                     for ds in ("gasto", "ingreso") if (p := lake.latest_pub(m, ds, year))}
     rep.add("coherencia", f"resumen_anual has year {year}", "PASS",
             f"mes_ult={mes_ult}, PIM=S/{pim/1e9:.1f}B, dev=S/{dev/1e9:.1f}B")
 
@@ -200,6 +208,13 @@ def _coherence(rep: Report, year: int) -> dict:
     return vals
 
 
+def _por_mes(con, tabla: str, col: str, year: int) -> dict[int, float]:
+    if not _has_table(con, tabla):
+        return {}
+    return {mes: float(v) for mes, v in con.execute(
+        f"SELECT mes, SUM({col}) FROM {tabla} WHERE ano=? GROUP BY mes", [year]).fetchall()}
+
+
 def _has_table(con, name: str) -> bool:
     return bool(con.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name=?", [name]).fetchone()[0])
@@ -242,50 +257,78 @@ def _page_numbers(html: str) -> list[float]:
     return out
 
 
-def _match(rep: Report, side: str, metric: str, ours: float | None, page_nums: list[float]):
-    if ours is None:
-        rep.add("consulta-amigable", f"{side} {metric}", "SKIP", "no local value")
+def _total_ca(html: str) -> dict[str, float]:
+    """The page's TOTAL row by label: CA describes it in an aria-label
+    ("TOTAL, PIA: 257,561,619,143, PIM: ..., DEVENGADO: 196,498,129,665, ...")."""
+    m = re.search(r'aria-label="TOTAL,([^"]*)"', html)
+    pares = re.findall(r"([A-Z][A-Z ]*?):\s*([0-9][0-9,]*(?:\.[0-9]+)?)", m.group(1)) if m else []
+    return {k.strip(): float(v.replace(",", "")) for k, v in pares}
+
+
+def _corte_ca(html: str) -> date | None:
+    """Date of CA's month-end snapshot, from its note ("Última actualización: 30 de septiembre de 2026")."""
+    texto = unescape(re.sub(r"<[^>]+>", " ", html))
+    m = re.search(r"ltima (?:fecha de )?actualizaci[oó]n:\s*(\d{1,2}) de ([a-z]+) de (\d{4})", texto, re.I)
+    mes = m.group(2).upper().replace("SETIEMBRE", "SEPTIEMBRE") if m else None
+    return date(int(m.group(3)), MESES.index(mes) + 1, int(m.group(1))) if mes in MESES else None
+
+
+def _al_corte(meses: dict[int, float], year: int, corte_ca: date | None,
+              propio: date | None) -> tuple[float | None, str, str]:
+    """Our flow over the months CA's snapshot covers: (amount, period, why the two may differ)."""
+    if not meses:
+        return None, "YTD", ""
+    if not corte_ca or not propio:
+        return sum(meses.values()), "YTD", "cut dates unknown"
+    if propio <= corte_ca:
+        return sum(meses.values()), "YTD", f"CA's snapshot ({corte_ca}) is newer than our file ({propio})"
+    hasta = 12 if corte_ca.year > year else corte_ca.month
+    return (sum(v for mes, v in meses.items() if mes <= hasta), f"months 1-{hasta}",
+            f"CA is a month-end snapshot ({corte_ca}); our file ({propio}) can include entries for "
+            f"those months registered later")
+
+
+def _valor_ca(total: dict[str, float], nums: list[float], etiqueta: str, ours: float | None) -> float | None:
+    """CA's value for a column: by label; if MEF changed the layout, the closest number on the page."""
+    if etiqueta in total:
+        return total[etiqueta]
+    return min(nums, key=lambda v: abs(v - ours), default=None) if ours is not None else None
+
+
+def _comparar(rep: Report, nombre: str, ours: float | None, ca: float | None, nota: str | None) -> None:
+    """PASS within 0.5%; WARN up to 5% when `nota` explains a legitimate gap (PIA has none)."""
+    if ours is None or ca is None:
+        rep.add("consulta-amigable", nombre, "SKIP", "no local value" if ours is None else "not found on the page")
         return
-    best = min(page_nums, key=lambda v: abs(v - ours), default=None)
-    if best is None:
-        rep.add("consulta-amigable", f"{side} {metric}", "SKIP", "no numbers parsed from page")
-        return
-    rel = abs(best - ours) / ours if ours else 1.0
-    depende_del_corte = metric != "PIA"
+    rel = abs(ca - ours) / ours if ours else 1.0
+    detalle = f"ours {ours:,.0f} vs CA {ca:,.0f} (Δ {rel*100:.2f}%)"
     if rel <= TOL_CA_REL:
-        rep.add("consulta-amigable", f"{side} {metric} matches CA", "PASS",
-                f"ours {ours:,.0f} ≈ CA {best:,.0f} (Δ {rel*100:.2f}%)")
-    elif depende_del_corte and rel <= TOL_CA_REL_CORTE:
-        rep.add("consulta-amigable", f"{side} {metric} matches CA", "WARN",
-                f"ours {ours:,.0f} vs CA {best:,.0f} (Δ {rel*100:.2f}%): CA is live, our MEF file was cut earlier")
+        rep.add("consulta-amigable", f"{nombre} matches CA", "PASS", detalle)
+    elif nota and rel <= TOL_CA_REL_CORTE:
+        rep.add("consulta-amigable", f"{nombre} matches CA", "WARN", f"{detalle}: {nota}")
     else:
-        rep.add("consulta-amigable", f"{side} {metric} matches CA", "FAIL",
-                f"ours {ours:,.0f} vs closest CA number {best:,.0f} (Δ {rel*100:.2f}%) — "
-                f"check month cut and source file freshness")
+        rep.add("consulta-amigable", f"{nombre} matches CA", "FAIL",
+                f"{detalle} — check the source file and how it was read")
 
 
 def _reconcile(rep: Report, year: int, vals: dict) -> None:
-    html = next((h for u in CA_URLS_GASTO if (h := _fetch(u.format(year=year)))), None)
-    if html:
-        (SERVING / "qa_ca_gasto.html").write_text(html)  # debug artifact
-        nums = _page_numbers(html)
-        _match(rep, "gasto", "PIA", vals.get("pia"), nums)
-        _match(rep, "gasto", "PIM", vals.get("pim"), nums)
-        _match(rep, "gasto", "devengado YTD", vals.get("devengado"), nums)
-    else:
-        rep.add("consulta-amigable", "gasto page reachable", "SKIP",
-                "CA mensual not fetchable (bot protection or offline) — open it in a browser to compare manually")
-
-    html = next((h for u in CA_URLS_INGRESO if (h := _fetch(u.format(year=year)))), None)
-    if html:
-        (SERVING / "qa_ca_ingreso.html").write_text(html)
-        nums = _page_numbers(html)
-        _match(rep, "ingreso", "PIA", vals.get("ing_pia"), nums)
-        _match(rep, "ingreso", "PIM", vals.get("ing_pim"), nums)
-        _match(rep, "ingreso", "recaudado YTD", vals.get("recaudado"), nums)
-    else:
-        rep.add("consulta-amigable", "ingreso page reachable", "SKIP",
-                "CA ingresos mensual not fetchable — open it in a browser to compare manually")
+    lados = (("gasto", CA_URLS_GASTO, "devengado", "DEVENGADO", "pia", "pim"),
+             ("ingreso", CA_URLS_INGRESO, "recaudado", "RECAUDADO", "ing_pia", "ing_pim"))
+    for lado, urls, flujo, etiqueta, k_pia, k_pim in lados:
+        html = next((h for u in urls if (h := _fetch(u.format(year=year)))), None)
+        if not html:
+            rep.add("consulta-amigable", f"{lado} page reachable", "SKIP",
+                    "CA mensual not fetchable (bot protection or offline) — open it in a browser to compare manually")
+            continue
+        (SERVING / f"qa_ca_{lado}.html").write_text(html)  # debug artifact (CI uploads it)
+        total, nums = _total_ca(html), _page_numbers(html)
+        corte_ca, propio = _corte_ca(html), vals.get("corte", {}).get(lado)
+        pia, pim = vals.get(k_pia), vals.get(k_pim)
+        _comparar(rep, f"{lado} PIA", pia, _valor_ca(total, nums, "PIA", pia), None)
+        _comparar(rep, f"{lado} PIM", pim, _valor_ca(total, nums, "PIM", pim),
+                  f"PIM changes every day: CA's snapshot is from {corte_ca or '?'}, our file from {propio or '?'}")
+        valor, periodo, nota = _al_corte(vals.get(f"{flujo}_mes") or {}, year, corte_ca, propio)
+        _comparar(rep, f"{lado} {flujo} {periodo}", valor, _valor_ca(total, nums, etiqueta, valor), nota)
 
 
 def qa(year: int, strict: bool = False, skip_external: bool = False) -> bool:
