@@ -2,11 +2,14 @@ name: Refresh budget data
 
 # Daily: check MEF for new publications (a few HEAD requests when nothing changed),
 # ingest them into the lake (Hugging Face dataset), rebuild the site and deploy it to
-# GitHub Pages. In 2026 MEF published between 20:00 and 21:40 UTC, so the evening run
-# picks up a publication the same day.
+# GitHub Pages. Since October 2026 MEF only publishes the *-Diario files (8-10 GB, re-stamped
+# daily), so a dataset-year is downloaded at most every 7 days (previous year: 30), see
+# pipeline/config.py CADENCIA_DIAS.
 #
-# Setup (once): repo variable HF_DATASET (e.g. "usuario/presupuesto-abierto-peru"),
+# Setup (once): HF_DATASET (repo variable or secret, e.g. "usuario/presupuesto-abierto-peru"),
 # repo secret HF_TOKEN (Hugging Face write token), Settings > Pages > Source: GitHub Actions.
+# Optional: secrets TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID to post a digest of each new publication,
+# and variable TELEGRAM_CANAL_URL (e.g. https://t.me/presupuestoabierto) to link the channel on the site.
 on:
   schedule:
     - cron: "30 23 * * *"   # 18:30 Lima
@@ -22,6 +25,10 @@ on:
       years:
         description: "Years to check, space-separated (default: current and previous)"
         required: false
+      ignore_cadence:
+        description: "Download re-published MEF files now, even if ingested within the last 7/30 days"
+        type: boolean
+        default: false
 
 concurrency:
   group: refresh-data
@@ -33,12 +40,17 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 300      # MEF throttles: ~6 MB/s in chunks, far slower when it misbehaves
+    # A normal ingest takes ~30-45 min (one 8-10 GB file at ~8 MB/s); the cap bounds what a misbehaving
+    # MEF server can burn. Budget (public repo: free; if private, GitHub Pro via the Student Pack includes
+    # 3,000 min/month): ~1 min/day of checks + ~45 min per weekly ingest + CI ≈ 350 min/month. See README.
+    timeout-minutes: 120
     outputs:
       deploy: ${{ steps.plan.outputs.deploy }}
     env:
-      HF_DATASET: ${{ vars.HF_DATASET }}
+      HF_DATASET: ${{ vars.HF_DATASET || secrets.HF_DATASET }}
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       FORCE: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.force) }}
     steps:
       - uses: actions/checkout@v4
@@ -55,12 +67,32 @@ jobs:
       - name: Pipeline tests (before touching any data)
         run: python -m pytest pipeline/tests -q
 
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
       - name: Update data (check MEF, ingest new publications, push to Hugging Face, rebuild serving)
         id: update
         working-directory: pipeline
         env:
           YEARS: ${{ inputs.years }}
-        run: python run.py update $([ "$FORCE" = true ] && echo --force) ${YEARS:+--years $YEARS}
+          SITE_URL: ${{ steps.pages.outputs.base_url }}   # absolute links in RSS feeds and Telegram
+          IGNORE_CADENCE: ${{ inputs.ignore_cadence }}
+        run: >-
+          python run.py update $([ "$FORCE" = true ] && echo --force)
+          $([ "$IGNORE_CADENCE" = true ] && echo --ignore-cadence) ${YEARS:+--years $YEARS}
+
+      # what QA checked, including the Consulta Amigable pages it compared against (also on failure)
+      - name: Upload QA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-report
+          path: |
+            data/serving/qa_report.json
+            data/serving/qa_ca_*.html
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Decide whether to deploy
         id: plan
@@ -94,16 +126,12 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
 
-      - name: Configure GitHub Pages
-        id: pages
-        if: steps.plan.outputs.deploy == 'true'
-        uses: actions/configure-pages@v5
-
       - name: Build site
         if: steps.plan.outputs.deploy == 'true'
         working-directory: apps/web
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_TELEGRAM_CANAL: ${{ vars.TELEGRAM_CANAL_URL }}   # optional: link shown on /metodologia
         run: npm ci && npm run build
 
       - uses: actions/upload-pages-artifact@v3

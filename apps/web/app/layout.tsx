@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { TopNav, BottomNav } from "@/components/Nav";
+import { TopNav, BottomNav, EnlaceSiguiendo } from "@/components/Nav";
 
 export const metadata: Metadata = {
   title: "Presupuesto Abierto Perú",
@@ -19,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="brand-mark">S/</span>
               Presupuesto Abierto Perú
             </Link>
-            <TopNav />
+            <div className="header-derecha">
+              <TopNav />
+              <EnlaceSiguiendo />
+            </div>
           </div>
         </header>
         <main className="container">{children}</main>

@@ -1,10 +1,15 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import Link from "next/link";
-import { load, DATA_DIR, fmtSoles, fmtPct, interpretarAvance, MESES, type Alerta } from "@/lib/data";
+import {
+  DATA_DIR, loadOptional, fmtSoles, fmtPct, fmtLugar, interpretarAvance, corteDatos,
+  type Alerta, type Obra, type ComparacionResumen,
+} from "@/lib/data";
 import { KpiCard, Lectura, ListaBarras } from "@/components/ui";
 import { GraficoMensual } from "@/components/Grafico";
 import { AlertaCard } from "@/components/AlertaCard";
+import { ListaObras } from "@/components/Obras";
+import { SeguirBoton } from "@/components/SeguirBoton";
 
 const ENT_DIR = join(DATA_DIR, "entidad");
 
@@ -32,10 +37,14 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 
 type Payload = {
   info: { sec_ejec: string; nombre: string; nivel: string | null; dept: string | null;
-          pliego: string | null; devengado: number | null; pim: number | null };
+          pliego: string | null; devengado: number | null; pim: number | null;
+          prov?: string | null; dist?: string | null };
   series: { ano: number; mes: number; pia: number | null; pim: number | null; devengado: number }[];
   funciones: { ano: number; funcion: string; devengado: number }[];
   genericas: { ano: number; generica: string; devengado: number }[];
+  /** top projects by budget (pipeline exportar.py), n_obras = all of them */
+  obras?: Obra[]; n_obras?: number;
+  alertas?: Alerta[];
 };
 
 export default function EntidadPage({ params }: { params: { id: string } }) {
@@ -44,8 +53,9 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
     return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de entidades procesados.</div></div>;
   }
   const raw = readFileSync(archivo, "utf-8");
-  const { info, series, funciones, genericas } = JSON.parse(raw) as Payload;
-  const alertasEntidad = load<Alerta[]>("alertas.json").filter((a) => a.sec_ejec === params.id);
+  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [] } =
+    JSON.parse(raw) as Payload;
+  const detenidas = obras.filter((o) => o.senal === "sin_avance");
 
   const anos = Array.from(new Set(series.map((s) => s.ano))).sort();
   const ano = anos[anos.length - 1];
@@ -55,7 +65,10 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
   const pia = serieAno.find((s) => s.mes === mesUlt)?.pia ?? null;
   const devYtd = serieAno.reduce((acc, s) => acc + (s.devengado ?? 0), 0);
   const avance = pim ? devYtd / pim : null;
-  const lectura = interpretarAvance(avance, mesUlt || 1);
+  const cmp = loadOptional<ComparacionResumen>("comparar/resumen.json");
+  const esperado = (cmp?.ano === ano ? cmp.avance_esperado : undefined) ?? (mesUlt || 1) / 12;
+  const lectura = interpretarAvance(avance, mesUlt || 1, esperado);
+  const corte = corteDatos(mesUlt, cmp?.ano === ano ? cmp.publicacion.fecha : null, ano);
 
   const funcAno = funciones.filter((f) => f.ano === ano).map((f) => ({
     id: f.funcion, nombre: f.funcion, monto: f.devengado, referencia: null,
@@ -72,15 +85,19 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
       <section className="hero">
         <h1>{info.nombre}</h1>
         <p>
-          {[info.nivel, info.pliego, info.dept].filter(Boolean).join(" · ")}
-          {` · Año ${ano}, datos a ${MESES[mesUlt].toLowerCase()}`}
+          {[info.nivel, info.pliego, info.dist && info.dist !== info.prov ? fmtLugar(info.dist) : null,
+            info.prov ? fmtLugar(info.prov) : null, info.dept ? fmtLugar(info.dept) : null].filter(Boolean).join(" · ")}
+          {` · Año ${ano}, datos ${corte}`}
         </p>
+        <div style={{ marginTop: 10 }}>
+          <SeguirBoton item={{ tipo: "entidad", id: info.sec_ejec, nombre: info.nombre }} />
+        </div>
       </section>
 
       <section className="kpis">
         <KpiCard etiqueta="Presupuesto vigente (PIM)" valor={fmtSoles(pim)} />
         <KpiCard etiqueta="Ejecutado" valor={fmtSoles(devYtd)} />
-        <KpiCard etiqueta="Avance" valor={fmtPct(avance)} nota={`Esperado: ${fmtPct(mesUlt / 12)}`} />
+        <KpiCard etiqueta="Avance" valor={fmtPct(avance)} nota={`Esperado: ${fmtPct(esperado)}`} />
         <KpiCard etiqueta="Presupuesto inicial (PIA)" valor={fmtSoles(pia)} />
       </section>
 
@@ -98,6 +115,17 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
       <section className="seccion tarjeta">
         <h2>Gasto mes a mes</h2>
         <GraficoMensual puntos={serieAno.map((s) => ({ mes: s.mes, valor: s.devengado }))} />
+      </section>
+
+      <section className="seccion tarjeta" id="obras">
+        <h2>Obras y proyectos de inversión ({n_obras})</h2>
+        <p className="sub">
+          {n_obras
+            ? `${detenidas.length ? `${detenidas.length} sin ningún gasto ${corte}. ` : ""}`
+              + `Los ${Math.min(obras.length, n_obras)} de mayor presupuesto; cada uno enlaza a su ficha oficial en el MEF.`
+            : "Esta entidad no tiene proyectos de inversión este año."}
+        </p>
+        {n_obras ? <ListaObras obras={obras} /> : null}
       </section>
 
       <section className="seccion tarjeta">

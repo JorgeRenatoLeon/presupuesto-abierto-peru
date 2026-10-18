@@ -158,7 +158,7 @@ def _export_json(con: duckdb.DuckDBPyConnection) -> None:
         (out / f"{name}.json").write_text(json.dumps(rows, ensure_ascii=False, default=str))
         print(f"  json: {name}.json ({len(rows)} records)")
 
-    _export_entidades(con, out)
+    # per-entity files are written by exportar.py, once alerts and projects exist
 
     has_ingreso = bool(con.execute(
         "SELECT count(*) FROM information_schema.tables WHERE table_name = 'resumen_ing_anual'"
@@ -203,63 +203,3 @@ def _export_json(con: duckdb.DuckDBPyConnection) -> None:
         "hf_dataset": os.environ.get("HF_DATASET") or None,  # where the full history can be downloaded
         "publicaciones": publicaciones,                      # which MEF files the site reflects
     }))
-
-
-def _export_entidades(con: duckdb.DuckDBPyConnection, out) -> None:
-    """entidades.json (search index) + one JSON per entity with series and breakdowns."""
-    ent_dir = out / "entidad"
-    ent_dir.mkdir(exist_ok=True)
-
-    index = con.execute("""
-        WITH ult AS (SELECT max(ano) AS ano FROM fact_entidad_mes),
-        ytd AS (
-            SELECT sec_ejec, SUM(devengado) dev,
-                   SUM(pim) FILTER (mes = (SELECT max(mes) FROM fact_entidad_mes f2
-                                           WHERE f2.ano = f.ano AND f2.sec_ejec = f.sec_ejec)) pim
-            FROM fact_entidad_mes f WHERE ano = (SELECT ano FROM ult) GROUP BY sec_ejec
-        )
-        SELECT e.sec_ejec, e.nombre, e.nivel_nombre AS nivel, e.dept_nombre AS dept,
-               e.pliego_nombre AS pliego, y.dev AS devengado, y.pim
-        FROM dim_entidad e LEFT JOIN ytd y USING (sec_ejec)
-        ORDER BY y.dev DESC NULLS LAST
-    """).fetchdf()
-    index = _records(index)
-    (out / "entidades.json").write_text(json.dumps(index, ensure_ascii=False, default=str))
-    print(f"  json: entidades.json ({len(index)} records)")
-
-    series = con.execute(
-        "SELECT sec_ejec, ano, mes, pia, pim, devengado FROM fact_entidad_mes ORDER BY ano, mes"
-    ).fetchdf()
-    funciones = con.execute("""
-        SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, FUNCION_NOMBRE AS funcion,
-               SUM(MONTO_DEVENGADO) AS devengado
-        FROM gasto GROUP BY 1, 2, 3
-    """).fetchdf()
-    genericas = con.execute("""
-        SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, GENERICA_NOMBRE AS generica,
-               SUM(MONTO_DEVENGADO) AS devengado
-        FROM gasto GROUP BY 1, 2, 3
-    """).fetchdf()
-
-    # group once (O(n)) instead of filtering the full frame per entity (O(n × entities));
-    # secondary name key makes tie order deterministic across runs
-    s_groups = dict(tuple(series.groupby("sec_ejec")))
-    f_groups = dict(tuple(funciones.sort_values(["devengado", "funcion"], ascending=[False, True]).groupby("sec_ejec")))
-    g_groups = dict(tuple(genericas.sort_values(["devengado", "generica"], ascending=[False, True]).groupby("sec_ejec")))
-    empty = series.iloc[0:0]
-
-    n = 0
-    for ent in index:
-        sec = ent["sec_ejec"]
-        s = s_groups.get(sec, empty)
-        f = f_groups.get(sec, funciones.iloc[0:0])
-        g = g_groups.get(sec, genericas.iloc[0:0])
-        payload = {
-            "info": ent,
-            "series": _records(s.drop(columns=["sec_ejec"])),
-            "funciones": _records(f.drop(columns=["sec_ejec"]).head(10)),
-            "genericas": _records(g.drop(columns=["sec_ejec"]).head(10)),
-        }
-        (ent_dir / f"{sec}.json").write_text(json.dumps(payload, ensure_ascii=False, default=str))
-        n += 1
-    print(f"  json: entidad/*.json ({n} files)")

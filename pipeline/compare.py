@@ -9,7 +9,9 @@ current year's spending:
 Writes json/comparar/<dimension>.json + resumen.json, and the tables cmp_nodos and
 cmp_entidad into serving.duckdb for alerts.py. Amounts are nominal soles.
 """
+import calendar
 import json
+from datetime import datetime
 
 import duckdb
 
@@ -34,6 +36,15 @@ DIMENSIONES = {
 }
 MEDIDAS = ["pia", "pim", "devengado", "pim_pub_ant", "pia_ano_ant", "pim_ano_ant",
            "dev_ano_ant_periodo", "dev_ano_ant"]
+
+# Investment projects (obras): one row per executing unit x CUI. Signals for citizens,
+# measured 2026 (data to August): 2,077 projects >= S/1M with no spending at all (S/ 6.7 bn).
+OBRA_MINIMO = 1_000_000       # smaller projects are listed but not flagged
+OBRA_MES_MIN = 6              # execution is back-loaded: don't judge it before mid-year
+OBRA_AVANCE_BAJO = 0.10       # < 10% executed by mid-year
+OBRA_RECORTE = 0.30           # budget cut >= 30% since the previous MEF publication
+# Devengado-Mensual files put the label in TIPO_ACT_PROY; the diario format uses the code '2'
+ES_PROYECTO = "('PROYECTO' IN (TIPO_ACT_PROY, TIPO_ACT_PROY_NOMBRE))"
 
 
 def _id(dim: dict, n: int) -> str:
@@ -72,6 +83,55 @@ def _nodos(con, dim_id: str, dim: dict) -> list[dict]:
     return out
 
 
+def _obras(con, mes_ult: int) -> None:
+    """Table `obras`: every investment project of the current year with its execution,
+    its budget in the previous publication and what it executed last year, plus a signal."""
+    juzgar = mes_ult >= OBRA_MES_MIN
+    con.execute(f"""
+        CREATE OR REPLACE TABLE obras AS
+        WITH c AS (
+            SELECT SEC_EJEC AS sec_ejec, PRODUCTO_PROYECTO AS cui,
+                   any_value(PRODUCTO_PROYECTO_NOMBRE) AS nombre, any_value(EJECUTORA_NOMBRE) AS entidad,
+                   any_value(NIVEL_GOBIERNO_NOMBRE) AS nivel,
+                   arg_max(DEPARTAMENTO_META, MONTO_PIM) AS dept, arg_max(DEPARTAMENTO_META_NOMBRE, MONTO_PIM) AS dept_nombre,
+                   arg_max(FUNCION_NOMBRE, MONTO_PIM) AS funcion,
+                   CAST(sum(MONTO_PIA) AS DOUBLE) AS pia, CAST(sum(MONTO_PIM) AS DOUBLE) AS pim,
+                   CAST(sum(MONTO_CERTIFICADO_ANUAL) AS DOUBLE) AS certificado,
+                   CAST(sum(MONTO_DEVENGADO_ANUAL) AS DOUBLE) AS devengado
+            FROM cur WHERE {ES_PROYECTO} GROUP BY 1, 2),
+        p AS (SELECT SEC_EJEC AS sec_ejec, PRODUCTO_PROYECTO AS cui, CAST(sum(MONTO_PIM) AS DOUBLE) AS pim
+              FROM prv WHERE {ES_PROYECTO} GROUP BY 1, 2),
+        a AS (SELECT SEC_EJEC AS sec_ejec, PRODUCTO_PROYECTO AS cui, CAST(sum(MONTO_DEVENGADO_ANUAL) AS DOUBLE) AS dev
+              FROM ant WHERE {ES_PROYECTO} GROUP BY 1, 2)
+        SELECT c.*, p.pim AS pim_pub_ant, a.dev AS dev_ano_ant,
+               CASE WHEN {juzgar} AND c.pim >= {OBRA_MINIMO} AND c.devengado = 0 THEN 'sin_avance'
+                    WHEN {juzgar} AND c.pim >= {OBRA_MINIMO} AND c.devengado / c.pim < {OBRA_AVANCE_BAJO} THEN 'avance_bajo'
+                    WHEN p.pim >= {OBRA_MINIMO} AND c.pim <= p.pim * (1 - {OBRA_RECORTE}) THEN 'recortada'
+               END AS senal
+        FROM c LEFT JOIN p USING (sec_ejec, cui) LEFT JOIN a USING (sec_ejec, cui)""")
+    n, sin_avance = con.execute("SELECT count(*), count(*) FILTER (senal = 'sin_avance') FROM obras").fetchone()
+    print(f"  obras: {n:,} proyectos ({sin_avance:,} sin avance)")
+
+
+def avance_esperado(pub: str, ano: int, mes_ult: int) -> float:
+    """Share of the year the data covers: the end of mes_ult for monthly files, or the
+    publication date for the daily Diario files (published mid-month: on 17 Oct the data
+    covers 79% of the year, not 10/12 = 83%)."""
+    fecha = datetime.strptime(pub, "%Y%m%dT%H%M%SZ")
+    if fecha.year > ano:
+        return mes_ult / 12
+    transcurrido = (fecha - datetime(ano, 1, 1)).days / (366 if calendar.isleap(ano) else 365)
+    return round(min(mes_ult / 12, max(transcurrido, 0.0)), 4)
+
+
+def dias_cubiertos(pub: str, ano: int, mes_ult: int) -> tuple[int, int]:
+    """(days of mes_ult the data covers, days in mes_ult): a Diario file published on 17 Oct
+    covers 16 of October's 31 days; a monthly file, published the month after, all of it."""
+    fecha = datetime.strptime(pub, "%Y%m%dT%H%M%SZ")
+    dias = calendar.monthrange(ano, mes_ult)[1]
+    return (fecha.day - 1, dias) if (fecha.year, fecha.month) == (ano, mes_ult) else (dias, dias)
+
+
 def compare() -> dict | None:
     m = lake.load_manifest()
     anos = lake.years(m, "gasto")
@@ -86,7 +146,14 @@ def compare() -> dict | None:
 
     con = duckdb.connect(str(SERVING / "serving.duckdb"))
     con.execute("SET enable_progress_bar = false")
-    periodo = " + ".join(f'coalesce("MONTO_DEVENGADO_{mm}", 0)' for mm in MESES[:mes_ult]) or "0"
+    # previous year "to the same date" (only read from `ant`): with a mid-month cut its last
+    # month is prorated by the days covered, assuming even spending within the month. Counting
+    # all of October 2025 against 1-16 October 2026 showed national spending +3.8% instead of +9%.
+    cubiertos, dias = dias_cubiertos(pub, ano, mes_ult)
+    meses = [f'coalesce("MONTO_DEVENGADO_{mm}", 0)' for mm in MESES[:mes_ult]]
+    if meses and cubiertos < dias:
+        meses[-1] = f"round({meses[-1]} * {cubiertos} / {dias}, 2)"
+    periodo = " + ".join(meses) or "0"
     fuentes = {"cur": lake.latest_path("gasto", ano),
                "prv": lake.snapshot_path("gasto", ano, prev) if prev else None,
                "ant": lake.latest_path("gasto", ant) if ant else None}
@@ -127,11 +194,12 @@ def compare() -> dict | None:
                c.nivel, c.dept, CAST(c.pia AS DOUBLE) AS pia, CAST(c.pim AS DOUBLE) AS pim,
                CAST(p.pim AS DOUBLE) AS pim_pub_ant
         FROM c FULL OUTER JOIN p ON c.SEC_EJEC = p.SEC_EJEC""")
+    _obras(con, mes_ult)
 
     pub_info = lambda p: {"id": p, "fecha": lake.pub_date(p),
                           "mes_ult": m["datasets"]["gasto"][str(ano)]["publications"][p]["mes_ult"]}
     resumen = {
-        "ano": ano, "mes_ult": mes_ult,
+        "ano": ano, "mes_ult": mes_ult, "avance_esperado": avance_esperado(pub, ano, mes_ult),
         "publicacion": pub_info(pub),
         "publicacion_anterior": pub_info(prev) if prev else None,
         "ano_anterior": {"ano": ant, "publicacion": {"id": lake.latest_pub(m, "gasto", ant),

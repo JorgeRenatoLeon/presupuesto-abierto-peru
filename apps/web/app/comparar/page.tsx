@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  load, loadOptional, fmtSoles, fmtDelta, fmtVariacion, fmtFecha, MESES,
+  load, loadOptional, fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos,
   type Alerta, type ComparacionResumen,
 } from "@/lib/data";
 import { KpiCard } from "@/components/ui";
@@ -34,7 +34,7 @@ export default function CompararPage() {
   }
   const t = resumen.totales;
   const ant = resumen.publicacion_anterior;
-  const mes = MESES[resumen.mes_ult].toLowerCase();
+  const corte = corteDatos(resumen.mes_ult, resumen.publicacion.fecha, resumen.ano);
 
   return (
     <div className="pagina">
@@ -56,7 +56,7 @@ export default function CompararPage() {
         <KpiCard etiqueta={resumen.ano_anterior ? `Frente a ${resumen.ano_anterior.ano}` : "Año anterior"}
                  valor={resumen.ano_anterior ? fmtVariacion(t.pia_ano_ant, t.pia) : "—"}
                  nota={resumen.ano_anterior ? `Presupuesto aprobado: ${fmtSoles(t.pia_ano_ant)} → ${fmtSoles(t.pia)}` : ""} />
-        <KpiCard etiqueta={`Ejecutado a ${mes}`}
+        <KpiCard etiqueta={`Ejecutado ${corte}`}
                  valor={resumen.ano_anterior ? fmtVariacion(t.dev_ano_ant_periodo, t.devengado) : fmtSoles(t.devengado)}
                  nota={resumen.ano_anterior ? `${fmtSoles(t.devengado)} vs ${fmtSoles(t.dev_ano_ant_periodo)} a la misma fecha de ${resumen.ano_anterior.ano}` : ""} />
       </section>

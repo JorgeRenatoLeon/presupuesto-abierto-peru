@@ -5,8 +5,8 @@ Web app to make Peru's national budget (allocation, spending, execution status, 
 ## How it works
 
 ```text
-MEF file server ──HEAD (ETag/size), daily──▶ new publication?
-      │ yes: chunked download (32 MB ranges, fresh connections, resumable)
+MEF file server ──HEAD (ETag/size), daily──▶ new publication? (and last ingest ≥ 7 days ago)
+      │ yes: chunked download of the *-Diario file (8-10 GB; MEF dropped the monthly files in Oct 2026)
       ▼
 normalize: CSV (2–3 GB) ──lossless──▶ Parquet (60–90 MB/year), verified row by row and total by total
       ▼
@@ -41,8 +41,12 @@ presupuesto-app/
 1. **Hugging Face** (data storage, no credit card): create an account and a
    [write token](https://huggingface.co/settings/tokens). The dataset repo is created on the first push.
 2. **GitHub** (code, daily job, hosting): push this repo (public: free Pages and Actions minutes). Then
-   - *Settings → Secrets and variables → Actions*: secret `HF_TOKEN`; variable `HF_DATASET` = `<usuario>/presupuesto-abierto-peru`
+   - *Settings → Secrets and variables → Actions*: secret `HF_TOKEN`; `HF_DATASET` = `<usuario>/presupuesto-abierto-peru`
+     (a variable is preferable since the name is public, but a secret also works)
    - *Settings → Pages → Source*: GitHub Actions
+   - Optional, Telegram digest of each new MEF publication (free): create a bot with @BotFather, make it admin of a
+     public channel, then add secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (e.g. `@presupuestoabierto`) and
+     variable `TELEGRAM_CANAL_URL` (e.g. `https://t.me/presupuestoabierto`, linked from /metodologia)
 3. **Seed the history from this machine.** `data/lake/` already holds the 2 Jul 2026 publication, which MEF
    no longer serves — push it before the first CI run:
 
@@ -51,6 +55,25 @@ presupuesto-app/
    ```
 
 4. *Actions → Refresh budget data → Run workflow* once. From then on it runs daily at 18:30 Lima.
+
+## Cost: everything stays free
+
+- **GitHub Actions:** free for public repositories on standard hosted runners (this repo is public). If it ever
+  becomes private, GitHub Pro from the Student Pack includes 3,000 minutes and 1 GB of artifact storage per month,
+  and without a payment method GitHub blocks usage instead of charging. Expected use, under 300 min/month
+  (timings measured on GitHub runners in October 2026):
+
+  | What | When | Minutes/month |
+  |---|---|---|
+  | Check MEF (HEAD requests, tests) | daily, ~1 min | ~30 |
+  | Ingest the current year (8.3 GB file: 17 min download), rebuild, deploy | weekly (`CADENCIA_DIAS`), ~35 min | ~150 |
+  | Ingest the previous year (10.5 GB: 21 min download) | monthly, +25 min | ~25 |
+  | CI on pushes and pull requests | ~3 min each | ~60 |
+
+  `timeout-minutes: 120` caps a run against a slow MEF server; the deploy artifact (the 342 MB site) is kept 1 day.
+  To use less, raise `CADENCIA_DIAS` in `pipeline/config.py` or check fewer days in the workflow's `cron`.
+- **Hugging Face:** a free public dataset; each weekly snapshot adds ~60–80 MB (~4 GB/year).
+- **GitHub Pages:** free for public repos; the site is ~340 MB of the 1 GB limit (mostly the 2,900 entity pages).
 
 ## Pipeline (local)
 
@@ -62,18 +85,30 @@ pip install -r requirements-dev.txt
 python run.py update             # daily job: check MEF → ingest new publications → push lake → rebuild serving
 python run.py update --force     # also rebuild serving when MEF published nothing new
 python run.py update --years 2024 2023   # backfill older years (~90 MB each in the lake)
-python run.py serving            # rebuild only: aggregate → compare → alerts → validate → qa
+python run.py update --ignore-cadence     # download now even if ingested < 7 days ago (CADENCIA_DIAS)
+python run.py serving            # rebuild only: aggregate → compare → alerts → exportar → validate → qa
 python -m pytest tests -q        # tests (fixtures, no network)
 ```
 
-Other commands: `catalog` (list files on the MEF server), `download` (manual), `normalize --year Y --dataset gasto --local-file X.csv [--published "<HTTP date>"]` (ingest a local CSV as a publication), `aggregate`, `compare`, `alerts`, `validate`, `qa [--skip-external]`, `pull` / `push` (Hugging Face). Without `HF_DATASET` everything stays in `data/lake/`.
+Other commands: `catalog` (list files on the MEF server), `download` (manual), `normalize --year Y --dataset gasto --local-file X.csv [--published "<HTTP date>"]` (ingest a local CSV as a publication), `aggregate`, `compare`, `alerts`, `exportar`, `validate`, `qa [--skip-external]`, `pull` / `push` (Hugging Face). Without `HF_DATASET` everything stays in `data/lake/`.
 
 Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are monthly flows; PIA, PIM, certificado and comprometido/girado *anual* are annual stocks (never summed across months). The site uses the last two years (`ANOS_SITIO` in `config.py`); older years stay in the lake.
 
 ## What the site shows
 
+- `/` — the budget at a glance, **"¿A dónde va cada S/ 100?"**, a region picker and what to watch.
+- `/localidad/<dep>` — **"Tu región"**: what the State spends in each department and who spends it (national, regional,
+  municipal), the biggest projects and those with no progress, every municipality (searchable, sortable by execution) and
+  the department's alerts.
 - `/comparar` — **what changed**: every función (→ división → grupo), tipo de gasto (→ … → específica), tema, departamento and nivel de gobierno, compared three ways: since approval (PIA → PIM), since the previous MEF publication, and vs the previous year. "Cambio fuerte" uses the alert thresholds.
-- `/alertas` — R1 entity PIM changed ≥20% (≥S/5M) between publications · R2 slow execution · R3 PIM far from PIA · R4 category changed ≥5% (≥S/100M) between publications · R5 approved budget ≥10% (≥S/100M) different from last year. Thresholds live in `pipeline/alerts.py`.
+- `/auditar` — **"Qué vigilar"**: five signals worth checking each month (projects with no progress, the December
+  spending rush, court/arbitration payouts, sharp budget changes, entities that don't execute) and how to act: a
+  Ley 27806 information request (Portal de Transparencia Estándar) or a Contraloría complaint (gob.pe/9260).
+- `/entidad/<id>` — an executing unit's budget, monthly execution, projects (each linked to its MEF investment record by CUI) and alerts.
+- `/seguimiento` — **"Siguiendo"**: entities, regions and temas the visitor follows (☆ Seguir), kept in the browser
+  (no accounts), with alerts that are new since the last visit.
+- `/alertas` — R1 entity PIM changed ≥20% (≥S/5M) between publications · R2 slow execution · R3 PIM far from PIA · R4 category changed ≥5% (≥S/100M) between publications · R5 approved budget ≥10% (≥S/100M) different from last year · R6 project of ≥S/5M with no spending by mid-year · R7 ≥35% of last year's spending made in December. Thresholds live in `pipeline/alerts.py`. The page loads one rule's or one department's list on demand (`?regla=…&dep=…` deep links).
+- **Notifications**: RSS feeds under `/data/feeds/` (high-priority alerts, changes by tema, projects with no progress, one per department) and the optional Telegram digest.
 - **Temas** (`pipeline/etiquetas/`): e.g. *obras por contrata*, *pagos a empresas y proveedores privados (aproximado)*, *laudos arbitrales*, *locadores*. The classifier says what money pays for, not who receives it, so these are documented approximations with a confidence level.
 
 ## Status
@@ -82,16 +117,17 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Lake with one snapshot per MEF publication + budget change log; Hugging Face mirror
 - [x] Daily refresh (ETag check, chunked downloads) + GitHub Pages deploy + CI quality gates
 - [x] Comparisons (PIA→PIM, publication→publication, year→year) by función, genérica, tema, departamento, nivel
-- [x] Alert rules R1–R5 on real data (Jul→Sep 2026 and 2025→2026)
+- [x] Alert rules R1–R7 on real data (Jul→Sep 2026 and 2025→2026)
+- [x] Regions, projects with signals, audit agenda with how-to-act, watchlist, RSS + Telegram notifications
 - [x] Ingresos side, QA (coherence + Consulta Amigable reconciliation), web explorer, entity pages
-- [ ] Connect GitHub + Hugging Face (setup above) and run the first scheduled refresh
 - [ ] Deep drill-down to line level in the browser (DuckDB-WASM over the Hugging Face Parquet, ~1 MB per entity)
 - [ ] Backfill 2012–2024; who-gets-paid via OSCE/SEACE contracts; Etapa 2 (reclamos/Contraloría)
 
 Known follow-ups:
 
 - **Next.js 14 → 16.** `npm audit` flags Next 14 (fixes exist only in 16). The advisories target server features (image optimizer, server functions, middleware) that a static export doesn't run, so CI reports them without blocking.
-- `/alertas` embeds all ~3,300 alerts (2 MB HTML, 177 KB gzipped): lazy-load the long tail.
+- End-to-end browser tests (Playwright) were run by hand on real data (follow, watchlist, filters, drill-down, 375 px
+  layout); adding them to CI needs a small fixture dataset.
 - Alert thresholds are first calibrations on 2026 data, pending review with the team.
 
 Design rationale for the UI: `docs/design-notes.md`. ⚠️ Never commit `data/` or `.env`. The old `typescript-express-api/` prototype is deprecated (rotate its Cloudant credentials before any push).

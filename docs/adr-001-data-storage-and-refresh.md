@@ -76,3 +76,32 @@ MEF rewrote closed months (2,815 lines of June devengado; revenue months move by
   history between CI runs.
 - ~8 GB peak RAM to convert a full-year file: fine on GitHub's 16 GB runners for public
   repos; private repos (7 GB runners) rely on DuckDB spilling to disk.
+
+## Addendum (2026-10-18): MEF discontinued the monthly files
+
+Since mid-October 2026 the `*-Devengado-Mensual.csv` and `*-Mensual.csv` files return 404 for
+2025 and 2026, gasto and ingreso. Only the `*-Diario.csv` files remain (gasto 2026: 8.3 GB;
+2025: 10.5 GB), re-stamped every day. Measured on the 2026 file: rows for **month 0** carry each
+line's annual PIA and PIM; rows for **months 1–12** carry that month's certificado, compromiso,
+devengado and girado, with PIA = PIM = 0.
+
+The pipeline fell back to the Diario file automatically, but it read annual amounts from each
+line's latest month, so national PIA came out at S/ 42 bn instead of ~S/ 258 bn. QA caught it
+(Consulta Amigable reconciliation and `devengado <= PIM`), and the run failed without publishing.
+
+Changes:
+- Every amount of a monthly-rows source is the **sum** over the line's rows; normalization now
+  checks that every total (PIA and PIM included) matches the CSV exactly.
+- `TIPO_ACT_PROY` keeps the label (`PROYECTO`/`ACTIVIDAD`): the Diario file uses codes, and line
+  keys must match across snapshots from both formats. The canonical layout is unchanged.
+- **Cadence:** the daily job still checks MEF with HEAD requests, but downloads a dataset-year at
+  most every 7 days (previous year: 30) — `CADENCIA_DIAS`. Re-downloading ~19 GB every day would
+  burden MEF's server and add a daily snapshot to the lake.
+- A server that can't be checked now fails the run (a 404 is the only "no file"); on 2026-10-16
+  unreachable files had been treated as "nothing new".
+- Expected execution pace is the share of the year the data covers (the publication date for
+  daily files), not `month / 12`. Spending "to the same date" last year prorates that year's
+  last month by the days covered (17 Oct: 16/31 of October 2025); counting the whole month made
+  2026 look +3.8% instead of +9.0%. Pages name the real cut ("al 17 de octubre").
+- Verified on the real 17 Oct files before release: PIA identical to the 3 Sep monthly snapshot
+  (S/ 257,561,619,143.00), January–August spending within 0.004%, 99.8% of line keys matched.

@@ -30,6 +30,9 @@ Troubleshooting "no data showing":
 - `/explorar` — tabs por función / departamento / entidad, with search
 - `/comparar` — what changed: since approval (PIA→PIM), since the previous MEF publication, vs last year
 - `/comparar/[dimension]` — función, generica, etiqueta (temas), departamento, nivel: drill-down tree with search
+- `/localidad`, `/localidad/[codigo]` — "Tu región": spending by level of government, projects, municipalities, alerts
+- `/auditar` — "Qué vigilar": five monthly audit signals and how to act
+- `/seguimiento` — "Siguiendo": the visitor's watchlist (localStorage), fetching only the followed items' JSON
 - `/entidad/[id]` — one page per entity (statically generated from `public/data/entidad/*.json`)
 - `/alertas` — filterable alert feed with share/copy actions
 - `/guia` — citizen-language budget guide (PIA→PIM→devengado journey, FAQ)
@@ -39,7 +42,9 @@ Troubleshooting "no data showing":
 
 Everything under `public/data/` is produced by the pipeline (`data/serving/json/`):
 `resumen_anual`, `serie_nacional`, `por_funcion`, `por_departamento`, `top_entidades`,
-`entidades`, `entidad/<sec_ejec>`, `alertas`, `meta`, `comparar/{resumen,funcion,generica,etiqueta,departamento,nivel}`.
+`entidades`, `entidad/<sec_ejec>`, `alertas`, `meta`, `comparar/{resumen,funcion,generica,etiqueta,departamento,nivel}`,
+`localidad/{index,<codigo>}`, `auditar`, `alertas/{resumen,<REGLA>,departamento/<codigo>}`, `seguimiento/temas`, `feeds/*.xml`.
+Files the browser fetches use `urlDatos()` (lib/types.ts), which adds the GitHub Pages base path.
 A build without data works (empty states + placeholder pages), which is what CI checks.
 
 Deploy: GitHub Pages via `.github/workflows/refresh-data.yml` (sets `BASE_PATH` for project sites).

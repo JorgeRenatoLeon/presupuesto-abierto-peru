@@ -5,7 +5,9 @@ import Link from "next/link";
 import type { Alerta } from "@/lib/types";
 import { MESES } from "@/lib/types";
 
-export function AlertaCard({ alerta, enEntidad = false }: { alerta: Alerta; enEntidad?: boolean }) {
+export function AlertaCard({ alerta, enEntidad = false, nueva = false }: {
+  alerta: Alerta; enEntidad?: boolean; nueva?: boolean;
+}) {
   const [copiado, setCopiado] = useState(false);
 
   const compartir = async () => {
@@ -26,6 +28,7 @@ export function AlertaCard({ alerta, enEntidad = false }: { alerta: Alerta; enEn
   return (
     <article className={`alerta ${alerta.severidad}`}>
       <div className="cabecera">
+        {nueva ? <span className="badge nueva">Nueva</span> : null}
         <span className={`badge ${alerta.severidad}`}>{alerta.severidad === "alta" ? "Prioridad alta" : "Atención"}</span>
         {alerta.nivel ? <span className="badge neutro">{alerta.nivel}</span> : null}
         {alerta.departamento ? <span className="badge neutro">{alerta.departamento}</span> : null}

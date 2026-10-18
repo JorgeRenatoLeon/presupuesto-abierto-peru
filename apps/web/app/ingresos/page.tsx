@@ -1,7 +1,7 @@
 import {
-  load, latestYear, fmtSoles, fmtPct, MESES,
+  load, latestYear, fmtSoles, fmtPct, corteDatos, fraccionAno,
   type IngresoResumen, type IngresoPorFuente, type IngresoPorGenerica,
-  type IngresoPorNivel, type ContrasteMensual, type ResumenAnual,
+  type IngresoPorNivel, type ContrasteMensual, type ResumenAnual, type Meta,
 } from "@/lib/data";
 import { KpiCard, Lectura, ListaBarras } from "@/components/ui";
 import { GraficoContraste } from "@/components/Grafico";
@@ -19,6 +19,7 @@ export default function IngresosPage() {
   const actual = latestYear(resumenIng);
   const ano = actual?.ano;
   const avance = actual?.pim && actual.recaudado_ytd != null ? actual.recaudado_ytd / actual.pim : null;
+  const pub = load<Meta>("meta.json").publicaciones?.find((p) => p.dataset === "ingreso" && p.ano === ano);
 
   const gastoAno = resumenGasto.find((r) => r.ano === ano);
   const cobertura =
@@ -59,8 +60,8 @@ export default function IngresosPage() {
       <section className="hero">
         <h1>¿De dónde sale el dinero?{ano ? ` · ${ano}` : ""}</h1>
         <p>
-          Ingresos públicos recaudados (impuestos, canon, tasas, endeudamiento…), actualizados a{" "}
-          {MESES[actual.mes_ult].toLowerCase()}. La otra cara del gasto.
+          Ingresos públicos recaudados (impuestos, canon, tasas, endeudamiento…), actualizados{" "}
+          {corteDatos(actual.mes_ult, pub?.fecha, ano)}. La otra cara del gasto.
         </p>
       </section>
 
@@ -68,9 +69,9 @@ export default function IngresosPage() {
         <KpiCard etiqueta="Meta de ingresos (PIM)" valor={fmtSoles(actual.pim)}
                  nota="Lo que se espera recaudar este año" />
         <KpiCard etiqueta="Recaudado" valor={fmtSoles(actual.recaudado_ytd)}
-                 nota={`Acumulado a ${MESES[actual.mes_ult].toLowerCase()}`} />
+                 nota={`Acumulado ${corteDatos(actual.mes_ult, pub?.fecha, ano)}`} />
         <KpiCard etiqueta="Avance de recaudación" valor={fmtPct(avance)}
-                 nota={`Referencia calendario: ${fmtPct(actual.mes_ult / 12)}`} />
+                 nota={`Referencia calendario: ${fmtPct(fraccionAno(actual.mes_ult, pub?.fecha, ano))}`} />
         <KpiCard etiqueta="Meta inicial (PIA)" valor={fmtSoles(actual.pia)}
                  nota="Estimado al aprobar el presupuesto" />
       </section>

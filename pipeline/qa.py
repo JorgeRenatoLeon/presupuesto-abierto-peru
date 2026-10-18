@@ -26,7 +26,11 @@ from config import SERVING
 
 # --- Tolerances ---
 TOL_INTERNAL = 0.01          # absolute soles, cross-table sums must match to the centavo
-TOL_CA_REL = 0.005           # 0.5% vs Consulta Amigable (rounding/cut differences)
+TOL_CA_REL = 0.005           # 0.5% vs Consulta Amigable for PIA (fixed all year: cut-independent)
+# PIM and execution are compared with CA's *live* numbers, while our source file was cut hours or
+# days earlier (MEF's daily file, Oct 2026: devengado differed 0.83% with a one-day gap). Up to 5%
+# is reported as WARN naming the cut; more than that is a real error (PIA off by 362% on 2026-10-18).
+TOL_CA_REL_CORTE = 0.05
 TOL_GIRADO_REL = 0.02        # girado may lag devengado slightly in weird ways
 ENTITY_RANGE = (2000, 4000)  # plausible count of ejecutoras
 MAX_ENTITY_OVEREXEC_PCT = 1.0  # % of entities allowed with devengado > PIM (data quirks)
@@ -247,9 +251,13 @@ def _match(rep: Report, side: str, metric: str, ours: float | None, page_nums: l
         rep.add("consulta-amigable", f"{side} {metric}", "SKIP", "no numbers parsed from page")
         return
     rel = abs(best - ours) / ours if ours else 1.0
+    depende_del_corte = metric != "PIA"
     if rel <= TOL_CA_REL:
         rep.add("consulta-amigable", f"{side} {metric} matches CA", "PASS",
                 f"ours {ours:,.0f} ≈ CA {best:,.0f} (Δ {rel*100:.2f}%)")
+    elif depende_del_corte and rel <= TOL_CA_REL_CORTE:
+        rep.add("consulta-amigable", f"{side} {metric} matches CA", "WARN",
+                f"ours {ours:,.0f} vs CA {best:,.0f} (Δ {rel*100:.2f}%): CA is live, our MEF file was cut earlier")
     else:
         rep.add("consulta-amigable", f"{side} {metric} matches CA", "FAIL",
                 f"ours {ours:,.0f} vs closest CA number {best:,.0f} (Δ {rel*100:.2f}%) — "

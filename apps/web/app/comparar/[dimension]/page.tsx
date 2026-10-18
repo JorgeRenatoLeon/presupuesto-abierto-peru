@@ -56,7 +56,8 @@ export default function CompararDimensionPage({ params }: { params: { dimension:
             Los temas agrupan partidas del clasificador de gastos. El clasificador dice <em>en qué</em> se gasta,
             no <em>quién</em> cobra: son aproximaciones. Los temas se superponen, así que no se suman entre sí.
           </p>
-          <table className="tabla-simple">
+          <div className="tabla-scroll">
+            <table className="tabla-simple">
             <thead><tr><th>Tema</th><th>Qué incluye</th><th>Confianza</th></tr></thead>
             <tbody>
               {data.definiciones.map((d) => (
@@ -68,6 +69,7 @@ export default function CompararDimensionPage({ params }: { params: { dimension:
               ))}
             </tbody>
           </table>
+          </div>
         </section>
       ) : null}
     </div>

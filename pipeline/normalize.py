@@ -9,10 +9,11 @@ hierarchy so drill-down queries touch few row groups.
 
 Source formats, auto-detected:
 - pivoted ("devengado-mensual" / "recaudado-mensual"): already one row per line item.
-- monthly rows (gasto "diario"/"mensual" with MES_EJE; ingreso with MES_DOC): pivoted here.
-  Annual stocks (PIA, PIM, certificado, comprometido anual) take the latest month's value;
-  monthly devengado/recaudado become month columns; monthly girado is summed into
-  MONTO_GIRADO_ANUAL (monthly comprometido is not kept: nothing downstream uses it).
+- monthly rows (the *-Diario files, MEF's only source since October 2026; MES_EJE or MES_DOC):
+  pivoted here. Verified on the 2026 file (2026-10-18): month 0 rows carry each line's annual
+  PIA and PIM; rows for months 1-12 carry that month's certificado, compromiso, devengado and
+  girado (with PIA = PIM = 0). So every amount is the SUM over a line's rows; devengado /
+  recaudado also become month columns (monthly comprometido is not kept: nothing uses it).
 
 Every file is checked against its CSV before it is written: same number of line items and
 exactly the same total for every amount column.
@@ -21,7 +22,7 @@ from pathlib import Path
 
 import duckdb
 
-from config import CANON, MESES, SORT_KEYS, PARQUET_OPTS, SERVING
+from config import CANON, MESES, SORT_KEYS, PARQUET_OPTS, SERVING, TIPO_TRANSACCION
 
 SUSPICIOUS = ("√", "Ã", "â€", "Â")  # mojibake markers (UTF-8/MacRoman/latin-1 double encodings)
 DEC = "DECIMAL(18,2)"
@@ -63,15 +64,22 @@ def _detect_format(dataset: str, cols: list[str]) -> str:
     raise SystemExit(f"Unknown {dataset} schema. Columns found: {cols[:12]}...")
 
 
-def _dim_select(dims: list[str], cols: list[str]) -> str:
+def _dim_select(dataset: str, cols: list[str]) -> str:
     """Canonical dims, source order-independent; absent ones NULL (e.g. TIPO_ACT_PROY_NOMBRE)."""
     out = []
-    for c in dims:
+    codigo, nombre = TIPO_TRANSACCION[dataset]
+    for c in CANON[dataset]["dims"]:
         if c == "ANO_EJE":
             src = "ANO_EJE" if "ANO_EJE" in cols else "ANO_DOC"
             out.append(f'CAST("{src}" AS INTEGER) AS ANO_EJE')
+        elif c == "TIPO_ACT_PROY" and "TIPO_ACT_PROY_NOMBRE" in cols:
+            # Devengado-Mensual put the label here, Diario puts a code ('2'/'3'): keep the label so
+            # line keys match across snapshots from both formats
+            out.append("coalesce(nullif(trim(\"TIPO_ACT_PROY_NOMBRE\"), ''), \"TIPO_ACT_PROY\") AS \"TIPO_ACT_PROY\"")
         elif c in cols:
             out.append(f'"{c}"')
+        elif c in ("TIPO_TRANSACCION", "TIPO_TRANSACCION_NOMBRE"):
+            out.append(f"'{codigo if c == 'TIPO_TRANSACCION' else nombre}' AS \"{c}\"")
         else:
             out.append(f'CAST(NULL AS VARCHAR) AS "{c}"')
     return ", ".join(out)
@@ -88,39 +96,37 @@ def _load_pivoted(con, dataset: str, cols: list[str]) -> None:
                           + f') AS "{c}"')
         else:
             raise SystemExit(f"{dataset}: amount column {c} missing from source")
-    con.execute(f"CREATE TABLE canon AS SELECT {_dim_select(spec['dims'], cols)}, {', '.join(montos)} FROM src")
+    con.execute(f"CREATE TABLE canon AS SELECT {_dim_select(dataset, cols)}, {', '.join(montos)} FROM src")
+
+
+def _montos_mensuales(dataset: str) -> dict[str, str]:
+    """canonical annual column <- monthly-rows source column (all of them summed over the year)."""
+    if dataset == "gasto":
+        return {"MONTO_PIA": "MONTO_PIA", "MONTO_PIM": "MONTO_PIM",
+                "MONTO_CERTIFICADO_ANUAL": "MONTO_CERTIFICADO",
+                "MONTO_COMPROMETIDO_ANUAL": "MONTO_COMPROMETIDO_ANUAL",
+                "MONTO_DEVENGADO_ANUAL": "MONTO_DEVENGADO", "MONTO_GIRADO_ANUAL": "MONTO_GIRADO"}
+    return {"MONTO_PIA": "MONTO_PIA", "MONTO_PIM": "MONTO_PIM", "MONTO_RECAUDADO_ANUAL": "MONTO_RECAUDADO"}
 
 
 def _load_monthly(con, dataset: str, cols: list[str]) -> None:
     spec = CANON[dataset]
     mes = "MES_EJE" if "MES_EJE" in cols else "MES_DOC"
     flujo = spec["flujo"]
-    dims = _dim_select(spec["dims"], cols)
     codes = ", ".join(f'"{c}"' for c in spec["dims"] if not c.endswith("_NOMBRE"))
     # line item = its codes; a name renamed mid-year takes its latest month's value
     dim_out = ", ".join(f'arg_max("{c}", mes) AS "{c}"' if c.endswith("_NOMBRE") else f'"{c}"'
                         for c in spec["dims"])
-    if dataset == "gasto":
-        stocks = {"MONTO_PIA": "MONTO_PIA", "MONTO_PIM": "MONTO_PIM",
-                  "MONTO_CERTIFICADO_ANUAL": "MONTO_CERTIFICADO",
-                  "MONTO_COMPROMETIDO_ANUAL": "MONTO_COMPROMETIDO_ANUAL"}
-        extra_flows = {"MONTO_GIRADO_ANUAL": "MONTO_GIRADO"}
-    else:
-        stocks = {"MONTO_PIA": "MONTO_PIA", "MONTO_PIM": "MONTO_PIM"}
-        extra_flows = {}
-    per_month = ", ".join(
-        [f'sum(CAST("{s}" AS {DEC})) AS "{s}"' for s in stocks.values()]
-        + [f'sum(CAST("{flujo}" AS {DEC})) AS "{flujo}"']
-        + [f'sum(CAST("{f}" AS {DEC})) AS "{f}"' for f in extra_flows.values()])
+    montos = _montos_mensuales(dataset)
+    fuentes = sorted(set(montos.values()))
     pivot = ", ".join(
-        [f'arg_max("{src}", mes) AS "{dst}"' for dst, src in stocks.items()]
+        [f'sum("{src}") AS "{dst}"' for dst, src in montos.items() if dst != f"{flujo}_ANUAL"]
         + [f'coalesce(sum("{flujo}") FILTER (mes = {i + 1}), 0) AS "{flujo}_{m}"' for i, m in enumerate(MESES)]
-        + [f'sum("{flujo}") AS "{flujo}_ANUAL"']
-        + [f'sum("{src}") AS "{dst}"' for dst, src in extra_flows.items()])
-    # 1) collapse duplicate rows within a month (stocks add up within a month), 2) pivot months
+        + [f'sum("{flujo}") AS "{flujo}_ANUAL"'])
     con.execute(f"""
         CREATE TABLE canon AS
-        WITH m AS (SELECT {dims}, CAST("{mes}" AS INTEGER) AS mes, {per_month} FROM src GROUP BY ALL)
+        WITH m AS (SELECT {_dim_select(dataset, cols)}, CAST("{mes}" AS INTEGER) AS mes,
+                          {', '.join(f'CAST("{c}" AS {DEC}) AS "{c}"' for c in fuentes)} FROM src)
         SELECT {dim_out}, {pivot} FROM m GROUP BY {codes}""")
 
 
@@ -132,13 +138,10 @@ def _verify(con, dataset: str, cols: list[str], fmt: str) -> dict:
         n_src = con.execute("SELECT count(*) FROM src").fetchone()[0]
         checks = [c for c in spec["montos"] if c in cols]
         pairs = {c: c for c in checks}
-    else:  # monthly rows: compare flows only (stocks are repeated per month in the source)
-        mes = "MES_EJE" if "MES_EJE" in cols else "MES_DOC"
+    else:  # monthly rows: every amount is a sum over the line's rows, so all totals must match
         key = ", ".join(f'"{c}"' for c in spec["dims"] if c in cols and not c.endswith("_NOMBRE") and c != "ANO_EJE")
         n_src = con.execute(f"SELECT count(*) FROM (SELECT DISTINCT {key} FROM src)").fetchone()[0]
-        pairs = {f"{spec['flujo']}_ANUAL": spec["flujo"]}
-        if dataset == "gasto" and "MONTO_GIRADO" in cols:
-            pairs["MONTO_GIRADO_ANUAL"] = "MONTO_GIRADO"
+        pairs = {dst: src for dst, src in _montos_mensuales(dataset).items() if src in cols}
     if n_canon != n_src:
         raise SystemExit(f"{dataset}: {n_canon:,} canonical line items vs {n_src:,} in the CSV")
     totals = {}
@@ -149,7 +152,7 @@ def _verify(con, dataset: str, cols: list[str], fmt: str) -> dict:
             raise SystemExit(f"{dataset}: total {canon_col} differs from CSV ({b} vs {a}); "
                              f"amounts with more than 2 decimals?")
         totals[canon_col] = str(b)
-    for c in spec["montos"]:  # also record totals of columns not compared (stocks of monthly sources)
+    for c in spec["montos"]:  # record the remaining columns too (month columns, derived annuals)
         totals.setdefault(c, str(con.execute(f'SELECT sum("{c}") FROM canon').fetchone()[0] or 0))
     return {"rows": n_canon, "totals": totals}
 

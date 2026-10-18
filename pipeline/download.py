@@ -28,8 +28,11 @@ class SourceChanged(Exception):
 
 
 def head(name: str) -> dict | None:
-    """File metadata from the MEF server, or None if it doesn't exist."""
+    """File metadata from the MEF server, or None if it doesn't exist (404).
+    Anything else (timeouts, 5xx, blocked IPs) raises after retries: "couldn't check" must
+    never look like "no file" (on 2026-10-16 that turned a failed run into a silent success)."""
     url = f"{BASE_URL}/{name}"
+    ultimo = None
     for attempt in range(RETRIES):
         try:
             r = requests.head(url, timeout=TIMEOUT, allow_redirects=True, headers={"Connection": "close"})
@@ -44,17 +47,21 @@ def head(name: str) -> dict | None:
                 }
             if r.status_code == 404:
                 return None
-        except requests.RequestException:
-            pass
+            ultimo = f"HTTP {r.status_code}"
+        except requests.RequestException as e:
+            ultimo = str(e)
         time.sleep(2 ** attempt)
-    return None
+    raise IOError(f"MEF server: could not check {name} after {RETRIES} attempts ({ultimo})")
 
 
 def resolve_source(dataset: str, year: int, prefer_diario: bool = False) -> dict | None:
     """First existing file (in preference order) for a dataset-year, with its metadata."""
-    for name in source_files(dataset, year, prefer_diario):
+    candidatos = source_files(dataset, year, prefer_diario)
+    for name in candidatos:
         info = head(name)
         if info:
+            if name != candidatos[0]:
+                print(f"  note: {candidatos[0]} not on the server; using {name}")
             return info
     return None
 
@@ -66,7 +73,11 @@ def catalog(years: list[int]) -> dict:
         n for y in years for n in candidate_files(y) + ingreso_candidate_files(y)
     ]
     for name in names:
-        info = head(name)
+        try:
+            info = head(name)
+        except IOError as e:
+            print(f"  ERROR {e}")
+            continue
         if info:
             result["files"][name] = info
             print(f"  FOUND {name}  {info['size']/1e6:.1f} MB  (modified {info['last_modified']})")

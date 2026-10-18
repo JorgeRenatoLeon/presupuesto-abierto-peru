@@ -11,3 +11,4 @@ apps/web/public/data/
 .DS_Store
 *.duckdb
 *.duckdb.wal
+*.tsbuildinfo

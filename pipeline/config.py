@@ -26,6 +26,12 @@ DICTIONARY_FILE = "Gastos_Diccionario.csv"
 DICTIONARY_FILE_INGRESOS = "Ingresos_Diccionario.csv"
 
 
+# Since October 2026 MEF publishes only the *-Diario files (gasto: 8-10 GB, re-stamped daily);
+# the *-Devengado-Mensual / *-Mensual files return 404. The daily job is a few HEAD requests;
+# a dataset-year is downloaded again only after this many days since its last ingest.
+CADENCIA_DIAS = {"actual": 7, "anterior": 30}
+
+
 def source_files(dataset: str, year: int, prefer_diario: bool = False) -> list[str]:
     """The single source file per dataset-year, in order of preference (first existing wins)."""
     if dataset == "gasto":
@@ -97,6 +103,9 @@ INGRESO_DIMS = [
 INGRESO_MONTOS = (
     ["MONTO_PIA", "MONTO_PIM"] + [f"MONTO_RECAUDADO_{m}" for m in MESES] + ["MONTO_RECAUDADO_ANUAL"]
 )
+# Constant per dataset; some sources omit the column (the Ingreso-Diario file), but it is part
+# of the line key and of classifier paths, so it is filled in rather than left NULL.
+TIPO_TRANSACCION = {"gasto": ("2", "GASTOS PRESUPUESTARIOS"), "ingreso": ("1", "INGRESOS PRESUPUESTARIOS")}
 CANON = {
     "gasto": {"dims": GASTO_DIMS, "montos": GASTO_MONTOS, "flujo": "MONTO_DEVENGADO"},
     "ingreso": {"dims": INGRESO_DIMS, "montos": INGRESO_MONTOS, "flujo": "MONTO_RECAUDADO"},

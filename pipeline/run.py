@@ -4,7 +4,7 @@ Daily job (what CI runs):
   python run.py update     pull lake -> check MEF -> ingest new publications -> push lake -> rebuild serving
 
 Individual steps:
-  catalog | download | normalize | aggregate | compare | alerts | validate | qa | serving | pull | push | all
+  catalog | download | normalize | aggregate | compare | alerts | exportar | validate | qa | serving | pull | push | all
 """
 import argparse
 import datetime
@@ -17,7 +17,7 @@ from pathlib import Path
 def main() -> None:
     p = argparse.ArgumentParser(description="Presupuesto Peru ETL")
     p.add_argument("command", choices=["update", "serving", "catalog", "download", "normalize", "aggregate",
-                                        "compare", "alerts", "validate", "qa", "pull", "push", "all"])
+                                        "compare", "alerts", "exportar", "validate", "qa", "pull", "push", "all"])
     p.add_argument("--year", type=int)
     p.add_argument("--years", type=int, nargs="+")
     p.add_argument("--dataset", choices=["gasto", "ingreso", "ambos"], default="ambos",
@@ -31,6 +31,8 @@ def main() -> None:
     p.add_argument("--keep-raw", action="store_true", help="update: keep downloaded CSVs in data/raw/incoming")
     p.add_argument("--force", action="store_true", help="update: rebuild serving even if MEF published nothing new")
     p.add_argument("--no-push", action="store_true", help="update: don't push the lake to Hugging Face")
+    p.add_argument("--ignore-cadence", action="store_true",
+                   help="update: download a re-published file even if ingested less than CADENCIA_DIAS ago")
     p.add_argument("--strict", action="store_true", help="QA: fail if Consulta Amigable is unreachable")
     p.add_argument("--skip-external", action="store_true", help="QA: coherence checks only (no network)")
     args = p.parse_args()
@@ -62,6 +64,9 @@ def main() -> None:
     elif args.command == "alerts":
         from alerts import compute_alerts
         compute_alerts()
+    elif args.command == "exportar":
+        from exportar import exportar
+        exportar()
     elif args.command == "validate":
         if not _validate(args.year or _current_year(), datasets):
             raise SystemExit(1)
@@ -88,7 +93,7 @@ def _update(args, datasets: list[str], force: bool) -> None:
     today = datetime.date.today()
     years = args.years or ([args.year] if args.year else [today.year, today.year - 1])
     print(f"Checking MEF for {datasets} {years}")
-    nuevas = update(years, datasets, keep_raw=args.keep_raw)
+    nuevas = update(years, datasets, keep_raw=args.keep_raw, ignorar_cadencia=args.ignore_cadence)
     if nuevas and not args.no_push:
         # capture the snapshot first: MEF overwrites its files, the site can be rebuilt later
         files = []
@@ -102,6 +107,19 @@ def _update(args, datasets: list[str], force: bool) -> None:
         _serving(args)
     else:
         print("No new MEF publications: serving layer left as is (use --force to rebuild).")
+    if nuevas:
+        _notificar()
+
+
+def _notificar() -> None:
+    """Optional Telegram digest of the new publication; a failure here never fails the run."""
+    from config import SERVING
+    from notify import notificar
+    try:
+        notificar(json.loads((SERVING / "json" / "alertas.json").read_text()),
+                  json.loads((SERVING / "json" / "comparar" / "resumen.json").read_text()))
+    except Exception as e:  # noqa: BLE001 - notifications are best effort
+        print(f"  WARN telegram: {e}")
 
 
 def _serving(args) -> None:
@@ -109,11 +127,13 @@ def _serving(args) -> None:
     from aggregate import aggregate
     from alerts import compute_alerts
     from compare import compare
+    from exportar import exportar
     from qa import qa
 
     aggregate()
     compare()
     compute_alerts()
+    exportar()
     year = _current_year()
     ok = _validate(year, ["gasto", "ingreso"])
     ok &= qa(year, strict=args.strict, skip_external=args.skip_external)

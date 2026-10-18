@@ -45,6 +45,14 @@ const FAQ = [
     a: "El dinero no usado del año generalmente regresa al tesoro público. La entidad 'devuelve' presupuesto: servicios u obras que la población esperaba y no llegaron. Por eso la ejecución lenta es una señal de alerta ciudadana.",
   },
   {
+    q: "¿Qué es un proyecto de inversión y cómo sé si avanza?",
+    a: "Es una obra o mejora de un servicio (una carretera, un colegio, un sistema de agua) con un código único, el CUI. Cada proyecto tiene su ficha oficial en el Sistema de Seguimiento de Inversiones del MEF. Aquí marcamos los que tienen S/ 1 millón o más y, a mitad de año, no registran ningún gasto: es una buena pregunta para la entidad, no una prueba de que algo esté mal.",
+  },
+  {
+    q: "Encontré algo raro. ¿Qué puedo hacer?",
+    a: "Pide la información a la entidad: por la Ley de Transparencia (Ley N.º 27806) debe responderte en 10 días hábiles. Si sospechas de un uso irregular del dinero, puedes denunciarlo ante la Contraloría, gratis y de forma anónima. En la sección «Vigilar» están los enlaces y las señales que vale la pena revisar cada mes.",
+  },
+  {
     q: "¿De dónde salen estos datos?",
     a: "Del portal oficial de Datos Abiertos del Ministerio de Economía y Finanzas (MEF), los mismos datos de la Consulta Amigable. No modificamos las cifras; solo las organizamos e interpretamos.",
   },

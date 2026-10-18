@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { ComparacionDimension, ComparacionResumen, Medida, NodoComparacion } from "@/lib/types";
-import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, MESES } from "@/lib/types";
+import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos } from "@/lib/types";
+import { SeguirBoton } from "@/components/SeguirBoton";
 
 type Modo = "aprobado" | "publicacion" | "anual";
 type Orden = "cambio" | "monto";
@@ -15,12 +16,15 @@ const UMBRAL: Record<Modo, { pct: number; soles: number }> = {
   anual: { pct: 0.1, soles: 100e6 },
 };
 
+/** Top-level rows that can be followed in /seguimiento (pipeline exportar._temas + localidad). */
+const SEGUIBLE: Record<string, boolean> = { funcion: true, etiqueta: true, departamento: true };
+
 /** accent-insensitive match: "educacion" finds "EDUCACIÓN" */
 const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
 export function Comparador({ data, resumen }: { data: ComparacionDimension; resumen: ComparacionResumen }) {
   const ant = resumen.publicacion_anterior;
-  const mes = MESES[resumen.mes_ult]?.toLowerCase() ?? "";
+  const corte = corteDatos(resumen.mes_ult, resumen.publicacion.fecha, resumen.ano);
   const modos = useMemo(() => {
     const m: { id: Modo; etiqueta: string; antes: Medida; despues: Medida; rotuloAntes: string;
                rotuloDespues: string; contexto: string; disponible: boolean }[] = [
@@ -36,10 +40,10 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
       { id: "anual", etiqueta: resumen.ano_anterior ? `Frente a ${resumen.ano_anterior.ano}` : "Año anterior",
         antes: "pia_ano_ant", despues: "pia",
         rotuloAntes: `Aprobado ${resumen.ano - 1}`, rotuloDespues: `Aprobado ${resumen.ano}`, disponible: !!resumen.ano_anterior,
-        contexto: `Presupuesto aprobado (PIA) de ${resumen.ano} frente al de ${resumen.ano - 1}, y gasto ejecutado de enero a ${mes} de cada año. Soles corrientes: no descuentan la inflación.` },
+        contexto: `Presupuesto aprobado (PIA) de ${resumen.ano} frente al de ${resumen.ano - 1}, y gasto ejecutado de enero ${corte} de cada año. Soles corrientes: no descuentan la inflación.` },
     ];
     return m;
-  }, [resumen, ant, mes]);
+  }, [resumen, ant, corte]);
 
   const [modoId, setModoId] = useState<Modo>(ant ? "publicacion" : "aprobado");
   const [orden, setOrden] = useState<Orden>("cambio");
@@ -105,6 +109,11 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
               <span className="nombre">
                 {n.nombre}
                 {fuerte(n) ? <span className="badge alta" style={{ marginLeft: 8 }}>cambio fuerte</span> : null}
+                {n.nivel === 1 && SEGUIBLE[data.dimension] ? (
+                  <SeguirBoton compacto item={data.dimension === "departamento"
+                    ? { tipo: "departamento", id: n.id, nombre: n.nombre }
+                    : { tipo: "tema", id: n.id, nombre: n.nombre, dimension: data.dimension }} />
+                ) : null}
               </span>
               <span className={`cmp-delta ${d > 0 ? "sube" : d < 0 ? "baja" : ""}`}>
                 {fmtDelta(d)} <small>{fmtVariacion(n[modo.antes], n[modo.despues])}</small>
@@ -117,7 +126,7 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
             </div>
             {modoId === "anual" && (n.dev_ano_ant_periodo != null || n.devengado != null) ? (
               <div className="detalle">
-                <span>Ejecutado ene–{mes.slice(0, 3)}</span>
+                <span>Ejecutado {corte}</span>
                 <span>{fmtSoles(n.dev_ano_ant_periodo)} → {fmtSoles(n.devengado)} ({fmtVariacion(n.dev_ano_ant_periodo, n.devengado)})</span>
               </div>
             ) : null}
