@@ -261,3 +261,76 @@ a.reparto-fila:hover .nombre { color: var(--rojo); }
 /* Tables keep their columns and scroll inside their card on narrow screens */
 .tabla-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .tabla-simple td { overflow-wrap: anywhere; }
+
+/* --- Explanations, breakdowns, places (functional base; restyled with the visual world) --- */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.boton-explicar { margin-left: 8px; min-width: 24px; height: 24px; border-radius: 12px; border: 1px solid var(--borde);
+  background: var(--tarjeta); color: var(--tinta); font-weight: 700; font-size: 13px; cursor: pointer; padding: 0 7px; }
+.boton-explicar.activo { background: var(--tinta); color: #fff; }
+.sr-solo-movil { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.explica { margin: 8px 0 12px; padding: 14px; background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px; font-size: 14px; }
+.explica.cargando { color: var(--texto-suave); }
+.explica-simple { margin-bottom: 10px; color: var(--tinta); }
+.explica-ejemplos { color: var(--texto); }
+.explica-oficial { border-left: 3px solid var(--tinta); padding-left: 12px; margin: 0 0 12px; }
+.explica-oficial footer { font-size: 12px; color: var(--texto-suave); margin-top: 4px; }
+.explica-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.explica h4, .desglose-panel h4 { font-size: 13px; margin: 8px 0 6px; color: var(--tinta); }
+.explica-lista { list-style: none; display: grid; gap: 6px; }
+.explica-lista li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.explica-item { min-width: 0; overflow-wrap: anywhere; }
+.explica-item::first-letter { text-transform: uppercase; }
+.explica-item.enlace { text-decoration: underline; text-underline-offset: 2px; }
+.cifra { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; color: var(--tinta); }
+.cifra small { font-weight: 400; color: var(--texto-suave); }
+.etiqueta-tipo { display: inline-block; font-size: 11px; font-weight: 700; margin-right: 6px; padding: 0 5px; border: 1px solid var(--borde); border-radius: 4px; }
+.etiqueta-tipo.proyecto { border-color: var(--tinta); }
+.explica-pie { font-size: 12px; color: var(--texto-suave); margin-top: 8px; }
+.desglose { list-style: none; display: grid; gap: 4px; }
+.desglose-fila { width: 100%; text-align: left; background: none; border: 0; padding: 8px 0; cursor: pointer; display: grid; gap: 4px; font: inherit; color: inherit; }
+.desglose-fila .linea1, .desglose-fila .detalle { display: flex; justify-content: space-between; gap: 8px; }
+.desglose-fila .detalle { font-size: 12px; color: var(--texto-suave); }
+.desglose-accion { text-decoration: underline; }
+.desglose-fila .barra, .ranking .barra, .avance-mini .barra { display: block; height: 6px; background: var(--borde); border-radius: 3px; overflow: hidden; }
+.desglose-fila .barra > span, .ranking .barra > span, .avance-mini .barra > span { display: block; height: 100%; background: var(--tinta); }
+.desglose-panel { padding: 4px 0 12px; }
+.migas ol { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 13px; }
+.migas li + li::before { content: "›"; margin-right: 6px; color: var(--texto-suave); }
+.migas a { color: var(--rojo); font-weight: 600; }
+.migas a[aria-current] { color: var(--tinta); }
+.ranking { list-style: none; display: grid; gap: 6px; }
+.ranking li { display: grid; grid-template-columns: minmax(0, 1fr) 2fr auto; gap: 10px; align-items: center; font-size: 14px; }
+.ranking li.propio { font-weight: 700; }
+.provincias, .distritos { list-style: none; display: grid; gap: 8px; }
+.provincias a { display: grid; padding: 10px 12px; border: 1px solid var(--borde); border-radius: 10px; }
+.provincias .detalle { font-size: 13px; color: var(--texto-suave); }
+.distritos > li { border-top: 1px solid var(--borde); padding-top: 10px; scroll-margin-top: 80px; }
+.distrito-cab { display: flex; justify-content: space-between; align-items: baseline; }
+.distrito-cab h3 { font-size: 16px; color: var(--tinta); }
+.ubigeo { font-size: 12px; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.distrito-muni { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 8px 0; }
+.distrito-muni .avance-mini, .distrito-senales { grid-column: 1 / -1; }
+.avance-mini { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.distrito-senales { display: flex; gap: 6px; flex-wrap: wrap; }
+.distrito-otras summary { font-size: 13px; color: var(--texto-suave); cursor: pointer; }
+.distrito-otras ul { list-style: none; display: grid; gap: 4px; margin-top: 6px; font-size: 14px; }
+.distrito-otras li { display: flex; justify-content: space-between; gap: 8px; }
+.nota-fuente { font-size: 12px; color: var(--texto-suave); margin: 24px 0; }
+.busca-etiqueta { display: block; font-weight: 700; color: var(--tinta); margin-bottom: 6px; }
+.busca-resultados { list-style: none; margin-top: 8px; display: grid; gap: 4px; }
+.busca-resultados li { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--borde); }
+.busca-resultados li > a:first-child { display: grid; padding: 8px 0; min-width: 0; }
+.busca-resultados .detalle { font-size: 13px; color: var(--texto-suave); }
+.busca-prov { font-size: 13px; color: var(--rojo); white-space: nowrap; }
+.busca-vacio { font-size: 14px; color: var(--texto-suave); margin-top: 8px; }
+.glosario { display: grid; gap: 14px; }
+.glosario dt { font-weight: 700; color: var(--tinta); }
+.glosario .simple { color: var(--tinta); }
+.glosario .oficial { font-size: 14px; color: var(--texto-suave); }
+.glosario .codigo { font-variant-numeric: tabular-nums; color: var(--texto-suave); font-weight: 400; margin-right: 4px; }
+.indice-glosario { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 12px; font-size: 14px; }
+.indice-glosario a { color: var(--rojo); font-weight: 600; }
+.desglose summary { list-style: none; }
+.desglose summary::-webkit-details-marker { display: none; }
+.desglose details[open] .desglose-accion { visibility: hidden; }
+.enlace-explicar { background: none; border: 0; padding: 4px 0; font: inherit; font-size: 13px; color: var(--rojo); font-weight: 600; cursor: pointer; text-decoration: underline; }

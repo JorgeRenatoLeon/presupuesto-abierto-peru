@@ -20,11 +20,13 @@ from xml.sax.saxutils import escape
 
 import duckdb
 
+from compare import ES_PROYECTO
 from config import SERVING
 from lake import register_views
 
 DEPARTAMENTOS = "BETWEEN '01' AND '25'"  # '0' = no location, '98' = abroad
 TOP_OBRAS_ENTIDAD = 40
+TOP_ITEMS_FUNCION = 5  # an entity's largest activities/projects shown under each of its funciones
 
 
 def _records(df):
@@ -64,7 +66,8 @@ def exportar() -> None:
     deps = _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, any_value(DEPARTAMENTO_META_NOMBRE) AS nombre
                          FROM gasto_wide WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS}
                          GROUP BY 1 ORDER BY 1""", [ano])
-    _localidad(con, out, alertas, resumen, ano, deps, tiene_obras)
+    entidades = _localidad(con, out, alertas, resumen, ano, deps, tiene_obras)
+    _provincias(con, out, alertas, resumen, ano, entidades, tiene_obras)
     _auditar(con, out, alertas, resumen, ano, tiene_obras)
     _alertas_por_grupo(out, alertas, deps)
     _temas(con, out)
@@ -90,6 +93,7 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
         SELECT e.sec_ejec, any_value(e.nombre) AS nombre, any_value(e.nivel_nombre) AS nivel,
                any_value(e.dept_nombre) AS dept, any_value(e.pliego_nombre) AS pliego,
                any_value(e.prov_nombre) AS prov, any_value(e.dist_nombre) AS dist,
+               any_value(e.dept || e.prov || e.dist) AS ubigeo,
                any_value(y.dev) AS devengado, any_value(y.pim) AS pim
         FROM dim_entidad e LEFT JOIN ytd y USING (sec_ejec)
         GROUP BY e.sec_ejec ORDER BY any_value(y.dev) DESC NULLS LAST
@@ -102,15 +106,25 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
         "SELECT sec_ejec, ano, mes, pia, pim, devengado FROM fact_entidad_mes ORDER BY ano, mes"
     ).fetchdf()
     funciones = con.execute("""
-        SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, FUNCION_NOMBRE AS funcion,
+        SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, FUNCION AS codigo, any_value(FUNCION_NOMBRE) AS funcion,
                SUM(MONTO_DEVENGADO) AS devengado
         FROM gasto GROUP BY 1, 2, 3
     """).fetchdf()
     genericas = con.execute("""
-        SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, GENERICA_NOMBRE AS generica,
-               SUM(MONTO_DEVENGADO) AS devengado
+        SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, TIPO_TRANSACCION || '.' || GENERICA AS codigo,
+               any_value(GENERICA_NOMBRE) AS generica, SUM(MONTO_DEVENGADO) AS devengado
         FROM gasto GROUP BY 1, 2, 3
     """).fetchdf()
+    # what each entity itself pays for inside each función: its largest activities and projects
+    items = con.execute(f"""
+        SELECT SEC_EJEC AS sec_ejec, FUNCION AS funcion, any_value(item) AS nombre, tipo,
+               sum(CAST(MONTO_PIM AS DOUBLE)) AS pim, sum(CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE)) AS devengado
+        FROM (SELECT *, CASE WHEN {ES_PROYECTO} THEN 'proyecto' ELSE 'actividad' END AS tipo,
+                     CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO_NOMBRE ELSE ACTIVIDAD_ACCION_OBRA_NOMBRE END AS item
+              FROM gasto_wide WHERE ANO_EJE = (SELECT max(ANO_EJE) FROM gasto_wide))
+        WHERE item IS NOT NULL GROUP BY SEC_EJEC, FUNCION, item, tipo
+        QUALIFY row_number() OVER (PARTITION BY SEC_EJEC, FUNCION ORDER BY pim DESC, item) <= {TOP_ITEMS_FUNCION}
+        ORDER BY sec_ejec, funcion, pim DESC""").fetchdf()
     obras = con.execute(f"""SELECT sec_ejec, cui, nombre, funcion, dept_nombre AS dept, pim, devengado,
                                    pim_pub_ant, dev_ano_ant, senal FROM obras ORDER BY pim DESC NULLS LAST"""
                         ).fetchdf() if tiene_obras else None
@@ -121,6 +135,9 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
     f_groups = dict(tuple(funciones.sort_values(["devengado", "funcion"], ascending=[False, True]).groupby("sec_ejec")))
     g_groups = dict(tuple(genericas.sort_values(["devengado", "generica"], ascending=[False, True]).groupby("sec_ejec")))
     o_groups = dict(tuple(obras.groupby("sec_ejec"))) if obras is not None else {}
+    i_groups: dict[str, dict[str, list]] = {}
+    for r in _records(items):
+        i_groups.setdefault(r.pop("sec_ejec"), {}).setdefault(r.pop("funcion"), []).append(r)
     a_groups: dict[str, list] = {}
     for a in alertas:
         if a.get("sec_ejec"):
@@ -135,8 +152,9 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
         payload = {
             "info": ent,
             "series": _records(s.drop(columns=["sec_ejec"])),
-            "funciones": _records(f.drop(columns=["sec_ejec"]).head(10)),
-            "genericas": _records(g.drop(columns=["sec_ejec"]).head(10)),
+            "funciones": _records(f.drop(columns=["sec_ejec"]).groupby("ano").head(12)),
+            "items": i_groups.get(sec, {}),
+            "genericas": _records(g.drop(columns=["sec_ejec"]).groupby("ano").head(10)),
             "obras": _records(o.drop(columns=["sec_ejec"]).head(TOP_OBRAS_ENTIDAD)) if o is not None else [],
             "n_obras": 0 if o is None else len(o),
             "alertas": a_groups.get(sec, [])[:10],
@@ -147,7 +165,7 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
 
 # --- departments ("Tu región") ------------------------------------------------------
 
-def _localidad(con, out, alertas, resumen, ano: int, deps: list[dict], tiene_obras: bool) -> None:
+def _localidad(con, out, alertas, resumen, ano: int, deps: list[dict], tiene_obras: bool) -> list[dict]:
     loc = out / "localidad"
     nombre_a_codigo = {d["nombre"].strip().upper(): d["codigo"] for d in deps}
 
@@ -159,8 +177,8 @@ def _localidad(con, out, alertas, resumen, ano: int, deps: list[dict], tiene_obr
                                  sum(MONTO_DEVENGADO_ANUAL) devengado FROM gasto_wide
                             WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS} GROUP BY 1, 2 ORDER BY pim DESC""", [ano]):
         por_nivel.setdefault(r.pop("codigo"), []).append(r)
-    for r in _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, FUNCION_NOMBRE AS funcion, sum(MONTO_PIM) pim,
-                                 sum(MONTO_DEVENGADO_ANUAL) devengado FROM gasto_wide
+    for r in _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, FUNCION AS id, any_value(FUNCION_NOMBRE) AS funcion,
+                                 sum(MONTO_PIM) pim, sum(MONTO_DEVENGADO_ANUAL) devengado FROM gasto_wide
                             WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS} GROUP BY 1, 2 ORDER BY pim DESC""", [ano]):
         por_funcion.setdefault(r.pop("codigo"), []).append(r)
     cambios = {r["id"]: r for r in _rows(con, """SELECT id, pim_pub_ant, pia_ano_ant, pim_ano_ant, dev_ano_ant_periodo
@@ -178,6 +196,7 @@ def _localidad(con, out, alertas, resumen, ano: int, deps: list[dict], tiene_obr
         WITH u AS (SELECT sec_ejec, max(mes) m FROM fact_entidad_mes WHERE ano = ? GROUP BY 1)
         SELECT e.sec_ejec, any_value(e.nombre) nombre, any_value(e.nivel) nivel, any_value(e.dept) dept,
                any_value(e.prov_nombre) provincia, any_value(e.dist_nombre) distrito,
+               any_value(e.prov) prov, any_value(e.dist) dist,
                sum(f.pim) FILTER (f.mes = u.m) pim, sum(f.devengado) devengado
         FROM fact_entidad_mes f JOIN u USING (sec_ejec) JOIN dim_entidad e USING (sec_ejec)
         WHERE f.ano = ? GROUP BY e.sec_ejec""", [ano, ano])
@@ -217,6 +236,7 @@ def _localidad(con, out, alertas, resumen, ano: int, deps: list[dict], tiene_obr
             "municipalidades": sorted([e for e in ents if e["nivel"] == "M"],
                                       key=lambda e: ((e["provincia"] or ""), -(e["pim"] or 0))),
             "nacional_con_sede": [e for e in ents if e["nivel"] == "E"][:15],
+            "provincias": _provincias_de(ents),
             "obras": {"n": len(obs), "n_sin_avance": len(sin_avance),
                       "pim_sin_avance": sum(o["pim"] or 0 for o in sin_avance),
                       "top": obs[:15], "sin_avance": sin_avance[:20]},
@@ -232,6 +252,102 @@ def _localidad(con, out, alertas, resumen, ano: int, deps: list[dict], tiene_obr
                        "n_sin_avance": len(sin_avance), "alertas_alta": payload["alertas"]["alta"]})
     _write(loc / "index.json", indice)
     print(f"  json: localidad/*.json ({len(indice)} departamentos)")
+    return entidades
+
+
+# --- provinces and districts ("Tu municipalidad") -------------------------------------
+
+def _es_municipalidad(e: dict) -> bool:
+    return e["nivel"] == "M" and (e["nombre"] or "").upper().startswith("MUNICIPALIDAD")
+
+
+def _provincias_de(ents: list[dict]) -> list[dict]:
+    """A department's provinces, for its page: totals of the entities based there."""
+    provs: dict[str, dict] = {}
+    for e in ents:
+        if not e.get("prov") or not (e["prov"] or "").strip():
+            continue
+        p = provs.setdefault(e["prov"], {"codigo": e["dept"] + e["prov"], "nombre": e["provincia"],
+                                         "pim": 0.0, "devengado": 0.0, "n_municipalidades": 0})
+        p["pim"] += e["pim"] or 0
+        p["devengado"] += e["devengado"] or 0
+        p["n_municipalidades"] += _es_municipalidad(e)
+    return sorted(provs.values(), key=lambda p: p["codigo"])
+
+
+def _provincias(con, out, alertas, resumen, ano: int, entidades: list[dict], tiene_obras: bool) -> None:
+    """localidad/prov/<dep><prov>.json: every district of a province with its municipality and the
+    other entities based there, plus localidad/distritos.json, the index behind "busca tu
+    municipalidad". Location is the executing unit's seat (MEF has no district of destination)."""
+    loc = out / "localidad"
+    por_prov: dict[str, list[dict]] = {}
+    for e in entidades:
+        if (e.get("dept") or "") >= "01" and (e.get("dept") or "") <= "25" and (e.get("prov") or "").strip():
+            por_prov.setdefault(e["dept"] + e["prov"], []).append(e)
+    por_funcion: dict[str, list] = {}
+    for r in _rows(con, f"""SELECT DEPARTAMENTO_EJECUTORA || PROVINCIA_EJECUTORA AS codigo, FUNCION AS id,
+                                   any_value(FUNCION_NOMBRE) AS funcion, sum(MONTO_PIM) pim,
+                                   sum(MONTO_DEVENGADO_ANUAL) devengado
+                            FROM gasto_wide WHERE ANO_EJE = ? GROUP BY 1, 2 ORDER BY pim DESC""", [ano]):
+        por_funcion.setdefault(r.pop("codigo"), []).append(r)
+    obras_ent: dict[str, list] = {}
+    if tiene_obras:
+        for r in _rows(con, """SELECT sec_ejec, cui, nombre, entidad, funcion, pim, devengado, pim_pub_ant,
+                                      dev_ano_ant, senal FROM obras ORDER BY pim DESC"""):
+            obras_ent.setdefault(r["sec_ejec"], []).append(r)
+    alertas_ent: dict[str, list] = {}
+    for a in alertas:
+        if a.get("sec_ejec"):
+            alertas_ent.setdefault(a["sec_ejec"], []).append(a)
+
+    indice = []
+    for codigo, ents in sorted(por_prov.items()):
+        ents = sorted(ents, key=lambda e: -(e["pim"] or 0))
+        distritos: dict[str, dict] = {}
+        for e in ents:
+            d = distritos.setdefault(e["dist"], {"ubigeo": codigo + e["dist"], "nombre": e["distrito"],
+                                                 "municipalidad": None, "otras": []})
+            if _es_municipalidad(e) and d["municipalidad"] is None:
+                d["municipalidad"] = e
+            else:
+                d["otras"].append(e)
+        provincial = next((e for e in ents if _es_municipalidad(e) and
+                           ("PROVINCIAL" in e["nombre"].upper() or "METROPOLITANA" in e["nombre"].upper())), None)
+        obs = [o for e in ents for o in obras_ent.get(e["sec_ejec"], [])]
+        obs.sort(key=lambda o: -(o["pim"] or 0))
+        sin_avance = [o for o in obs if o["senal"] == "sin_avance"]
+        als = sorted((a for e in ents for a in alertas_ent.get(e["sec_ejec"], [])),
+                     key=lambda a: (a["severidad"] != "alta", -(a.get("datos", {}).get("pim") or 0)))
+        payload = {
+            "codigo": codigo, "nombre": ents[0]["provincia"], "dept": codigo[:2], "dept_nombre": None,
+            "ano": ano, "mes_ult": resumen["mes_ult"] if resumen else None,
+            "avance_esperado": resumen.get("avance_esperado") if resumen else None,
+            "publicacion": resumen["publicacion"] if resumen else None,
+            "gasto": {"pim": sum(e["pim"] or 0 for e in ents), "devengado": sum(e["devengado"] or 0 for e in ents)},
+            "por_funcion": por_funcion.get(codigo, [])[:12],
+            "municipalidad_provincial": provincial,
+            "distritos": sorted(distritos.values(), key=lambda d: (d["ubigeo"][-2:] != "01", d["nombre"] or "")),
+            "obras": {"n": len(obs), "n_sin_avance": len(sin_avance),
+                      "pim_sin_avance": sum(o["pim"] or 0 for o in sin_avance),
+                      "top": obs[:10], "sin_avance": sin_avance[:15]},
+            "alertas": {"total": len(als), "alta": sum(a["severidad"] == "alta" for a in als),
+                        "top": [_compacta(a) for a in als[:6]]},
+        }
+        _write(loc / "prov" / f"{codigo}.json", payload)
+        for d in payload["distritos"]:
+            m = d["municipalidad"]
+            indice.append({"u": d["ubigeo"], "d": d["nombre"], "p": payload["nombre"],
+                           "s": m["sec_ejec"] if m else None, "n": m["nombre"] if m else None})
+    deps = {d["codigo"]: d["nombre"] for d in _rows(con, """SELECT dept AS codigo, any_value(dept_nombre) AS nombre
+                                                            FROM dim_entidad GROUP BY 1""")}
+    for i in indice:
+        i["r"] = deps.get(i["u"][:2])
+    for path in (loc / "prov").glob("*.json"):  # department names, now known
+        data = json.loads(path.read_text())
+        data["dept_nombre"] = deps.get(data["dept"])
+        _write(path, data)
+    _write(loc / "distritos.json", indice)
+    print(f"  json: localidad/prov/*.json ({len(por_prov)} provincias), distritos.json ({len(indice)} distritos)")
 
 
 # --- audit agenda --------------------------------------------------------------------

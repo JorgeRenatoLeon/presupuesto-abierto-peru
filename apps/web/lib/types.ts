@@ -77,7 +77,8 @@ export type Localidad = {
   gasto: { pia: number | null; pim: number | null; devengado: number | null };
   cambios: { pim_pub_ant?: number | null; pia_ano_ant?: number | null; pim_ano_ant?: number | null; dev_ano_ant_periodo?: number | null };
   por_nivel: { nivel: string; pim: number; devengado: number }[];
-  por_funcion: { funcion: string; pim: number; devengado: number }[];
+  por_funcion: { id?: string; funcion: string; pim: number; devengado: number }[];
+  provincias?: ProvinciaResumen[];
   gobierno_regional: EntidadResumen[]; municipalidades: EntidadResumen[]; nacional_con_sede: EntidadResumen[];
   obras: { n: number; n_sin_avance: number; pim_sin_avance: number; top: Obra[]; sin_avance: Obra[] };
   alertas: { total: number; alta: number; por_regla: Record<string, number>; top: Alerta[] };
@@ -204,3 +205,43 @@ export function interpretarAvance(avance: number | null, mes: number, esperado?:
   if (gap <= 0.15) return { texto: "El gasto avanza algo más lento de lo esperado; aún es recuperable.", tono: "warn" };
   return { texto: "El gasto va muy por detrás del calendario: hay riesgo de que parte del presupuesto no se use.", tono: "bad" };
 }
+
+// --- Explanations (pipeline explicar.py -> explicar/<dimension>/<id>.json, glosario.json) ---
+export type Explicacion = {
+  dimension: "funcion" | "generica"; id: string; nivel: string; nombre: string; ano: number;
+  pim: number | null; devengado: number | null; entidades: number;
+  /** MEF's official definition; `heredado` when it belongs to the nearest parent category */
+  oficial: { texto: string; nombre: string; heredado: boolean; fuente: string } | null;
+  simple: { texto: string; ejemplos: string } | null;
+  en_que: { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null; entidades: number }[];
+  como: { codigo: string; nombre: string; pim: number | null; devengado: number | null }[];
+  quien: { sec_ejec: string; nombre: string; nivel: string; pim: number | null; devengado: number | null }[];
+  por_nivel: { nivel: string; pim: number | null; devengado: number | null }[];
+};
+export const archivoExplicacion = (id: string) => id.replace(/\//g, "-");
+export const DIMENSIONES_EXPLICADAS = new Set(["funcion", "generica"]);
+
+export type Termino = { clave: string; termino: string; simple: string; detalle: string; grupo: string };
+export type Glosario = {
+  terminos: Termino[];
+  funciones: { codigo: string; nombre: string; oficial: string; simple?: string; ejemplos?: string }[];
+  genericas: { codigo: string; nombre: string; oficial: string; simple: string; ejemplos: string }[];
+  fuentes: Record<string, string>;
+};
+
+// --- Provinces and districts (pipeline exportar._provincias) ---
+export type EntidadLugar = EntidadResumen & { prov?: string; dist?: string };
+export type Distrito = { ubigeo: string; nombre: string; municipalidad: EntidadLugar | null; otras: EntidadLugar[] };
+export type Provincia = {
+  codigo: string; nombre: string; dept: string; dept_nombre: string | null; ano: number; mes_ult: number | null;
+  avance_esperado?: number | null; publicacion: Publicacion | null;
+  gasto: { pim: number; devengado: number };
+  por_funcion: { id: string; funcion: string; pim: number | null; devengado: number | null }[];
+  municipalidad_provincial: EntidadLugar | null;
+  distritos: Distrito[];
+  obras: { n: number; n_sin_avance: number; pim_sin_avance: number; top: Obra[]; sin_avance: Obra[] };
+  alertas: { total: number; alta: number; top: Alerta[] };
+};
+export type ProvinciaResumen = { codigo: string; nombre: string; pim: number; devengado: number; n_municipalidades: number };
+/** localidad/distritos.json: u ubigeo, d distrito, p provincia, r región, s municipality sec_ejec, n its name */
+export type DistritoIndice = { u: string; d: string; p: string; r: string | null; s: string | null; n: string | null };

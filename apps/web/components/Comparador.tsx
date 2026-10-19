@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { ComparacionDimension, ComparacionResumen, Medida, NodoComparacion } from "@/lib/types";
-import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos } from "@/lib/types";
+import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos, DIMENSIONES_EXPLICADAS } from "@/lib/types";
+import { BotonExplicar, PanelExplicacion } from "@/components/Explicacion";
 import { SeguirBoton } from "@/components/SeguirBoton";
 
 type Modo = "aprobado" | "publicacion" | "anual";
@@ -49,6 +50,8 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
   const [orden, setOrden] = useState<Orden>("cambio");
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
   const [busqueda, setBusqueda] = useState("");
+  const [explicado, setExplicado] = useState<string | null>(null);
+  const explicable = DIMENSIONES_EXPLICADAS.has(data.dimension);
   const modo = modos.find((m) => m.id === modoId)!;
 
   const delta = (n: NodoComparacion) => (n[modo.despues] ?? 0) - (n[modo.antes] ?? 0);
@@ -108,6 +111,10 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
             <div className="linea1">
               <span className="nombre">
                 {n.nombre}
+                {explicable ? (
+                  <BotonExplicar abierto={explicado === n.id} nombre={n.nombre}
+                                 onClick={() => setExplicado(explicado === n.id ? null : n.id)} />
+                ) : null}
                 {fuerte(n) ? <span className="badge alta" style={{ marginLeft: 8 }}>cambio fuerte</span> : null}
                 {n.nivel === 1 && SEGUIBLE[data.dimension] ? (
                   <SeguirBoton compacto item={data.dimension === "departamento"
@@ -132,6 +139,7 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
             ) : null}
           </div>
         </div>
+        {explicado === n.id ? <PanelExplicacion dimension={data.dimension} id={n.id} /> : null}
         {abierto && !conRuta ? <ul className="cmp-lista">{ordenar(hs).map((h) => fila(h, profundidad + 1))}</ul> : null}
       </li>
     );

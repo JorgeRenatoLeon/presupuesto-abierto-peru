@@ -3,9 +3,11 @@ import { join } from "node:path";
 import Link from "next/link";
 import {
   DATA_DIR, loadOptional, fmtSoles, fmtPct, fmtLugar, interpretarAvance, corteDatos,
-  type Alerta, type Obra, type ComparacionResumen,
+  type Alerta, type Obra, type ComparacionResumen, type Provincia,
 } from "@/lib/data";
-import { KpiCard, Lectura, ListaBarras } from "@/components/ui";
+import { DesgloseFunciones, type ItemEntidad } from "@/components/DesgloseFunciones";
+import { Migas } from "@/components/Migas";
+import { KpiCard, Lectura } from "@/components/ui";
 import { GraficoMensual } from "@/components/Grafico";
 import { AlertaCard } from "@/components/AlertaCard";
 import { ListaObras } from "@/components/Obras";
@@ -38,10 +40,12 @@ export function generateMetadata({ params }: { params: { id: string } }) {
 type Payload = {
   info: { sec_ejec: string; nombre: string; nivel: string | null; dept: string | null;
           pliego: string | null; devengado: number | null; pim: number | null;
-          prov?: string | null; dist?: string | null };
+          prov?: string | null; dist?: string | null; ubigeo?: string | null };
   series: { ano: number; mes: number; pia: number | null; pim: number | null; devengado: number }[];
-  funciones: { ano: number; funcion: string; devengado: number }[];
-  genericas: { ano: number; generica: string; devengado: number }[];
+  funciones: { ano: number; codigo: string; funcion: string; devengado: number }[];
+  genericas: { ano: number; codigo: string; generica: string; devengado: number }[];
+  /** per función code: this entity's largest activities and projects */
+  items?: Record<string, ItemEntidad[]>;
   /** top projects by budget (pipeline exportar.py), n_obras = all of them */
   obras?: Obra[]; n_obras?: number;
   alertas?: Alerta[];
@@ -70,18 +74,31 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
   const lectura = interpretarAvance(avance, mesUlt || 1, esperado);
   const corte = corteDatos(mesUlt, cmp?.ano === ano ? cmp.publicacion.fecha : null, ano);
 
-  const funcAno = funciones.filter((f) => f.ano === ano).map((f) => ({
-    id: f.funcion, nombre: f.funcion, monto: f.devengado, referencia: null,
-  }));
-  const genAno = genericas.filter((g) => g.ano === ano).map((g) => ({
-    id: g.generica, nombre: g.generica, monto: g.devengado, referencia: null,
-  }));
+  const funcAno = funciones.filter((f) => f.ano === ano);
+  const genAno = genericas.filter((g) => g.ano === ano).map((g) => ({ codigo: g.codigo, funcion: g.generica, devengado: g.devengado }));
+
+  // where it sits, and how it compares with the other municipalities of its province
+  const ub = info.ubigeo && /^\d{6}$/.test(info.ubigeo) && info.ubigeo.slice(0, 2) <= "25" ? info.ubigeo : null;
+  const prov = ub ? loadOptional<Provincia>(`localidad/prov/${ub.slice(0, 4)}.json`) : null;
+  const pares = prov ? prov.distritos.map((d) => d.municipalidad).filter((m): m is NonNullable<typeof m> => !!m && !!m.pim) : [];
+  const esMunicipal = pares.some((m) => m.sec_ejec === info.sec_ejec);
+  const ranking = esMunicipal
+    ? [...pares].sort((a, b) => (b.devengado ?? 0) / (b.pim ?? 1) - (a.devengado ?? 0) / (a.pim ?? 1))
+    : [];
+  const puesto = ranking.findIndex((m) => m.sec_ejec === info.sec_ejec) + 1;
+  const avanceProv = pares.length ? pares.reduce((a, m) => a + (m.devengado ?? 0), 0) / pares.reduce((a, m) => a + (m.pim ?? 0), 0) : null;
 
   return (
     <div className="pagina">
-      <nav style={{ fontSize: 13 }}>
-        <Link href="/explorar/" style={{ color: "var(--rojo)", fontWeight: 600 }}>← Explorar</Link>
-      </nav>
+      {ub && prov ? (
+        <Migas pasos={[
+          { href: `/localidad/${ub.slice(0, 2)}/`, texto: fmtLugar(prov.dept_nombre ?? "") },
+          { href: `/localidad/${ub.slice(0, 2)}/${ub.slice(2, 4)}/`, texto: `Provincia de ${fmtLugar(prov.nombre)}` },
+          { href: `/localidad/${ub.slice(0, 2)}/${ub.slice(2, 4)}/#d${ub}`, texto: fmtLugar(info.dist ?? "") },
+        ]} />
+      ) : (
+        <Migas pasos={[{ href: "/explorar/", texto: "Entidades" }]} />
+      )}
       <section className="hero">
         <h1>{info.nombre}</h1>
         <p>
@@ -102,6 +119,25 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
       </section>
 
       <Lectura tono={lectura.tono}>{lectura.texto}</Lectura>
+
+      {esMunicipal && ranking.length > 1 ? (
+        <section className="seccion tarjeta">
+          <h2>Frente a las otras municipalidades de {fmtLugar(prov!.nombre)}</h2>
+          <p className="sub">
+            Puesto <strong>{puesto} de {ranking.length}</strong> por avance de ejecución {corte}. Promedio de la
+            provincia: {fmtPct(avanceProv)}.
+          </p>
+          <ol className="ranking">
+            {ranking.map((m) => (
+              <li key={m.sec_ejec} className={m.sec_ejec === info.sec_ejec ? "propio" : ""}>
+                <Link href={`/entidad/${m.sec_ejec}/`}>{fmtLugar(m.distrito ?? m.nombre)}</Link>
+                <span className="barra"><span style={{ width: `${Math.min(100, ((m.devengado ?? 0) / (m.pim ?? 1)) * 100)}%` }} /></span>
+                <span className="cifra">{fmtPct((m.devengado ?? 0) / (m.pim ?? 1))}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       {alertasEntidad.length ? (
         <section className="seccion">
@@ -130,14 +166,14 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
 
       <section className="seccion tarjeta">
         <h2>¿A qué lo destina?</h2>
-        <p className="sub">Funciones del Estado en las que gasta esta entidad.</p>
-        <ListaBarras items={funcAno} unidadNota="devengado" />
+        <p className="sub">Gastado {corte}, por función del Estado. Abre cada una para ver en qué lo usa y qué significa.</p>
+        <DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} />
       </section>
 
       <section className="seccion tarjeta">
         <h2>¿En qué tipo de gasto?</h2>
-        <p className="sub">Personal, bienes y servicios, inversiones…</p>
-        <ListaBarras items={genAno} unidadNota="devengado" />
+        <p className="sub">Sueldos, compras, obras… Abre cada tipo para ver qué incluye.</p>
+        <DesgloseFunciones funciones={genAno} dimension="generica" />
       </section>
     </div>
   );

@@ -1,19 +1,24 @@
 import Link from "next/link";
+import { BuscaMunicipalidad } from "@/components/BuscaMunicipalidad";
 import { load, fmtSoles, fmtPct, fmtLugar, fmtVariacion, type LocalidadIndice } from "@/lib/data";
 
-export const metadata = { title: "Tu región — Presupuesto Abierto Perú" };
+export const metadata = { title: "Tu municipalidad — Presupuesto Abierto Perú" };
 
 export default function LocalidadIndex() {
   const deps = load<LocalidadIndice[]>("localidad/index.json");
   return (
     <div className="pagina">
       <section className="hero">
-        <h1>¿Cómo se usa el presupuesto en tu región?</h1>
+        <h1>¿Cómo se usa el presupuesto donde vives?</h1>
         <p>
-          Elige tu departamento: cuánto gastan ahí el gobierno nacional, tu gobierno regional y tus
-          municipalidades, qué proyectos están en marcha y cuáles no avanzan.
+          Busca tu distrito para ir directo a tu municipalidad, o recorre tu región y tu provincia: quién gasta,
+          en qué, qué obras avanzan y cuáles no.
         </p>
       </section>
+      <section className="seccion tarjeta">
+        <BuscaMunicipalidad autoFocus />
+      </section>
+      <h2 className="seccion">O elige tu región</h2>
       {deps.length ? (
         <div className="cmp-dimensiones">
           {deps.map((d) => {

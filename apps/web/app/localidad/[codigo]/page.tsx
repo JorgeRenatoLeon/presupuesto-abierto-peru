@@ -8,6 +8,7 @@ import { AlertaCard } from "@/components/AlertaCard";
 import { ListaObras } from "@/components/Obras";
 import { ListaEntidades } from "@/components/ListaEntidades";
 import { SeguirBoton } from "@/components/SeguirBoton";
+import { DesgloseFunciones } from "@/components/DesgloseFunciones";
 
 export const dynamicParams = false;
 
@@ -82,10 +83,8 @@ export default function LocalidadPage({ params }: { params: { codigo: string } }
 
       <section className="seccion tarjeta">
         <h2>¿En qué se gasta?</h2>
-        <p className="sub">Principales funciones, por presupuesto vigente.</p>
-        <ListaBarras items={d.por_funcion.slice(0, 8).map((f) => ({
-          id: f.funcion, nombre: f.funcion, monto: f.devengado, referencia: f.pim,
-        }))} />
+        <p className="sub">Gastado {corte} en {nombre}, por función. Abre cada una para saber qué es y en qué se usa.</p>
+        <DesgloseFunciones funciones={d.por_funcion.slice(0, 10).map((f) => ({ codigo: f.id ?? f.funcion, funcion: f.funcion, devengado: f.devengado }))} />
       </section>
 
       <section className="seccion tarjeta" id="obras">
@@ -108,6 +107,23 @@ export default function LocalidadPage({ params }: { params: { codigo: string } }
           <h2>Gobierno regional</h2>
           <p className="sub">Sede central y unidades ejecutoras (hospitales, UGEL, proyectos especiales…).</p>
           <ListaEntidades entidades={d.gobierno_regional} esperado={esperado} buscador={d.gobierno_regional.length > 8} />
+        </section>
+      ) : null}
+
+      {d.provincias?.length ? (
+        <section className="seccion tarjeta" id="provincias">
+          <h2>Provincias de {nombre}</h2>
+          <p className="sub">Entra a tu provincia para ver cada distrito, su municipalidad y las obras que no avanzan.</p>
+          <ul className="provincias">
+            {d.provincias.map((pr) => (
+              <li key={pr.codigo}>
+                <Link href={`/localidad/${d.codigo}/${pr.codigo.slice(2)}/`}>
+                  <span className="nombre">{fmtLugar(pr.nombre)}</span>
+                  <span className="detalle">{pr.n_municipalidades} municipalidades · {fmtSoles(pr.pim)} · avance {fmtPct(pr.pim ? pr.devengado / pr.pim : null)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

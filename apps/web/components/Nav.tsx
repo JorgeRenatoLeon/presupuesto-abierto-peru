@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 // the six that fit the mobile bottom bar; the rest live in the desktop top bar
 const principales = [
   { href: "/", etiqueta: "Inicio", icono: "◉" },
-  { href: "/localidad/", etiqueta: "Tu región", icono: "⌂" },
+  { href: "/localidad/", etiqueta: "Tu municipalidad", icono: "⌂" },
   { href: "/comparar/", etiqueta: "Comparar", icono: "⇄" },
   { href: "/auditar/", etiqueta: "Vigilar", icono: "◎" },
   { href: "/alertas/", etiqueta: "Alertas", icono: "▲" },
@@ -15,6 +15,7 @@ const principales = [
 const secundarios = [
   { href: "/ingresos/", etiqueta: "Ingresos" },
   { href: "/guia/", etiqueta: "Guía" },
+  { href: "/glosario/", etiqueta: "Glosario" },
 ];
 
 function activo(pathname: string, href: string): boolean {

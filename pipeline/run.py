@@ -65,8 +65,10 @@ def main() -> None:
         from alerts import compute_alerts
         compute_alerts()
     elif args.command == "exportar":
+        from explicar import explicar
         from exportar import exportar
         exportar()
+        explicar()
     elif args.command == "validate":
         if not _validate(args.year or _current_year(), datasets):
             raise SystemExit(1)
@@ -127,6 +129,7 @@ def _serving(args) -> None:
     from aggregate import aggregate
     from alerts import compute_alerts
     from compare import compare
+    from explicar import explicar
     from exportar import exportar
     from qa import qa
 
@@ -134,6 +137,7 @@ def _serving(args) -> None:
     compare()
     compute_alerts()
     exportar()
+    explicar()
     year = _current_year()
     ok = _validate(year, ["gasto", "ingreso"])
     ok &= qa(year, strict=args.strict, skip_external=args.skip_external)

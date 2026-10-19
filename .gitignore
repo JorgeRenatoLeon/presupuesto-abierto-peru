@@ -12,3 +12,7 @@ apps/web/public/data/
 *.duckdb
 *.duckdb.wal
 *.tsbuildinfo
+
+# Impeccable working files (decision mocks, review captures)
+.impeccable/mocks/
+.impeccable/review/

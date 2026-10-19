@@ -11,6 +11,7 @@ import { GraficoMensual } from "@/components/Grafico";
 import { AlertaCard } from "@/components/AlertaCard";
 import { RepartoPorCien } from "@/components/Reparto";
 import { SelectorRegion } from "@/components/SelectorRegion";
+import { BuscaMunicipalidad } from "@/components/BuscaMunicipalidad";
 
 export default function Home() {
   const resumen = load<ResumenAnual[]>("resumen_anual.json");
@@ -72,8 +73,10 @@ export default function Home() {
 
           {departamentos.length ? (
             <section className="seccion tarjeta">
-              <h2>¿Qué pasa en tu región?</h2>
-              <p className="sub">Quién gasta, qué obras avanzan y cuáles no, municipalidad por municipalidad.</p>
+              <h2>¿Qué hace tu municipalidad con su presupuesto?</h2>
+              <p className="sub">En qué gasta, cuánto lleva y qué obras no avanzan, distrito por distrito.</p>
+              <BuscaMunicipalidad />
+              <p className="sub" style={{ marginTop: 14 }}>O recorre tu región:</p>
               <SelectorRegion departamentos={departamentos} />
             </section>
           ) : null}
