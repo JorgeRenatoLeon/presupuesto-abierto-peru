@@ -29,7 +29,8 @@ export function generateStaticParams() {
   return ids.length ? ids.map((id) => ({ id })) : [{ id: "sin-datos" }];
 }
 
-export function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   try {
     const { info } = JSON.parse(readFileSync(join(ENT_DIR, `${params.id}.json`), "utf-8"));
     return {
@@ -64,7 +65,8 @@ function nombreEnBandas(nombre: string, pim: number | null, ano: number): Banda[
   return [{ texto: fmtLugar(nombre), color: "amarillo", chica: nombre.length > 28 }, monto];
 }
 
-export default function EntidadPage({ params }: { params: { id: string } }) {
+export default async function EntidadPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const archivo = join(ENT_DIR, `${params.id}.json`);
   if (!existsSync(archivo)) {
     return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de entidades procesados.</div></div>;

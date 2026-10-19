@@ -25,7 +25,8 @@ export function generateStaticParams() {
   return codigos.length ? codigos.map((c) => ({ codigo: c.slice(0, 2), prov: c.slice(2) })) : [{ codigo: "15", prov: "01" }];
 }
 
-export function generateMetadata({ params }: { params: { codigo: string; prov: string } }) {
+export async function generateMetadata(props: { params: Promise<{ codigo: string; prov: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const p = loadOptional<Provincia>(`localidad/prov/${params.codigo}${params.prov}.json`);
   const nombre = p ? fmtLugar(p.nombre) : "Tu provincia";
   return {
@@ -45,7 +46,8 @@ function Avance({ e, esperado }: { e: EntidadLugar; esperado: number }) {
   );
 }
 
-export default function ProvinciaPage({ params }: { params: { codigo: string; prov: string } }) {
+export default async function ProvinciaPage(props: { params: Promise<{ codigo: string; prov: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const p = loadOptional<Provincia>(`localidad/prov/${params.codigo}${params.prov}.json`);
   if (!p) return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de esta provincia.</div></div>;
 

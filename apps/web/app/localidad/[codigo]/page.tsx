@@ -21,7 +21,8 @@ export function generateStaticParams() {
   return deps.length ? deps.map((d) => ({ codigo: d.codigo })) : [{ codigo: "15" }];
 }
 
-export function generateMetadata({ params }: { params: { codigo: string } }) {
+export async function generateMetadata(props: { params: Promise<{ codigo: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const d = loadOptional<Localidad>(`localidad/${params.codigo}.json`);
   const nombre = d ? fmtLugar(d.nombre) : "Tu región";
   return {
@@ -36,7 +37,8 @@ const NIVEL: Record<string, string> = {
   "GOBIERNOS LOCALES": "Municipalidades",
 };
 
-export default function LocalidadPage({ params }: { params: { codigo: string } }) {
+export default async function LocalidadPage(props: { params: Promise<{ codigo: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const d = loadOptional<Localidad>(`localidad/${params.codigo}.json`);
   if (!d) return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de este departamento.</div></div>;
 

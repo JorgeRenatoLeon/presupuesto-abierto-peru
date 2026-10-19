@@ -15,12 +15,14 @@ export function generateStaticParams() {
   return ids.length ? ids.map((dimension) => ({ dimension })) : [{ dimension: "funcion" }];
 }
 
-export function generateMetadata({ params }: { params: { dimension: string } }) {
+export async function generateMetadata(props: { params: Promise<{ dimension: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const data = loadOptional<ComparacionDimension>(`comparar/${params.dimension}.json`);
   return { title: `Comparar por ${data?.titulo.toLowerCase() ?? params.dimension} — Presupuesto Abierto Perú` };
 }
 
-export default function CompararDimensionPage({ params }: { params: { dimension: string } }) {
+export default async function CompararDimensionPage(props: { params: Promise<{ dimension: string }> }) {
+  const params = await props.params; // Next 16: route params arrive as a promise
   const resumen = loadOptional<ComparacionResumen>("comparar/resumen.json");
   const data = loadOptional<ComparacionDimension>(`comparar/${params.dimension}.json`);
   if (!resumen || !data) {

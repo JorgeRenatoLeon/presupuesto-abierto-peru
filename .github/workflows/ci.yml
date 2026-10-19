@@ -35,9 +35,8 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run build
-      # Report only: Next 14 advisories are fixed only in Next 16 and target server features
-      # (image optimizer, server functions, middleware) that a static export doesn't run.
-      # Upgrading to Next 16 is tracked in the README.
+      # Report only: a static export runs no server code, so a new advisory should not block
+      # every change; it shows up here to be handled (0 known vulnerabilities as of Oct 2026).
       - name: Security audit (non-blocking)
         run: npm audit --omit=dev --audit-level=high
         continue-on-error: true

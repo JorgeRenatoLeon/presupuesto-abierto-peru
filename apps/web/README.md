@@ -1,6 +1,6 @@
 # Web — Presupuesto Abierto Perú
 
-Next.js 14 (App Router, TypeScript, static export). No UI framework — hand-rolled CSS + SVG charts, zero chart dependencies.
+Next.js 15 (App Router, React 19, TypeScript, static export). No UI framework: hand-rolled CSS (see `docs/design-notes.md`), SVG charts, lucide icons.
 
 ## Run locally
 
@@ -16,7 +16,15 @@ npm run dev                  # http://localhost:3000
 # 3. Production build (static export to ./out; sync runs automatically)
 npm run build
 npm run serve                # serve the exported site locally
+
+# 4. Browser checks on the built site (what CI runs before every deploy)
+npx playwright-core install chromium          # once
+python3 -m http.server 8767 --directory out & # any static server
+E2E_BASE=http://127.0.0.1:8767 node e2e/sitio.mjs
 ```
+
+`next build` and `next dev` share `.next/`: stop the dev server before building, or the build
+fails with "Cannot find module … page.js".
 
 Troubleshooting "no data showing":
 

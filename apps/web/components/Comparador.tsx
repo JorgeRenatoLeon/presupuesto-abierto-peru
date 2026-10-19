@@ -96,7 +96,7 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
   const sube = raiz.filter((n) => delta(n) > 0).sort((x, y) => delta(y) - delta(x))[0];
   const baja = raiz.filter((n) => delta(n) < 0).sort((x, y) => delta(x) - delta(y))[0];
 
-  const fila = (n: NodoComparacion, profundidad: number, conRuta = false): JSX.Element => {
+  const fila = (n: NodoComparacion, profundidad: number, conRuta = false): React.JSX.Element => {
     const d = delta(n);
     const hs = hijos.get(n.id) ?? [];
     const abierto = abiertos.has(n.id);

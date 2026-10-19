@@ -134,6 +134,23 @@ jobs:
           NEXT_PUBLIC_TELEGRAM_CANAL: ${{ vars.TELEGRAM_CANAL_URL }}   # optional: link shown on /metodologia
         run: npm ci && npm run build
 
+      # The built site in a real browser, with this run's data, before anyone sees it: 40 checks
+      # (municipality search, explanations, province pages, follow list, alerts, 375 px layout).
+      # A failure stops the deploy and the previous version stays online. About 1 minute.
+      - name: Browser checks
+        if: steps.plan.outputs.deploy == 'true'
+        working-directory: apps/web
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          npx playwright-core install --with-deps --only-shell chromium
+          sitio="$RUNNER_TEMP/sitio"
+          mkdir -p "$sitio"
+          if [ -n "$BASE_PATH" ]; then ln -s "$PWD/out" "$sitio$BASE_PATH"; else sitio="$PWD/out"; fi
+          python3 -m http.server 8767 --bind 127.0.0.1 --directory "$sitio" > /dev/null 2>&1 &
+          sleep 1
+          E2E_BASE="http://127.0.0.1:8767${BASE_PATH}" node e2e/sitio.mjs
+
       - uses: actions/upload-pages-artifact@v3
         if: steps.plan.outputs.deploy == 'true'
         with:

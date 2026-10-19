@@ -69,6 +69,7 @@ presupuesto-app/
   | Ingest the current year (8.3 GB file: 17 min download), rebuild, deploy | weekly (`CADENCIA_DIAS`), ~35 min | ~150 |
   | Ingest the previous year (10.5 GB: 21 min download) | monthly, +25 min | ~25 |
   | CI on pushes and pull requests | ~3 min each | ~60 |
+  | Browser checks before each deploy | +1 min per deploy | ~10 |
 
   `timeout-minutes: 120` caps a run against a slow MEF server; the deploy artifact (the 342 MB site) is kept 1 day.
   To use less, raise `CADENCIA_DIAS` in `pipeline/config.py` or check fewer days in the workflow's `cron`.
@@ -116,6 +117,7 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Pipeline: dual-format (pivoted + monthly rows) → lossless canonical Parquet, verified against the CSV
 - [x] Lake with one snapshot per MEF publication + budget change log; Hugging Face mirror
 - [x] Daily refresh (ETag check, chunked downloads) + GitHub Pages deploy + CI quality gates
+- [x] 40 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
 - [x] Comparisons (PIA→PIM, publication→publication, year→year) by función, genérica, tema, departamento, nivel
 - [x] Alert rules R1–R7 on real data (Jul→Sep 2026 and 2025→2026)
 - [x] Regions, projects with signals, audit agenda with how-to-act, watchlist, RSS + Telegram notifications
@@ -125,9 +127,10 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 
 Known follow-ups:
 
-- **Next.js 14 → 16.** `npm audit` flags Next 14 (fixes exist only in 16). The advisories target server features (image optimizer, server functions, middleware) that a static export doesn't run, so CI reports them without blocking.
-- End-to-end browser tests (Playwright) were run by hand on real data (follow, watchlist, filters, drill-down, 375 px
-  layout); adding them to CI needs a small fixture dataset.
+- **Next.js 16** was tried and skipped for now: its static export writes each page's payload three times (segment
+  prefetch files), 782 MB against 529 MB on Next 15.5, too close to the 1 GB Pages limit. Revisit if it becomes
+  configurable. The site runs Next 15.5 with React 19; `npm audit` reports 0 vulnerabilities (postcss pinned
+  through `overrides`).
 - Alert thresholds are first calibrations on 2026 data, pending review with the team.
 
 Design: `docs/design-notes.md` (the chicha visual system; tokens in `apps/web/app/globals.css`). ⚠️ Never commit `data/` or `.env`. The old `typescript-express-api/` prototype is deprecated (rotate its Cloudant credentials before any push).
