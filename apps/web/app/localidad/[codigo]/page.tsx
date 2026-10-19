@@ -12,7 +12,8 @@ import { SeguirBoton } from "@/components/SeguirBoton";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
 import { Bandas } from "@/components/Bandas";
 
-export const dynamicParams = false;
+// No `dynamicParams = false`: with output "export" only generated paths exist anyway, and
+// Next 14's dev server rejects it with a misleading "missing generateStaticParams()" error.
 
 export function generateStaticParams() {
   const deps = load<LocalidadIndice[]>("localidad/index.json");

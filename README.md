@@ -130,4 +130,4 @@ Known follow-ups:
   layout); adding them to CI needs a small fixture dataset.
 - Alert thresholds are first calibrations on 2026 data, pending review with the team.
 
-Design rationale for the UI: `docs/design-notes.md`. ⚠️ Never commit `data/` or `.env`. The old `typescript-express-api/` prototype is deprecated (rotate its Cloudant credentials before any push).
+Design: `docs/design-notes.md` (the chicha visual system; tokens in `apps/web/app/globals.css`). ⚠️ Never commit `data/` or `.env`. The old `typescript-express-api/` prototype is deprecated (rotate its Cloudant credentials before any push).

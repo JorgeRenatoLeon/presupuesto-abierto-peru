@@ -18,7 +18,8 @@ import { Bandas, type Banda } from "@/components/Bandas";
 const ENT_DIR = join(DATA_DIR, "entidad");
 const OBRAS_EN_PAGINA = 10;
 
-export const dynamicParams = false;
+// No `dynamicParams = false`: with output "export" only generated paths exist anyway, and
+// Next 14's dev server rejects it with a misleading "missing generateStaticParams()" error.
 
 export function generateStaticParams() {
   const ids = existsSync(ENT_DIR)

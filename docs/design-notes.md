@@ -1,24 +1,55 @@
-# Design notes — from paper wireframes to the web app
+# Design notes
 
-The scanned paper wireframes (in `Proyecto Sist Inf/`) were the starting point. What was kept, what changed, and why:
+How the site looks and why. Tokens and component styles live in `apps/web/app/globals.css`.
 
-**Kept from the wireframes**
+## Who it is for
 
-- Mobile-first with bottom navigation (the 3-phone sketches map to Inicio / Explorar / Alertas + Guía)
-- Home = overview with chart + cards; detail screens as drill-down lists with chevrons
-- The "guía" as a first-class section (the wireframes' step-by-step form idea became the step-by-step budget journey)
+Ordinary citizens on a phone, often outdoors, with no budget vocabulary. When needs conflict
+they come first: plain language first, the official term second, the raw code last. Journalists
+and watchdogs get the detail one tap deeper.
 
-**Changed, and the reasoning**
+## The world: a *cartel chicha*
 
-1. **Every number gets an interpretation.** The benchmark's core finding: competitors show numbers citizens can't act on. Each KPI carries a plain-language note, and a colored "lectura" box answers "is this normal?" (ok/warn/bad against calendar pace).
-2. **Reclamo flow deferred, alerts promoted.** The wireframes' multi-step reclamo form depends on Etapa 2 integrations (Contraloría/Defensoría). Instead, alerts are ready-to-share texts — the fastest control-social action available today (share/copy button on every card).
-3. **Progress bars everywhere.** % ejecución as a bar against 100% makes pace visible without reading numbers; color encodes health.
-4. **Search-first entity explorer.** "Busca tu municipalidad" is the emotional entry point (my district!), so entity search gets prominence over abstract classifier drill-downs.
-5. **Plain-Spanish labels.** "¿A qué se destina?" instead of "Clasificación funcional"; "¿En qué tipo de gasto?" instead of "Genérica de gasto". Official terms appear in the guía with definitions.
-6. **Visual language.** Peru red (#C8102E) as the single accent on warm neutrals; large rounded cards, system fonts, generous spacing — serious but approachable, works on cheap Android screens.
+The budget is announced like a chicha poster: the question and the number a citizen needs, set
+in stacked fluorescent bands on a near-black ground, readable from across the street. It refuses
+the usual white civic dashboard of same-size cards.
 
-**Open items for hi-fi (Figma)**
+- **One ink, one job.** Fucsia `#ff2e88` = identity and attention; amarillo `#ffe600` = amounts
+  and the primary action; verde `#00d26a` = on pace, increases; naranja `#ff8a00` = behind,
+  cuts; celeste `#3ee0ff` = explanations and links. Ground `#0e0e10`, rules `#34343c`.
+- **No red.** Being behind schedule is a reason to ask, not an error or an accusation.
+- **Printed marks.** Flat ink, 1px rules (2px for emphasis), no shadows, no rounded corners.
+- **Type.** Anton (self-hosted) for bands, page titles and section tabs; Archivo for reading,
+  with tabular figures so amounts line up.
+- **Dark only.** The poster is black; contrast meets WCAG AA throughout.
 
-- Department map view (choropleth) once ubigeo polygons are added
-- Entity comparison (this year vs last, vs similar municipalities)
-- Alert subscription (email/WhatsApp) UI
+## Signature pieces
+
+- **Band stack** (`components/Bandas.tsx`): the page's question and number as stacked bands,
+  e.g. "¿En qué se gasta / el dinero del Perú? / S/ 289.8 mil millones · 2026".
+- **Ink split** (`components/Franja.tsx`): any budget split is one stacked band of colour
+  segments, with the rows below as its legend. Ink order fucsia, amarillo, verde, celeste,
+  naranja (then "las demás" in grey) was checked for colour-blind separation of neighbours.
+- **Section tabs:** every section is headed by its own yellow band.
+- **Route always visible:** Perú › región › provincia › distrito (`components/Migas.tsx`).
+
+## Words
+
+- Every number answers "compared to what?" (the plan, the last MEF publication, last year, the
+  calendar) and carries a plain reading ("algo más lento de lo esperado").
+- Every category has "¿Qué es?": our plain summary, MEF's official definition, and from the data
+  what the money buys, how and who spends it.
+- MEF names arrive in unaccented capitals; `lib/nombres.ts` (and `pipeline/nombres.py` for alert
+  texts) restores accents, keeps acronyms and capitalises places.
+
+## Motion
+
+One authored moment: bands and split segments wipe in once, left to right (clip-path, 520 ms,
+exponential ease-out, short stagger). Nothing else animates; reduced-motion turns it off.
+Buttons give press feedback (`scale(0.97)`); hover styles only apply to real pointers.
+
+## History
+
+Paper wireframes (mobile-first, bottom navigation, "busca tu municipalidad" as the emotional
+entry point, alerts as shareable texts) became a first web version in red on warm neutrals. In
+October 2026 it was redesigned into the chicha world above, keeping those structural decisions.

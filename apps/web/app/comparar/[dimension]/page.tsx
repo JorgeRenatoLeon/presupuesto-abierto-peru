@@ -3,7 +3,8 @@ import Link from "next/link";
 import { loadOptional, type ComparacionDimension, type ComparacionResumen, fmtLugar } from "@/lib/data";
 import { Comparador } from "@/components/Comparador";
 
-export const dynamicParams = false;
+// No `dynamicParams = false`: with output "export" only generated paths exist anyway, and
+// Next 14's dev server rejects it with a misleading "missing generateStaticParams()" error.
 
 export function generateStaticParams() {
   const resumen = loadOptional<ComparacionResumen>("comparar/resumen.json");

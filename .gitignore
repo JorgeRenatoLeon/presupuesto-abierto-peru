@@ -13,8 +13,10 @@ apps/web/public/data/
 *.duckdb.wal
 *.tsbuildinfo
 
-# Impeccable working files (decision mocks, review captures)
-.impeccable/mocks/
-.impeccable/review/
-
+# Local development aids (AI tooling outputs and context): kept on our machines, not in the repo
 graphify-out/
+.impeccable/
+.github/hooks/
+PRODUCT.md
+DESIGN.md
+.claude/
