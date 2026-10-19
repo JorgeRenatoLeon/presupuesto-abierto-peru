@@ -133,7 +133,7 @@ export default function MetodologiaPage() {
       <section className="tarjeta seccion">
         <h2>Avisos</h2>
         <p style={{ fontSize: 14 }}>
-          Con <strong>☆ Seguir</strong> puedes guardar regiones, entidades y temas en este navegador (sin cuenta) y
+          Con <strong>«Seguir»</strong> puedes guardar regiones, entidades y temas en este navegador (sin cuenta) y
           ver lo nuevo en <Link href="/seguimiento/" style={enlace}>Siguiendo</Link>. También publicamos canales RSS:{" "}
           <a style={enlace} href={urlDatos("feeds/alertas.xml")}>alertas altas</a>,{" "}
           <a style={enlace} href={urlDatos("feeds/cambios.xml")}>cambios por tema</a>,{" "}

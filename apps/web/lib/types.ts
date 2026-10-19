@@ -1,3 +1,4 @@
+import { textoMEF } from "./nombres";
 export type ResumenAnual = {
   ano: number; mes_ult: number; pia: number | null; pim: number | null;
   certificado: number | null; devengado_ytd: number | null; girado_ytd: number | null;
@@ -158,12 +159,12 @@ export const fmtVariacion = (antes: number | null | undefined, despues: number |
 
 /** MEF place names are upper case: "MADRE DE DIOS" -> "Madre de Dios". */
 export const fmtLugar = (s: string): string => {
-  const t = s.trim();
+  const t = (s ?? "").trim();
   if (t === "PROVINCIA CONSTITUCIONAL DEL CALLAO") return "Callao";
-  return t.toLowerCase()
-    .replace(/(^|\s)\S/g, (c) => c.toUpperCase())
-    .replace(/\s(De|Del|La|Las|Los|Y)(?=\s)/g, (m) => m.toLowerCase());
+  return textoMEF(t, "titulo");
 };
+/** A budget category, activity or project name as a sentence: "Gestión de la educación básica". */
+export const fmtNombre = (s: string): string => textoMEF(s, "oracion");
 
 /** "2026-09-03" -> "3 de septiembre de 2026" */
 export const fmtFecha = (iso: string): string => {

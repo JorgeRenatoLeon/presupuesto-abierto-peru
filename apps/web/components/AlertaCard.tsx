@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Alerta } from "@/lib/types";
 import { MESES } from "@/lib/types";
+import { ArrowRight, Check, Share2 } from "lucide-react";
 
 export function AlertaCard({ alerta, enEntidad = false, nueva = false }: {
   alerta: Alerta; enEntidad?: boolean; nueva?: boolean;
@@ -27,6 +28,7 @@ export function AlertaCard({ alerta, enEntidad = false, nueva = false }: {
 
   return (
     <article className={`alerta ${alerta.severidad}`}>
+      <h3>{alerta.titulo}</h3>
       <div className="cabecera">
         {nueva ? <span className="badge nueva">Nueva</span> : null}
         <span className={`badge ${alerta.severidad}`}>{alerta.severidad === "alta" ? "Prioridad alta" : "Atención"}</span>
@@ -34,14 +36,13 @@ export function AlertaCard({ alerta, enEntidad = false, nueva = false }: {
         {alerta.departamento ? <span className="badge neutro">{alerta.departamento}</span> : null}
         {alerta.mes ? <span className="badge neutro">{MESES[alerta.mes]} {alerta.ano}</span> : <span className="badge neutro">{alerta.ano}</span>}
       </div>
-      <h3>{alerta.titulo}</h3>
       <p>{alerta.mensaje}</p>
-      <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="acciones">
         <button className="tab" onClick={compartir}>
-          {copiado ? "✓ Copiado" : "Compartir"}
+          {copiado ? <><Check className="icono-linea" aria-hidden /> Copiado</> : <><Share2 className="icono-linea" aria-hidden /> Compartir</>}
         </button>
-        {alerta.enlace ? <Link className="tab" href={alerta.enlace}>Ver la comparación →</Link> : null}
-        {alerta.sec_ejec && !enEntidad ? <Link className="tab" href={`/entidad/${alerta.sec_ejec}/`}>Ver la entidad →</Link> : null}
+        {alerta.enlace ? <Link className="tab" href={alerta.enlace}>Ver la comparación <ArrowRight className="icono-linea" aria-hidden /></Link> : null}
+        {alerta.sec_ejec && !enEntidad ? <Link className="tab" href={`/entidad/${alerta.sec_ejec}/`}>Ver la entidad <ArrowRight className="icono-linea" aria-hidden /></Link> : null}
       </div>
     </article>
   );

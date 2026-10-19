@@ -16,3 +16,5 @@ apps/web/public/data/
 # Impeccable working files (decision mocks, review captures)
 .impeccable/mocks/
 .impeccable/review/
+
+graphify-out/

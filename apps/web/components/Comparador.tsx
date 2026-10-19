@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import type { ComparacionDimension, ComparacionResumen, Medida, NodoComparacion } from "@/lib/types";
-import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos, DIMENSIONES_EXPLICADAS } from "@/lib/types";
+import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos, fmtNombre, DIMENSIONES_EXPLICADAS } from "@/lib/types";
 import { BotonExplicar, PanelExplicacion } from "@/components/Explicacion";
 import { SeguirBoton } from "@/components/SeguirBoton";
+import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 
 type Modo = "aprobado" | "publicacion" | "anual";
 type Orden = "cambio" | "monto";
@@ -84,7 +85,7 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
   const ruta = (n: NodoComparacion) => {
     const partes: string[] = [];
     for (let p = n.padre ? porId.get(n.padre) : undefined; p; p = p.padre ? porId.get(p.padre) : undefined) {
-      partes.unshift(p.nombre);
+      partes.unshift(fmtNombre(p.nombre));
     }
     return partes.join(" › ");
   };
@@ -105,12 +106,12 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
         <div className="cmp-fila" style={{ paddingLeft: conRuta ? 0 : (profundidad - 1) * 16 }}>
           {hs.length && !conRuta ? (
             <button className="cmp-toggle" aria-expanded={abierto} aria-label={`${abierto ? "Cerrar" : "Abrir"} ${n.nombre}`}
-                    onClick={() => alternar(n.id)}>{abierto ? "▾" : "▸"}</button>
+                    onClick={() => alternar(n.id)}>{abierto ? <ChevronDown size={16} aria-hidden /> : <ChevronRight size={16} aria-hidden />}</button>
           ) : <span className="cmp-toggle vacio-toggle" aria-hidden />}
           <div className="cmp-cuerpo">
             <div className="linea1">
               <span className="nombre">
-                {n.nombre}
+                {fmtNombre(n.nombre)}
                 {explicable ? (
                   <BotonExplicar abierto={explicado === n.id} nombre={n.nombre}
                                  onClick={() => setExplicado(explicado === n.id ? null : n.id)} />
@@ -159,11 +160,11 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
       <p className="sub" style={{ fontSize: 13.5 }}>{modo.contexto}</p>
 
       {!busqueda && (sube || baja) ? (
-        <div className="lectura warn" style={{ background: "var(--fondo)", color: "var(--texto)", border: "1px solid var(--borde)" }}>
-          <strong aria-hidden>≈</strong>
+        <div className="lectura resumen-cambio">
+          <strong aria-hidden><Sparkles size={18} /></strong>
           <span>
-            {sube ? <>Lo que más creció: <b>{sube.nombre}</b> ({fmtDelta(delta(sube))}, {fmtVariacion(sube[modo.antes], sube[modo.despues])}). </> : null}
-            {baja ? <>Lo que más se redujo: <b>{baja.nombre}</b> ({fmtDelta(delta(baja))}, {fmtVariacion(baja[modo.antes], baja[modo.despues])}).</> : null}
+            {sube ? <>Lo que más creció: <b>{fmtNombre(sube.nombre)}</b> ({fmtDelta(delta(sube))}, {fmtVariacion(sube[modo.antes], sube[modo.despues])}). </> : null}
+            {baja ? <>Lo que más se redujo: <b>{fmtNombre(baja.nombre)}</b> ({fmtDelta(delta(baja))}, {fmtVariacion(baja[modo.antes], baja[modo.despues])}).</> : null}
           </span>
         </div>
       ) : null}

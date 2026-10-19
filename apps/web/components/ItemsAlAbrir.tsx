@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { fmtSoles, urlDatos } from "@/lib/types";
+import { fmtSoles, fmtNombre, urlDatos } from "@/lib/types";
 
 type Item = { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null };
 const pedidos = new Map<string, Promise<Record<string, Item[]>>>();
@@ -42,7 +42,7 @@ export function ItemsAlAbrir({ sec, codigo }: { sec: string; codigo: string }) {
               <li key={`${i.tipo}-${i.nombre}`}>
                 <span className="explica-item">
                   <span className={`etiqueta-tipo ${i.tipo}`}>{i.tipo === "proyecto" ? "Obra / proyecto" : "Actividad"}</span>
-                  {i.nombre.toLowerCase()}
+                  {fmtNombre(i.nombre)}
                 </span>
                 <span className="cifra">{fmtSoles(i.pim)}<small> · {fmtSoles(i.devengado)}</small></span>
               </li>

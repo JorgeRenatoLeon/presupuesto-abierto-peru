@@ -11,9 +11,12 @@ import { KpiCard, Lectura } from "@/components/ui";
 import { GraficoMensual } from "@/components/Grafico";
 import { AlertaCard } from "@/components/AlertaCard";
 import { ListaObras } from "@/components/Obras";
+import { MasObras } from "@/components/MasObras";
 import { SeguirBoton } from "@/components/SeguirBoton";
+import { Bandas, type Banda } from "@/components/Bandas";
 
 const ENT_DIR = join(DATA_DIR, "entidad");
+const OBRAS_EN_PAGINA = 10;
 
 export const dynamicParams = false;
 
@@ -29,7 +32,7 @@ export function generateMetadata({ params }: { params: { id: string } }) {
   try {
     const { info } = JSON.parse(readFileSync(join(ENT_DIR, `${params.id}.json`), "utf-8"));
     return {
-      title: `${info.nombre} — Presupuesto Abierto Perú`,
+      title: `${fmtLugar(info.nombre)} — Presupuesto Abierto Perú`,
       description: `Presupuesto y ejecución de ${info.nombre}: PIM, devengado mensual, funciones y tipo de gasto.`,
     };
   } catch {
@@ -50,6 +53,15 @@ type Payload = {
   obras?: Obra[]; n_obras?: number;
   alertas?: Alerta[];
 };
+
+/** "MUNICIPALIDAD DISTRITAL DE OLLANTAYTAMBO" -> a small band for the kind of entity and a big
+ *  one for the place; any other entity keeps its full name (smaller when long). */
+function nombreEnBandas(nombre: string, pim: number | null, ano: number): Banda[] {
+  const m = nombre.match(/^(MUNICIPALIDAD (?:DISTRITAL|PROVINCIAL|METROPOLITANA) DE)\s+(.+)$/i);
+  const monto = { texto: `${fmtSoles(pim)} · ${ano}`, color: "verde" as const, chica: true };
+  if (m) return [{ texto: m[1], color: "fucsia", chica: true }, { texto: fmtLugar(m[2]), color: "amarillo", grande: m[2].length <= 16 }, monto];
+  return [{ texto: fmtLugar(nombre), color: "amarillo", chica: nombre.length > 28 }, monto];
+}
 
 export default function EntidadPage({ params }: { params: { id: string } }) {
   const archivo = join(ENT_DIR, `${params.id}.json`);
@@ -100,10 +112,10 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
         <Migas pasos={[{ href: "/explorar/", texto: "Entidades" }]} />
       )}
       <section className="hero">
-        <h1>{info.nombre}</h1>
+        <Bandas etiqueta={info.nombre} bandas={nombreEnBandas(info.nombre, pim, ano)} />
         <p>
-          {[info.nivel, info.pliego, info.dist && info.dist !== info.prov ? fmtLugar(info.dist) : null,
-            info.prov ? fmtLugar(info.prov) : null, info.dept ? fmtLugar(info.dept) : null].filter(Boolean).join(" · ")}
+          {[info.nivel ? fmtLugar(info.nivel) : null, info.pliego, info.dist && info.dist !== info.prov ? fmtLugar(info.dist) : null,
+            info.prov ? fmtLugar(info.prov) : null, info.dept ? fmtLugar(info.dept) : null].filter((x) => x && x.trim()).join(" · ")}
           {` · Año ${ano}, datos ${corte}`}
         </p>
         <div style={{ marginTop: 10 }}>
@@ -158,10 +170,11 @@ export default function EntidadPage({ params }: { params: { id: string } }) {
         <p className="sub">
           {n_obras
             ? `${detenidas.length ? `${detenidas.length} sin ningún gasto ${corte}. ` : ""}`
-              + `Los ${Math.min(obras.length, n_obras)} de mayor presupuesto; cada uno enlaza a su ficha oficial en el MEF.`
+              + `Los de mayor presupuesto; cada uno enlaza a su ficha oficial en el MEF.`
             : "Esta entidad no tiene proyectos de inversión este año."}
         </p>
-        {n_obras ? <ListaObras obras={obras} /> : null}
+        {n_obras ? <ListaObras obras={obras.slice(0, OBRAS_EN_PAGINA)} /> : null}
+        <MasObras sec={info.sec_ejec} desde={OBRAS_EN_PAGINA} total={obras.length} />
       </section>
 
       <section className="seccion tarjeta">

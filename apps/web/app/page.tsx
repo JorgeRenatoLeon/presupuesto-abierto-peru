@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import {
   load, loadOptional, latestYear, fmtSoles, fmtPct, interpretarAvance, corteDatos,
@@ -12,6 +13,7 @@ import { AlertaCard } from "@/components/AlertaCard";
 import { RepartoPorCien } from "@/components/Reparto";
 import { SelectorRegion } from "@/components/SelectorRegion";
 import { BuscaMunicipalidad } from "@/components/BuscaMunicipalidad";
+import { Bandas } from "@/components/Bandas";
 
 export default function Home() {
   const resumen = load<ResumenAnual[]>("resumen_anual.json");
@@ -40,7 +42,11 @@ export default function Home() {
   return (
     <div className="pagina">
       <section className="hero">
-        <h1>¿En qué se gasta el dinero del Perú?</h1>
+        <Bandas bandas={[
+          { texto: "¿En qué se gasta", color: "fucsia", chica: true },
+          { texto: "el dinero del Perú?", color: "amarillo" },
+          ...(actual ? [{ texto: `${fmtSoles(actual.pim)} · ${actual.ano}`, color: "verde" as const, chica: true }] : []),
+        ]} etiqueta="¿En qué se gasta el dinero del Perú?" />
         <p>
           Seguimiento del presupuesto público con datos oficiales del MEF{ano ? ` — año ${ano}` : ""}
           {actual ? `, actualizado ${corte}` : ""}.
@@ -49,26 +55,11 @@ export default function Home() {
 
       {actual ? (
         <>
-          <section className="kpis">
-            <KpiCard etiqueta="Presupuesto vigente (PIM)" valor={fmtSoles(actual.pim)}
-                     nota="Lo que las entidades pueden gastar este año" />
-            <KpiCard etiqueta="Ejecutado (devengado)" valor={fmtSoles(actual.devengado_ytd)}
-                     nota={`Acumulado ${corte}`} />
+          <section className="kpis kpis-2">
+            <KpiCard etiqueta={`Gastado ${corte}`} valor={fmtSoles(actual.devengado_ytd)}
+                     nota={`De ${fmtSoles(actual.pim)} vigentes; el Congreso aprobó ${fmtSoles(actual.pia)}`} />
             <KpiCard etiqueta="Avance de ejecución" valor={fmtPct(avance)}
                      nota={`Esperado a la fecha: ${fmtPct(esperado)}`} />
-            <KpiCard etiqueta="Presupuesto inicial (PIA)" valor={fmtSoles(actual.pia)}
-                     nota="Aprobado al inicio del año" />
-          </section>
-
-          {lectura ? <Lectura tono={lectura.tono}>{lectura.texto}</Lectura> : null}
-
-          <section className="seccion tarjeta">
-            <h2>¿A dónde va cada S/ 100?</h2>
-            <p className="sub">De cada S/ 100 del presupuesto vigente {ano}, por función del Estado.</p>
-            <RepartoPorCien partes={funcionesAno} href="/comparar/funcion/" />
-            <div style={{ marginTop: 10 }}>
-              <Link className="tab" href="/comparar/funcion/">¿Cómo cambió cada función? →</Link>
-            </div>
           </section>
 
           {departamentos.length ? (
@@ -80,6 +71,17 @@ export default function Home() {
               <SelectorRegion departamentos={departamentos} />
             </section>
           ) : null}
+
+          {lectura ? <Lectura tono={lectura.tono}>{lectura.texto}</Lectura> : null}
+
+          <section className="seccion tarjeta">
+            <h2>¿A dónde va cada S/ 100?</h2>
+            <p className="sub">De cada S/ 100 del presupuesto vigente {ano}, por función del Estado.</p>
+            <RepartoPorCien partes={funcionesAno} href="/comparar/funcion/" />
+            <div style={{ marginTop: 10 }}>
+              <Link className="tab" href="/comparar/funcion/">¿Cómo cambió cada función? <ArrowRight className="icono-linea" aria-hidden /></Link>
+            </div>
+          </section>
 
           {auditoria?.obras_sin_avance ? (
             <section className="seccion tarjeta">
@@ -96,7 +98,7 @@ export default function Home() {
                          nota={auditoria.laudos.a_empresas ? `${fmtSoles(auditoria.laudos.a_empresas)} para empresas` : "presupuestados este año"} />
               </div>
               <div style={{ marginTop: 10 }}>
-                <Link className="tab activo" href="/auditar/">Ver qué vigilar y cómo actuar →</Link>
+                <Link className="tab activo" href="/auditar/">Ver qué vigilar y cómo actuar <ArrowRight className="icono-linea" aria-hidden /></Link>
               </div>
             </section>
           ) : null}
@@ -122,7 +124,7 @@ export default function Home() {
                 </p>
                 <GraficoContraste puntos={contrasteAno} />
                 <div style={{ marginTop: 10 }}>
-                  <Link className="tab" href="/ingresos/">Ver el detalle de ingresos →</Link>
+                  <Link className="tab" href="/ingresos/">Ver el detalle de ingresos <ArrowRight className="icono-linea" aria-hidden /></Link>
                 </div>
               </section>
             );
@@ -142,8 +144,8 @@ export default function Home() {
           <div style={{ display: "grid", gap: 10 }}>
             {alertasTop.map((a, i) => <AlertaCard key={a.id ?? i} alerta={a} />)}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Link className="tab activo" href="/comparar/">Comparar el presupuesto →</Link>
-              <Link className="tab" href="/alertas/">Ver todas las alertas →</Link>
+              <Link className="tab activo" href="/comparar/">Comparar el presupuesto <ArrowRight className="icono-linea" aria-hidden /></Link>
+              <Link className="tab" href="/alertas/">Ver todas las alertas <ArrowRight className="icono-linea" aria-hidden /></Link>
             </div>
           </div>
         ) : (

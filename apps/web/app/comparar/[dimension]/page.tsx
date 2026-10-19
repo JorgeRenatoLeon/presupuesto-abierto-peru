@@ -1,5 +1,6 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { loadOptional, type ComparacionDimension, type ComparacionResumen } from "@/lib/data";
+import { loadOptional, type ComparacionDimension, type ComparacionResumen, fmtLugar } from "@/lib/data";
 import { Comparador } from "@/components/Comparador";
 
 export const dynamicParams = false;
@@ -28,7 +29,7 @@ export default function CompararDimensionPage({ params }: { params: { dimension:
   return (
     <div className="pagina">
       <nav style={{ fontSize: 13 }}>
-        <Link href="/comparar/" style={{ color: "var(--rojo)", fontWeight: 600 }}>← ¿Qué cambió?</Link>
+        <Link href="/comparar/" style={{ color: "var(--rojo)", fontWeight: 600 }}><ArrowLeft className="icono-linea" aria-hidden /> ¿Qué cambió?</Link>
       </nav>
       <section className="hero">
         <h1>Comparar por {data.titulo.toLowerCase()} · {resumen.ano}</h1>
@@ -62,7 +63,7 @@ export default function CompararDimensionPage({ params }: { params: { dimension:
             <tbody>
               {data.definiciones.map((d) => (
                 <tr key={d.etiqueta}>
-                  <td style={{ fontWeight: 600, color: "var(--tinta)" }}>{d.nombre}</td>
+                  <td style={{ fontWeight: 600, color: "var(--tinta)" }}>{fmtLugar(d.nombre)}</td>
                   <td>{d.descripcion}</td>
                   <td><span className={`badge ${d.confianza === "alta" ? "neutro" : "media"}`}>{d.confianza}</span></td>
                 </tr>

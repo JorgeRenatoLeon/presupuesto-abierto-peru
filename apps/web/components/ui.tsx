@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { fmtSoles, fmtPct } from "@/lib/types";
+import { fmtSoles, fmtPct, fmtNombre } from "@/lib/types";
+import { CircleCheck, CircleAlert, Clock } from "lucide-react";
 
 export function KpiCard({ etiqueta, valor, nota }: { etiqueta: string; valor: string; nota?: string }) {
   return (
@@ -12,10 +13,10 @@ export function KpiCard({ etiqueta, valor, nota }: { etiqueta: string; valor: st
 }
 
 export function Lectura({ tono, children }: { tono: "ok" | "warn" | "bad"; children: React.ReactNode }) {
-  const icono = tono === "ok" ? "✓" : tono === "warn" ? "!" : "✕";
+  const Icono = tono === "ok" ? CircleCheck : tono === "warn" ? CircleAlert : Clock;
   return (
     <div className={`lectura ${tono}`}>
-      <strong aria-hidden>{icono}</strong>
+      <strong aria-hidden><Icono size={20} strokeWidth={2.4} /></strong>
       <span>{children}</span>
     </div>
   );
@@ -49,7 +50,7 @@ export function ListaBarras({ items, unidadNota }: { items: FilaItem[]; unidadNo
         const contenido = (
           <>
             <div className="linea1">
-              <span className="nombre">{i.nombre}</span>
+              <span className="nombre">{fmtNombre(i.nombre)}</span>
               <span className="monto">{fmtSoles(i.monto)}</span>
             </div>
             <BarraProgreso avance={i.monto / max} />

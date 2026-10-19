@@ -10,6 +10,7 @@
     "serve": "npx serve@latest out"
   },
   "dependencies": {
+    "lucide-react": "^1.59.0",
     "next": "14.2.15",
     "react": "18.3.1",
     "react-dom": "18.3.1"

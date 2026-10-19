@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
 import { fmtLugar, urlDatos, type DistritoIndice } from "@/lib/types";
@@ -47,7 +48,7 @@ export function BuscaMunicipalidad({ autoFocus = false, etiqueta = "Busca tu mun
                 <span className="detalle">{d.d === d.p ? "Capital de provincia" : `Provincia de ${fmtLugar(d.p)}`} · {fmtLugar(d.r ?? "")}</span>
               </Link>
               <Link className="busca-prov" href={`/localidad/${d.u.slice(0, 2)}/${d.u.slice(2, 4)}/#d${d.u}`}
-                    aria-label={`Ver la provincia de ${fmtLugar(d.p)}`}>Provincia →</Link>
+                    aria-label={`Ver la provincia de ${fmtLugar(d.p)}`}>Provincia <ArrowRight className="icono-linea" aria-hidden /></Link>
             </li>
           ))}
         </ul>

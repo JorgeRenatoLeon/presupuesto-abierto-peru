@@ -20,6 +20,9 @@ import json
 
 import duckdb
 
+from nombres import con_lugares, lugares, texto, titulo as nombre_propio
+
+_SITIOS = None  # place names for project titles, loaded by compute_alerts()
 from config import SERVING
 
 # --- Thresholds (tune with the team) ---
@@ -82,6 +85,9 @@ def _has(con, table: str) -> bool:
 
 def compute_alerts() -> list[dict]:
     con = _db()
+    global _SITIOS
+    _SITIOS = lugares(con) if con.execute(
+        "SELECT count(*) FROM information_schema.tables WHERE table_name = 'dim_entidad'").fetchone()[0] else None
     resumen_p = SERVING / "json" / "comparar" / "resumen.json"
     resumen = json.loads(resumen_p.read_text()) if resumen_p.exists() else None
     # expected execution: share of the year the data covers (daily files are published mid-month).
@@ -126,7 +132,7 @@ def compute_alerts() -> list[dict]:
             "regla": "RIESGO_EJEC", "severidad": "alta" if gap >= UMBRAL_RIESGO_GAP_ALTA else "media",
             "ano": ano, "mes": mes, "sec_ejec": sec, "entidad": nombre,
             "nivel": nivel, "departamento": dept,
-            "titulo": f"{nombre} solo ha ejecutado {avance*100:.0f}% de su presupuesto {corte.rsplit(' de ', 1)[0]}",
+            "titulo": f"{nombre_propio(nombre)} solo ha ejecutado {avance*100:.0f}% de su presupuesto {corte.rsplit(' de ', 1)[0]}",
             "mensaje": (
                 f"{corte[0].upper() + corte[1:]}, esta entidad ha gastado {_fmt(dev)} de los {_fmt(pim)} "
                 f"disponibles ({avance*100:.0f}%). Al ritmo del calendario debería ir cerca de "
@@ -152,7 +158,7 @@ def compute_alerts() -> list[dict]:
     """).fetchall()
     for ano, mes, sec, nombre, nivel, dept, pia, pim in r3:
         if pia == 0:
-            titulo = f"{nombre} maneja {_fmt(pim)} que no estaban en el presupuesto inicial"
+            titulo = f"{nombre_propio(nombre)} maneja {_fmt(pim)} que no estaban en el presupuesto inicial"
             mensaje = (f"Esta entidad no tenía presupuesto de apertura (PIA) y ahora administra {_fmt(pim)}. "
                        f"Esto ocurre con transferencias durante el año; conviene revisar su origen y destino.")
             pct = None
@@ -160,7 +166,7 @@ def compute_alerts() -> list[dict]:
             ratio = pim / pia
             crecio = ratio > 1
             pct = (ratio - 1) * 100
-            titulo = (f"El presupuesto de {nombre} {'creció' if crecio else 'se redujo'} "
+            titulo = (f"El presupuesto de {nombre_propio(nombre)} {'creció' if crecio else 'se redujo'} "
                       f"{abs(pct):.0f}% respecto al inicial")
             mensaje = (f"Comenzó el año con {_fmt(pia)} (PIA) y ahora tiene {_fmt(pim)} (PIM). "
                        + ("Un aumento grande puede reflejar nuevas obras o transferencias recibidas."
@@ -185,7 +191,7 @@ def compute_alerts() -> list[dict]:
 
 def _corto(nombre: str, n: int = 90) -> str:
     """Project names run to 300 characters: keep the start, in sentence case."""
-    s = _frase(nombre)
+    s = con_lugares(nombre, _SITIOS)
     return s if len(s) <= n else s[:n].rsplit(" ", 1)[0] + "…"
 
 
@@ -203,7 +209,7 @@ def _obras_sin_avance(con, resumen: dict) -> list[dict]:
             "departamento": (dept or "").strip() or None, "codigo": cui,
             "titulo": f"Proyecto de {_fmt(pim)} sin gasto a {MESES_ES[mes]}: {_corto(nombre)}",
             "mensaje": (
-                f"{entidad} tiene {_fmt(pim)} para «{_corto(nombre, 160)}» (CUI {cui}), pero a {MESES_ES[mes]} "
+                f"{nombre_propio(entidad)} tiene {_fmt(pim)} para «{_corto(nombre, 160)}» (CUI {cui}), pero a {MESES_ES[mes]} "
                 f"de {ano} no ha registrado ningún gasto. "
                 + (f"El año pasado sí avanzó ({_fmt(dev_ant)} ejecutados): ¿está paralizada? " if venia else
                    "Los proyectos suelen gastar más a fin de año, pero a estas alturas conviene preguntar por su cronograma. ")
@@ -235,7 +241,7 @@ def _gasto_diciembre(con) -> list[dict]:
         out.append({
             "regla": "GASTO_DICIEMBRE", "severidad": "alta" if share >= UMBRAL_DICIEMBRE_ALTA else "media",
             "ano": ant, "mes": 12, "sec_ejec": sec, "entidad": nombre, "nivel": nivel, "departamento": dept,
-            "titulo": f"{nombre} concentró en diciembre el {share*100:.0f}% de todo su gasto de {ant}",
+            "titulo": f"{nombre_propio(nombre)} concentró en diciembre el {share*100:.0f}% de todo su gasto de {ant}",
             "mensaje": (
                 f"De los {_fmt(dev)} que ejecutó en {ant}, {_fmt(dic)} se gastaron en diciembre "
                 f"({share*100:.0f}%; el promedio del Estado es {nac*100:.0f}%). Gastar tanto al cierre del año "
@@ -266,7 +272,7 @@ def _cambios_publicacion(con, resumen: dict) -> list[dict]:
         out.append({
             "regla": "PIM_CAMBIO", "severidad": "alta" if abs(pct) >= UMBRAL_PIM_CAMBIO_ALTA * 100 else "media",
             "ano": ano, "mes": mes, "sec_ejec": sec, "entidad": nombre, "nivel": nivel, "departamento": dept,
-            "titulo": f"El presupuesto de {nombre} {'subió' if subio else 'bajó'} {abs(pct):.0f}% en la última actualización",
+            "titulo": f"El presupuesto de {nombre_propio(nombre)} {'subió' if subio else 'bajó'} {abs(pct):.0f}% en la última actualización",
             "mensaje": (
                 f"Entre la publicación del MEF del {desde} y la del {hasta}, su presupuesto modificado (PIM) "
                 f"pasó de {_fmt(prev_pim)} a {_fmt(cur)} ({'+' if subio else '−'}{_fmt(abs(delta))}). "
@@ -344,19 +350,18 @@ def _nodos(con, antes: str, despues: str, pct: float, soles: float) -> list[dict
 
 
 def _frase(s: str) -> str:
-    """'CONSTRUCCION DE EDIFICIOS' -> 'Construccion de edificios' (MEF names are upper case)."""
-    s = " ".join(s.split())
-    return s[:1].upper() + s[1:].lower()
+    """'CONSTRUCCION DE EDIFICIOS' -> 'Construcción de edificios' (MEF names are upper case)."""
+    return texto(s)
 
 
 def _que(n: dict) -> str:
     """How to name a category inside a sentence, e.g. 'la función «Saneamiento»'."""
     nombre = _frase(n["nombre"])
     if n["dimension"] == "departamento":
-        return f"el departamento de {n['nombre'].strip().title()}"
+        return f"el departamento de {nombre_propio(n["nombre"])}"
     if n["dimension"] == "etiqueta":
         return f"«{n['nombre'].strip()}»"
-    que = {"funcion": f"la función «{nombre}»", "generica": f"el gasto en «{nombre}»"}[n["dimension"]]
+    que = {"funcion": f"la función «{nombre_propio(nombre)}»", "generica": f"el gasto en «{nombre_propio(nombre)}»"}[n["dimension"]]
     if n.get("padre"):  # a sub-level: say which parent it belongs to
         que = que.replace("la función", "la división funcional") + f" (dentro de «{_frase(n['padre'])}»)"
     return que

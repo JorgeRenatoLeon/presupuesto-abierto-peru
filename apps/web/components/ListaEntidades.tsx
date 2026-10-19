@@ -65,7 +65,7 @@ export function ListaEntidades({ entidades, esperado, porProvincia = false, busc
                 {cabecera ? <div className="grupo-titulo">Provincia de {fmtLugar(e.provincia ?? "—")}</div> : null}
                 <Link href={`/entidad/${e.sec_ejec}/`} className="fila-lista">
                   <div className="linea1">
-                    <span className="nombre">{e.nombre}</span>
+                    <span className="nombre">{fmtLugar(e.nombre)}</span>
                     <span className="monto">{fmtSoles(e.pim)}</span>
                   </div>
                   <BarraProgreso avance={avance(e)} tono={tono(e)} />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { archivoExplicacion, fmtSoles, fmtPct, fmtLugar, urlDatos, type Explicacion } from "@/lib/types";
+import { archivoExplicacion, fmtSoles, fmtPct, fmtLugar, fmtNombre, urlDatos, type Explicacion } from "@/lib/types";
 
 const cache = new Map<string, Explicacion | null>();
 
@@ -52,7 +52,7 @@ export function PanelExplicacion({ dimension, id, soloDefinicion = false }:
               <li key={`${x.tipo}-${x.nombre}`}>
                 <span className="explica-item">
                   <span className={`etiqueta-tipo ${x.tipo}`}>{x.tipo === "proyecto" ? "Obra / proyecto" : "Actividad"}</span>
-                  {x.nombre.toLowerCase()}
+                  {fmtNombre(x.nombre)}
                 </span>
                 <span className="cifra">{fmtSoles(x.pim)} <small>{parte(x.pim)}</small></span>
               </li>
@@ -64,7 +64,7 @@ export function PanelExplicacion({ dimension, id, soloDefinicion = false }:
           <ul className="explica-lista">
             {e.como.map((x) => (
               <li key={x.codigo}>
-                <span className="explica-item">{x.nombre.toLowerCase()}</span>
+                <span className="explica-item">{fmtNombre(x.nombre)}</span>
                 <span className="cifra">{parte(x.pim)}</span>
               </li>
             ))}

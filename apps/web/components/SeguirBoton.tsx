@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { leerSeguidos, guardarSeguidos, mismo, type Seguido } from "@/lib/seguimiento";
+import { Star } from "lucide-react";
 
-/** ☆ Seguir / ★ Siguiendo: adds the item to this browser's watchlist (/seguimiento). */
+/** Seguir / Siguiendo: adds the item to this browser's watchlist (/seguimiento). */
 export function SeguirBoton({ item, compacto = false }: { item: Seguido; compacto?: boolean }) {
   // unknown until mounted: the static HTML can't know what this browser follows
   const [sigue, setSigue] = useState<boolean | null>(null);
@@ -22,14 +23,15 @@ export function SeguirBoton({ item, compacto = false }: { item: Seguido; compact
     return (
       <button className={`seguir-compacto ${sigue ? "activo" : ""}`} onClick={alternar} aria-pressed={!!sigue}
               aria-label={`${sigue ? "Dejar de seguir" : "Seguir"} ${item.nombre}`} title={sigue ? "Siguiendo" : "Seguir"}>
-        {sigue ? "★" : "☆"}
+        <Star className="icono-linea" aria-hidden fill={sigue ? "currentColor" : "none"} />
       </button>
     );
   }
   return (
     <button className={`tab ${sigue ? "activo" : ""}`} onClick={alternar} aria-pressed={!!sigue}
             title="Se guarda solo en este navegador; míralo en «Siguiendo»">
-      {sigue ? "★ Siguiendo" : "☆ Seguir"}
+      <Star className="icono-linea" aria-hidden fill={sigue ? "currentColor" : "none"} />
+      {sigue ? "Siguiendo" : "Seguir"}
     </button>
   );
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { loadOptional, type Glosario } from "@/lib/data";
+import { loadOptional, fmtNombre, type Glosario } from "@/lib/data";
 
 export const metadata = {
   title: "Glosario del presupuesto — Presupuesto Abierto Perú",
@@ -10,7 +10,6 @@ const GRUPOS: Record<string, string> = {
   presupuesto: "El presupuesto", ejecucion: "Cómo se gasta (las etapas)", estructura: "Quién gasta",
   clasificacion: "Cómo se clasifica el gasto", inversion: "Obras y actividades",
 };
-const oracion = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
 
 export default function GlosarioPage() {
   const g = loadOptional<Glosario>("glosario.json");
@@ -48,7 +47,7 @@ export default function GlosarioPage() {
         <dl className="glosario">
           {g.funciones.map((f) => (
             <div key={f.codigo} id={`f${f.codigo}`}>
-              <dt><span className="codigo">{f.codigo}</span> {oracion(f.nombre)}</dt>
+              <dt><span className="codigo">{f.codigo}</span> {fmtNombre(f.nombre)}</dt>
               <dd>
                 {f.simple ? <p className="simple">{f.simple}{f.ejemplos ? ` Por ejemplo: ${f.ejemplos}.` : ""}</p> : null}
                 <p className="oficial">{f.oficial}</p>
@@ -64,7 +63,7 @@ export default function GlosarioPage() {
         <dl className="glosario">
           {g.genericas.map((f) => (
             <div key={f.codigo} id={`g${f.codigo}`}>
-              <dt><span className="codigo">{f.codigo}</span> {oracion(f.nombre)}</dt>
+              <dt><span className="codigo">{f.codigo}</span> {fmtNombre(f.nombre)}</dt>
               <dd><p className="simple">{f.simple} Por ejemplo: {f.ejemplos}.</p><p className="oficial">{f.oficial}</p></dd>
             </div>
           ))}

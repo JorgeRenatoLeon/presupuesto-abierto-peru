@@ -21,6 +21,7 @@ from xml.sax.saxutils import escape
 import duckdb
 
 from compare import ES_PROYECTO
+from nombres import con_lugares, lugares as _lugares
 from config import SERVING
 from lake import register_views
 
@@ -31,13 +32,24 @@ TOP_ITEMS_FUNCION = 5  # an entity's largest activities/projects shown under eac
 
 def _records(df):
     """DataFrame -> list of dicts with NaN/NaT converted to None (valid JSON)."""
-    return df.astype(object).where(df.notnull(), None).to_dict(orient="records")
+    return _bonito(df.astype(object).where(df.notnull(), None).to_dict(orient="records"))
+
+
+_LUGARES = None  # place names, set by exportar() before anything is written
+
+
+def _bonito(filas: list[dict]) -> list[dict]:
+    """Project/activity names readable: accents and capitalised places ("... distrito de Ollantaytambo")."""
+    for f in filas:
+        if f.get("nombre") and ("cui" in f or "tipo" in f):
+            f["nombre"] = con_lugares(f["nombre"], _LUGARES)
+    return filas
 
 
 def _rows(con, sql: str, params=None) -> list[dict]:
     cur = con.execute(sql, params or [])
     cols = [d[0] for d in cur.description]
-    return [{c: (float(v) if hasattr(v, "is_finite") else v) for c, v in zip(cols, r)} for r in cur.fetchall()]
+    return _bonito([{c: (float(v) if hasattr(v, "is_finite") else v) for c, v in zip(cols, r)} for r in cur.fetchall()])
 
 
 def _write(path, data) -> None:
@@ -54,6 +66,8 @@ def exportar() -> None:
     con = duckdb.connect(str(SERVING / "serving.duckdb"), read_only=True)
     con.execute("SET enable_progress_bar = false")
     register_views(con)
+    global _LUGARES
+    _LUGARES = _lugares(con)
     out = SERVING / "json"
     resumen_p = out / "comparar" / "resumen.json"
     resumen = json.loads(resumen_p.read_text()) if resumen_p.exists() else None

@@ -10,6 +10,7 @@ import { AlertaCard } from "@/components/AlertaCard";
 import { ListaObras } from "@/components/Obras";
 import { Migas } from "@/components/Migas";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
+import { Bandas } from "@/components/Bandas";
 
 const PROV_DIR = join(DATA_DIR, "localidad", "prov");
 
@@ -59,7 +60,11 @@ export default function ProvinciaPage({ params }: { params: { codigo: string; pr
     <div className="pagina">
       <Migas pasos={[{ href: `/localidad/${p.dept}/`, texto: dep }, { href: `/localidad/${p.dept}/${p.codigo.slice(2)}/`, texto: `Provincia de ${nombre}` }]} />
       <section className="hero">
-        <h1>Provincia de {nombre}</h1>
+        <Bandas etiqueta={`Provincia de ${nombre}`} bandas={[
+          { texto: "Provincia de", color: "fucsia", chica: true },
+          { texto: nombre, color: "amarillo", grande: true },
+          { texto: `${p.distritos.length} municipalidades · ${fmtSoles(p.gasto.pim)}`, color: "verde", chica: true },
+        ]} />
         <p>
           Las {p.distritos.length} municipalidades de la provincia y las demás entidades con sede en ella, en {p.ano}
           {p.publicacion ? `, según la publicación del MEF del ${fmtFecha(p.publicacion.fecha)}` : ""} (datos {corte}).

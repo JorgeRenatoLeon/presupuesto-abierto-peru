@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import {
   load, loadOptional, fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos,
@@ -78,7 +79,7 @@ export default function CompararPage() {
         {cambios.length ? (
           <div style={{ display: "grid", gap: 10 }}>
             {cambios.map((a, i) => <AlertaCard key={i} alerta={a} />)}
-            <Link className="tab" href="/alertas/" style={{ justifySelf: "start" }}>Ver todas las alertas →</Link>
+            <Link className="tab" href="/alertas/" style={{ justifySelf: "start" }}>Ver todas las alertas <ArrowRight className="icono-linea" aria-hidden /></Link>
           </div>
         ) : (
           <div className="tarjeta vacio">No hay cambios por encima de los umbrales de alerta.</div>

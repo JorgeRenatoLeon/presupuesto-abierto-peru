@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { fmtSoles } from "@/lib/types";
+import { fmtSoles, fmtNombre } from "@/lib/types";
+import { Franja, tinta } from "@/components/Franja";
 
 type Parte = { id: string; nombre: string; monto: number };
 
@@ -17,7 +18,7 @@ export function partesDeCien(montos: number[], total = 100): number[] {
   return base;
 }
 
-/** Part-to-whole as a ranked single-hue bar list (magnitude, not identity): top N + "Otros". */
+/** Part-to-whole: one stacked ink band (top 5 + the rest) and the ranked rows as its legend. */
 export function RepartoPorCien({ partes, maximo = 8, href }: { partes: Parte[]; maximo?: number; href?: string }) {
   const ordenadas = [...partes].filter((p) => p.monto > 0).sort((a, b) => b.monto - a.monto);
   if (!ordenadas.length) return <div className="vacio">Sin datos disponibles todavía.</div>;
@@ -27,19 +28,21 @@ export function RepartoPorCien({ partes, maximo = 8, href }: { partes: Parte[]; 
     ? [...top, { id: "otros", nombre: `Otras ${cola.length} funciones`, monto: cola.reduce((a, p) => a + p.monto, 0) }]
     : top;
   const soles = partesDeCien(filas.map((f) => f.monto));
-  const mayor = Math.max(...soles, 1);
   return (
+    <>
+    <Franja segmentos={filas.slice(0, 5).concat(filas.length > 5 ? [{ id: "resto", nombre: "Las demás",
+      monto: filas.slice(5).reduce((a, f) => a + f.monto, 0) }] : [])} etiqueta="Reparto del presupuesto por función" />
     <div className="reparto" role="list">
       {filas.map((f, i) => {
         const contenido = (
           <>
+            <span className={`chip ${i < 5 ? tinta(i) : "otras"}`} aria-hidden />
             <span className="reparto-valor" aria-label={`${soles[i]} soles de cada 100`}>S/ {soles[i]}</span>
             <span className="reparto-cuerpo">
               <span className="linea1">
-                <span className="nombre">{f.nombre}</span>
+                <span className="nombre">{fmtNombre(f.nombre)}</span>
                 <span className="monto">{fmtSoles(f.monto)}</span>
               </span>
-              <span className="reparto-barra"><span style={{ width: `${(soles[i] / mayor) * 100}%` }} /></span>
             </span>
           </>
         );
@@ -48,5 +51,6 @@ export function RepartoPorCien({ partes, maximo = 8, href }: { partes: Parte[]; 
           : <div key={f.id} className="reparto-fila" role="listitem">{contenido}</div>;
       })}
     </div>
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import {
   loadOptional, fmtSoles, fmtPct, fmtLugar, fmtFecha, urlDatos, ACCIONES, corteDatos, type Auditoria,
@@ -71,7 +72,7 @@ export default function AuditarPage() {
           </div>
           <ListaObras obras={o.top.slice(0, 8)} conEntidad />
           <div style={{ marginTop: 10 }}>
-            <Link className="tab" href="/alertas/?regla=OBRA_SIN_AVANCE">Ver los {n("OBRA_SIN_AVANCE")} más grandes →</Link>
+            <Link className="tab" href="/alertas/?regla=OBRA_SIN_AVANCE">Ver los {n("OBRA_SIN_AVANCE")} más grandes <ArrowRight className="icono-linea" aria-hidden /></Link>
           </div>
         </Paso>
       ) : null}
@@ -93,7 +94,7 @@ export default function AuditarPage() {
             <tbody>
               {d.top.slice(0, 10).map((x) => (
                 <tr key={x.sec_ejec}>
-                  <td><Link href={`/entidad/${x.sec_ejec}/`} style={{ color: "var(--tinta)", fontWeight: 600 }}>{x.nombre}</Link>
+                  <td><Link href={`/entidad/${x.sec_ejec}/`} style={{ color: "var(--tinta)", fontWeight: 600 }}>{fmtLugar(x.nombre)}</Link>
                     {x.dept ? <div className="sub" style={{ margin: 0 }}>{fmtLugar(x.dept)}</div> : null}</td>
                   <td>{fmtSoles(x.dic)}</td>
                   <td><strong>{fmtPct(x.pct)}</strong></td>
@@ -121,7 +122,7 @@ export default function AuditarPage() {
           <tbody>
             {l.top.slice(0, 8).map((x) => (
               <tr key={x.sec_ejec}>
-                <td><Link href={`/entidad/${x.sec_ejec}/`} style={{ color: "var(--tinta)", fontWeight: 600 }}>{x.nombre}</Link></td>
+                <td><Link href={`/entidad/${x.sec_ejec}/`} style={{ color: "var(--tinta)", fontWeight: 600 }}>{fmtLugar(x.nombre)}</Link></td>
                 <td>{fmtSoles(x.pim)}</td>
                 <td>{fmtSoles(x.a_empresas)}</td>
               </tr>
@@ -143,7 +144,7 @@ export default function AuditarPage() {
         <div style={{ display: "grid", gap: 10 }}>
           {a.destacadas.map((x, i) => <AlertaCard key={x.id ?? i} alerta={x} />)}
         </div>
-        <div style={{ marginTop: 10 }}><Link className="tab activo" href="/comparar/">Comparar el presupuesto →</Link></div>
+        <div style={{ marginTop: 10 }}><Link className="tab activo" href="/comparar/">Comparar el presupuesto <ArrowRight className="icono-linea" aria-hidden /></Link></div>
       </Paso>
 
       <Paso n={5} titulo="Entidades que no ejecutan">
@@ -155,7 +156,7 @@ export default function AuditarPage() {
           Por qué importa: el dinero que no se ejecuta no se convierte en servicios, y al final del año suele
           gastarse con apuro (señal 2) o quedar sin usar.
         </p>
-        <Link className="tab" href="/alertas/?regla=RIESGO_EJEC">Ver la lista →</Link>
+        <Link className="tab" href="/alertas/?regla=RIESGO_EJEC">Ver la lista <ArrowRight className="icono-linea" aria-hidden /></Link>
       </Paso>
 
       <section className="tarjeta seccion">
@@ -185,7 +186,7 @@ export default function AuditarPage() {
       <section className="tarjeta seccion">
         <h2>Recibe avisos</h2>
         <p style={{ fontSize: 14 }}>
-          Sigue tu región o tu municipalidad con <strong>☆ Seguir</strong> y revisa lo nuevo en{" "}
+          Sigue tu región o tu municipalidad con <strong>«Seguir»</strong> y revisa lo nuevo en{" "}
           <Link href="/seguimiento/" style={enlace}>Siguiendo</Link>. O suscríbete con cualquier lector de RSS:{" "}
           <a style={enlace} href={urlDatos("feeds/alertas.xml")}>alertas de prioridad alta</a>,{" "}
           <a style={enlace} href={urlDatos("feeds/cambios.xml")}>cambios por tema</a>,{" "}

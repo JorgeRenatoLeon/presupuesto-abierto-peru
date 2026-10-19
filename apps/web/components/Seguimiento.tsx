@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Alerta, ComparacionResumen, Localidad, Obra, TemaSeguible } from "@/lib/types";
@@ -72,7 +73,7 @@ export function Seguimiento() {
       <div className="tarjeta vacio">
         Aún no sigues nada. Busca tu <Link href="/localidad/" style={{ color: "var(--rojo)", fontWeight: 600 }}>región</Link>,
         tu municipalidad en <Link href="/explorar/" style={{ color: "var(--rojo)", fontWeight: 600 }}>Explorar</Link> o un
-        tema en <Link href="/comparar/" style={{ color: "var(--rojo)", fontWeight: 600 }}>Comparar</Link>, y toca ☆ Seguir.
+        tema en <Link href="/comparar/" style={{ color: "var(--rojo)", fontWeight: 600 }}>Comparar</Link>, y toca «Seguir».
       </div>
     );
   }
@@ -126,7 +127,7 @@ function Resumen({ d, s }: { d: Datos; s: Seguido }) {
           <span>{fmtPct(avance)} ejecutado de {fmtSoles(i.pim)}</span>
           <span>{d.entidad.n_obras} proyectos{detenidas ? `, ${detenidas} sin avance` : ""}</span>
         </div>
-        <Link className="tab" href={`/entidad/${s.id}/`} style={{ display: "inline-block", marginTop: 8 }}>Ver la entidad →</Link>
+        <Link className="tab" href={`/entidad/${s.id}/`} style={{ display: "inline-block", marginTop: 8 }}>Ver la entidad <ArrowRight className="icono-linea" aria-hidden /></Link>
       </>
     );
   }
@@ -141,7 +142,7 @@ function Resumen({ d, s }: { d: Datos; s: Seguido }) {
           <span>{x.cambios.pim_pub_ant ? `${fmtDelta((x.gasto.pim ?? 0) - x.cambios.pim_pub_ant)} en la última actualización` : ""}</span>
         </div>
         <p className="sub" style={{ marginTop: 6 }}>{x.obras.n_sin_avance} proyectos sin avance · {x.alertas.total} alertas ({x.alertas.alta} altas)</p>
-        <Link className="tab" href={`/localidad/${s.id}/`} style={{ display: "inline-block", marginTop: 4 }}>Ver la región →</Link>
+        <Link className="tab" href={`/localidad/${s.id}/`} style={{ display: "inline-block", marginTop: 4 }}>Ver la región <ArrowRight className="icono-linea" aria-hidden /></Link>
       </>
     );
   }
@@ -153,7 +154,7 @@ function Resumen({ d, s }: { d: Datos; s: Seguido }) {
         {t.pim_pub_ant ? <span>Última actualización: {fmtDelta((t.pim ?? 0) - t.pim_pub_ant)} ({fmtVariacion(t.pim_pub_ant, t.pim)})</span> : null}
         {t.pia_ano_ant ? <span>Aprobado frente al año anterior: {fmtVariacion(t.pia_ano_ant, t.pia)}</span> : null}
       </div>
-      <Link className="tab" href={`/comparar/${s.dimension ?? "funcion"}/`} style={{ display: "inline-block", marginTop: 8 }}>Comparar →</Link>
+      <Link className="tab" href={`/comparar/${s.dimension ?? "funcion"}/`} style={{ display: "inline-block", marginTop: 8 }}>Comparar <ArrowRight className="icono-linea" aria-hidden /></Link>
     </>
   );
 }

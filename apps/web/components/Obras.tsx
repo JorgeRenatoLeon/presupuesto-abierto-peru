@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { fmtSoles, fmtPct, fichaInversion, type Obra } from "@/lib/types";
+import { fmtSoles, fmtPct, fichaInversion, type Obra, fmtNombre } from "@/lib/types";
 import { BarraProgreso } from "@/components/ui";
 
 /** Signals computed by the pipeline (compare._obras): same words everywhere on the site. */
@@ -20,7 +20,7 @@ export function ListaObras({ obras, conEntidad = false, vacio }: {
         const s = o.senal ? SENAL_OBRA[o.senal] : null;
         return (
           <li key={`${o.sec_ejec ?? ""}-${o.cui}`} className="obra">
-            <div className="obra-nombre">{o.nombre}</div>
+            <div className="obra-nombre">{fmtNombre(o.nombre)}</div>
             <div className="obra-meta">
               {s ? <span className={`badge ${s.clase}`}>{s.texto}</span> : null}
               {conEntidad && o.entidad

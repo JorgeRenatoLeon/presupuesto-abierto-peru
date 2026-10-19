@@ -20,6 +20,7 @@ import duckdb
 from compare import DIMENSIONES, _id
 from config import SERVING
 from lake import register_views
+from nombres import con_lugares, lugares
 
 GLOSARIO = Path(__file__).parent / "glosario"
 TOP_EN_QUE, TOP_COMO, TOP_QUIEN = 8, 6, 6
@@ -77,6 +78,7 @@ def explicar() -> None:
     con.execute("SET enable_progress_bar = false")
     register_views(con)
     ano = con.execute("SELECT max(ANO_EJE) FROM gasto_wide").fetchone()[0]
+    sitios = lugares(con)
     con.execute(f"""CREATE TEMP VIEW g AS SELECT *,
         CASE WHEN 'PROYECTO' IN (TIPO_ACT_PROY, TIPO_ACT_PROY_NOMBRE) THEN 'proyecto' ELSE 'actividad' END AS tipo,
         CASE WHEN 'PROYECTO' IN (TIPO_ACT_PROY, TIPO_ACT_PROY_NOMBRE) THEN PRODUCTO_PROYECTO_NOMBRE
@@ -111,7 +113,7 @@ def explicar() -> None:
                     "pim": pim, "devengado": dev, "entidades": n_ent,
                     "oficial": _oficial(dim, id_, defs[dim]),
                     "simple": {"texto": s["simple"], "ejemplos": s["ejemplos"]} if s else None,
-                    "en_que": en_que.get(id_, []), "como": como.get(id_, []),
+                    "en_que": [{**x, "nombre": con_lugares(x["nombre"], sitios)} for x in en_que.get(id_, [])], "como": como.get(id_, []),
                     "quien": quien.get(id_, []), "por_nivel": por_nivel.get(id_, []),
                 }
                 path = out / "explicar" / dim / f"{archivo(id_)}.json"

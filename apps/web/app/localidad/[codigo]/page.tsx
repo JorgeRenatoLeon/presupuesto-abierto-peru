@@ -1,3 +1,4 @@
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import {
   load, loadOptional, fmtSoles, fmtPct, fmtDelta, fmtVariacion, fmtLugar, fmtFecha, interpretarAvance, urlDatos,
@@ -9,6 +10,7 @@ import { ListaObras } from "@/components/Obras";
 import { ListaEntidades } from "@/components/ListaEntidades";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
+import { Bandas } from "@/components/Bandas";
 
 export const dynamicParams = false;
 
@@ -48,10 +50,14 @@ export default function LocalidadPage({ params }: { params: { codigo: string } }
   return (
     <div className="pagina">
       <nav style={{ fontSize: 13 }}>
-        <Link href="/localidad/" style={{ color: "var(--rojo)", fontWeight: 600 }}>← Todas las regiones</Link>
+        <Link href="/localidad/" style={{ color: "var(--rojo)", fontWeight: 600 }}><ArrowLeft className="icono-linea" aria-hidden /> Todas las regiones</Link>
       </nav>
       <section className="hero">
-        <h1>{nombre}: ¿cómo se usa el presupuesto?</h1>
+        <Bandas etiqueta={`${nombre}: ¿cómo se usa el presupuesto?`} bandas={[
+          { texto: "¿Cómo se usa el presupuesto en", color: "fucsia", chica: true },
+          { texto: `${nombre}?`, color: "amarillo", grande: true },
+          { texto: `${fmtSoles(d.gasto.pim)} · ${d.ano}`, color: "verde", chica: true },
+        ]} />
         <p>
           Todo lo que el Estado gasta en {nombre} en {d.ano}
           {d.publicacion ? `, según la publicación del MEF del ${fmtFecha(d.publicacion.fecha)}` : ""}
@@ -93,7 +99,7 @@ export default function LocalidadPage({ params }: { params: { codigo: string } }
           Proyectos de inversión de S/ 1 millón o más que {corte} no registran ningún gasto:
           {" "}{fmtSoles(d.obras.pim_sin_avance)} en total. Pregunta a la entidad por su cronograma.
         </p>
-        <ListaObras obras={d.obras.sin_avance} conEntidad vacio="Ningún proyecto grande está detenido. 👏" />
+        <ListaObras obras={d.obras.sin_avance} conEntidad vacio="Ningún proyecto grande está detenido." />
       </section>
 
       <section className="seccion tarjeta">
@@ -139,7 +145,7 @@ export default function LocalidadPage({ params }: { params: { codigo: string } }
           <div style={{ display: "grid", gap: 10 }}>
             {d.alertas.top.map((a, i) => <AlertaCard key={a.id ?? i} alerta={a} />)}
             <Link className="tab" href={`/alertas/?dep=${d.codigo}`} style={{ justifySelf: "start" }}>
-              Ver todas las alertas de {nombre} →
+              Ver todas las alertas de {nombre} <ArrowRight className="icono-linea" aria-hidden />
             </Link>
           </div>
         ) : (
