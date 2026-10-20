@@ -48,7 +48,33 @@ await paso("municipality", async () => {
   await page.getByRole("button", { name: /Definición oficial/ }).first().click();
   await page.locator(".explica-oficial").first().waitFor();
   check(true, "entity: MEF's official definition loads");
-  await sinScroll("entidad/300790");
+  const fila = page.locator("details[open] .desglose-fila").first();
+  check(await fila.getByText("Presupuesto", { exact: true }).isVisible() && await fila.getByText("Gastado", { exact: true }).isVisible(),
+        "entity: función row labels its budget and what was spent");
+  await page.getByRole("button", { name: "¿En qué exactamente?" }).first().click();
+  const detalle = page.locator(".detalle-item").first();
+  await detalle.waitFor();
+  check(await detalle.locator("li").count() > 1 && await detalle.getByText("Qué se compra o se paga").isVisible(),
+        "entity: an activity opens its metas, expense types and sources");
+  check(await detalle.getByText("De dónde sale el dinero").isVisible(), "entity: the detail says where the money comes from");
+  await sinScroll("entidad/300790 (detail open)");
+  const nav = page.getByRole("navigation", { name: "Secciones de esta página" });
+  await nav.getByRole("link", { name: "Obras" }).click();
+  await page.waitForFunction(() => location.hash === "#obras");
+  check(await page.locator("#obras h2").isVisible(), "entity: the section strip jumps to Obras");
+  check(await nav.isVisible(), "entity: the section strip stays visible while scrolling");
+});
+
+await paso("budget without description", async () => {
+  await page.goto(`${BASE}/entidad/472/#en-que`);  // Fuerza Aérea del Perú: S/ 2,061 M under the generic code
+  await page.locator("details summary", { hasText: /Defensa y seguridad/i }).first().click();
+  await page.locator(".badge.sin-descripcion").first().waitFor();
+  check(await page.getByText("Sin nombre en los datos del MEF").first().isVisible(), "FAP: the nameless project is labelled, not left blank");
+  await page.getByRole("button", { name: "¿Qué se sabe de este presupuesto?" }).first().click();
+  await page.locator(".aviso-sd").first().waitFor();
+  check(await page.getByText(/transporte aéreo/i).first().isVisible(), "FAP: the detail shows what is public (expense types)");
+  await page.goto(`${BASE}/auditar/`);
+  check(await page.getByText("Presupuesto sin descripción").first().isVisible(), "auditar: budget without description is a signal");
 });
 
 await paso("province", async () => {

@@ -20,14 +20,16 @@ from xml.sax.saxutils import escape
 
 import duckdb
 
-from compare import ES_PROYECTO
-from nombres import con_lugares, lugares as _lugares
+from compare import ES_PROYECTO, SIN_DESCRIPCION
+from nombres import con_lugares, texto, lugares as _lugares
 from config import SERVING
 from lake import register_views
 
 DEPARTAMENTOS = "BETWEEN '01' AND '25'"  # '0' = no location, '98' = abroad
 TOP_OBRAS_ENTIDAD = 40
 TOP_ITEMS_FUNCION = 5  # an entity's largest activities/projects shown under each of its funciones
+TOP_METAS = 4          # per activity/project: its main targets (metas)...
+TOP_ESPECIFICAS = 6    # ...and expense types; the rest is summed as "otros"
 
 
 def _records(df):
@@ -119,26 +121,29 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
     series = con.execute(
         "SELECT sec_ejec, ano, mes, pia, pim, devengado FROM fact_entidad_mes ORDER BY ano, mes"
     ).fetchdf()
+    # budget (PIM) and spending (devengado) side by side: "tiene S/ X, gastó S/ Y"
     funciones = con.execute("""
         SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, FUNCION AS codigo, any_value(FUNCION_NOMBRE) AS funcion,
-               SUM(MONTO_DEVENGADO) AS devengado
-        FROM gasto GROUP BY 1, 2, 3
+               SUM(CAST(MONTO_PIM AS DOUBLE)) AS pim, SUM(CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE)) AS devengado
+        FROM gasto_wide GROUP BY 1, 2, 3
     """).fetchdf()
     genericas = con.execute("""
         SELECT SEC_EJEC AS sec_ejec, ANO_EJE AS ano, TIPO_TRANSACCION || '.' || GENERICA AS codigo,
-               any_value(GENERICA_NOMBRE) AS generica, SUM(MONTO_DEVENGADO) AS devengado
-        FROM gasto GROUP BY 1, 2, 3
+               any_value(GENERICA_NOMBRE) AS generica,
+               SUM(CAST(MONTO_PIM AS DOUBLE)) AS pim, SUM(CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE)) AS devengado
+        FROM gasto_wide GROUP BY 1, 2, 3
     """).fetchdf()
     # what each entity itself pays for inside each función: its largest activities and projects
-    items = con.execute(f"""
-        SELECT SEC_EJEC AS sec_ejec, FUNCION AS funcion, any_value(item) AS nombre, tipo,
-               sum(CAST(MONTO_PIM AS DOUBLE)) AS pim, sum(CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE)) AS devengado
-        FROM (SELECT *, CASE WHEN {ES_PROYECTO} THEN 'proyecto' ELSE 'actividad' END AS tipo,
-                     CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO_NOMBRE ELSE ACTIVIDAD_ACCION_OBRA_NOMBRE END AS item
-              FROM gasto_wide WHERE ANO_EJE = (SELECT max(ANO_EJE) FROM gasto_wide))
-        WHERE item IS NOT NULL GROUP BY SEC_EJEC, FUNCION, item, tipo
-        QUALIFY row_number() OVER (PARTITION BY SEC_EJEC, FUNCION ORDER BY pim DESC, item) <= {TOP_ITEMS_FUNCION}
-        ORDER BY sec_ejec, funcion, pim DESC""").fetchdf()
+    # (one ranked table, so the item lists and their detail files stay aligned)
+    _lineas_actuales(con)
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _items AS
+        SELECT sec, funcion, item, tipo, sum(p) AS pim, sum(d) AS devengado, bool_or(sin_desc) AS sd,
+               row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) AS k
+        FROM _lineas WHERE item IS NOT NULL GROUP BY sec, funcion, item, tipo
+        QUALIFY row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) <= {TOP_ITEMS_FUNCION}""")
+    items = con.execute("""SELECT sec AS sec_ejec, funcion, item AS nombre, tipo, pim, devengado,
+                                  CASE WHEN sd THEN true END AS sd
+                           FROM _items ORDER BY sec, funcion, k""").fetchdf()
     obras = con.execute(f"""SELECT sec_ejec, cui, nombre, funcion, dept_nombre AS dept, pim, devengado,
                                    pim_pub_ant, dev_ano_ant, senal FROM obras ORDER BY pim DESC NULLS LAST"""
                         ).fetchdf() if tiene_obras else None
@@ -146,11 +151,13 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
     # group once (O(n)) instead of filtering the full frame per entity (O(n × entities));
     # secondary name key makes tie order deterministic across runs
     s_groups = dict(tuple(series.groupby("sec_ejec")))
-    f_groups = dict(tuple(funciones.sort_values(["devengado", "funcion"], ascending=[False, True]).groupby("sec_ejec")))
-    g_groups = dict(tuple(genericas.sort_values(["devengado", "generica"], ascending=[False, True]).groupby("sec_ejec")))
+    f_groups = dict(tuple(funciones.sort_values(["pim", "funcion"], ascending=[False, True]).groupby("sec_ejec")))
+    g_groups = dict(tuple(genericas.sort_values(["pim", "generica"], ascending=[False, True]).groupby("sec_ejec")))
     o_groups = dict(tuple(obras.groupby("sec_ejec"))) if obras is not None else {}
     i_groups: dict[str, dict[str, list]] = {}
     for r in _records(items):
+        if not r.get("sd"):
+            r.pop("sd", None)  # only flagged items carry it
         i_groups.setdefault(r.pop("sec_ejec"), {}).setdefault(r.pop("funcion"), []).append(r)
     a_groups: dict[str, list] = {}
     for a in alertas:
@@ -175,6 +182,68 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool) -> None:
         }
         _write(ent_dir / f"{sec}.json", payload)
     print(f"  json: entidad/*.json ({len(index)} files)")
+    _detalle_items(con, out)
+
+
+def _lineas_actuales(con) -> None:
+    """_lineas: every line of the current year with the keys the entity breakdowns use."""
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _lineas AS
+        SELECT SEC_EJEC AS sec, FUNCION AS funcion,
+               CASE WHEN {ES_PROYECTO} THEN 'proyecto' ELSE 'actividad' END AS tipo,
+               CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO_NOMBRE ELSE ACTIVIDAD_ACCION_OBRA_NOMBRE END AS item,
+               META AS meta, META_NOMBRE AS meta_nombre, RUBRO AS rubro, {SIN_DESCRIPCION} AS sin_desc,
+               TIPO_TRANSACCION || '.' || GENERICA || '.' || SUBGENERICA || '.' || SUBGENERICA_DET || '.'
+                 || ESPECIFICA || '.' || ESPECIFICA_DET AS clas,
+               CAST(MONTO_PIM AS DOUBLE) AS p, CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE) AS d
+        FROM gasto_wide WHERE ANO_EJE = (SELECT max(ANO_EJE) FROM gasto_wide)""")
+
+
+def _detalle_items(con, out) -> None:
+    """detalle/<sec_ejec>.json: for each activity/project an entity page lists, what exactly the
+    money is for (metas), what it buys or pays (específica: food, fuel, salaries, works...) and
+    where it comes from (rubro). Lists per función, in the same order as the entity's `items`.
+    Expense types and funding sources travel as codes; clasificador.json names them once."""
+    n = lambda v: int(round(v or 0))
+    unidos = "FROM _lineas l JOIN _items i USING (sec, funcion, item, tipo)"
+    det: dict[str, dict[str, dict[int, dict]]] = {}
+    hueco = lambda sec, f, k: det.setdefault(sec, {}).setdefault(f, {}).setdefault(k, {"m": [], "e": [], "f": []})
+    for sec, f, k, nombre, pim, dev in con.execute(f"""
+            SELECT i.sec, i.funcion, i.k, any_value(l.meta_nombre), sum(l.p), sum(l.d) {unidos}
+            GROUP BY i.sec, i.funcion, i.k, l.meta HAVING sum(l.p) <> 0 OR sum(l.d) <> 0
+            QUALIFY row_number() OVER (PARTITION BY i.sec, i.funcion, i.k ORDER BY sum(l.p) DESC, l.meta) <= {TOP_METAS}
+            ORDER BY 1, 2, 3, 5 DESC""").fetchall():
+        hueco(sec, f, k)["m"].append([con_lugares(nombre, _LUGARES), n(pim), n(dev)])
+    for sec, f, k, clas, pim, dev in con.execute(f"""
+            SELECT i.sec, i.funcion, i.k, l.clas, sum(l.p), sum(l.d) {unidos}
+            GROUP BY i.sec, i.funcion, i.k, l.clas HAVING sum(l.p) <> 0 OR sum(l.d) <> 0
+            ORDER BY 1, 2, 3, 5 DESC, 4""").fetchall():
+        h = hueco(sec, f, k)
+        if len(h["e"]) < TOP_ESPECIFICAS:
+            h["e"].append([clas, n(pim), n(dev)])
+        else:  # the rest, summed: "otros gastos"
+            o = h.setdefault("o", [0, 0])
+            o[0] += n(pim); o[1] += n(dev)
+    for sec, f, k, rubro, pim, dev in con.execute(f"""
+            SELECT i.sec, i.funcion, i.k, l.rubro, sum(l.p), sum(l.d) {unidos}
+            GROUP BY i.sec, i.funcion, i.k, l.rubro HAVING sum(l.p) <> 0 OR sum(l.d) <> 0
+            ORDER BY 1, 2, 3, 5 DESC""").fetchall():
+        hueco(sec, f, k)["f"].append([rubro, n(pim), n(dev)])
+    carpeta = out / "detalle"
+    for sec, funciones in det.items():
+        _write(carpeta / f"{sec}.json", {f: [ks[k] for k in sorted(ks)] for f, ks in funciones.items()})
+    # [name, context]: the context is the closest parent with a different name, since names alone
+    # can mislead ("Personal administrativo" inside "Pago de sentencias judiciales")
+    nombres = {}
+    for c, nom, esp, subdet, sub in con.execute("""
+            SELECT TIPO_TRANSACCION || '.' || GENERICA || '.' || SUBGENERICA || '.' || SUBGENERICA_DET || '.'
+                     || ESPECIFICA || '.' || ESPECIFICA_DET, any_value(ESPECIFICA_DET_NOMBRE), any_value(ESPECIFICA_NOMBRE),
+                   any_value(SUBGENERICA_DET_NOMBRE), any_value(SUBGENERICA_NOMBRE)
+            FROM gasto_wide GROUP BY 1""").fetchall():
+        contexto = next((x for x in (esp, subdet, sub) if x and x.strip().upper() != (nom or "").strip().upper()), None)
+        nombres[c] = [texto(nom), texto(contexto) if contexto else None]
+    rubros = {r: texto(nm) for r, nm in con.execute("SELECT RUBRO, any_value(RUBRO_NOMBRE) FROM gasto_wide GROUP BY 1").fetchall()}
+    _write(out / "clasificador.json", {"especificas": nombres, "rubros": rubros})
+    print(f"  json: detalle/*.json ({len(det)} entities), clasificador.json ({len(nombres)} expense types)")
 
 
 # --- departments ("Tu región") ------------------------------------------------------
@@ -405,9 +474,14 @@ def _auditar(con, out, alertas, resumen, ano: int, tiene_obras: bool) -> None:
                sum(MONTO_PIM) pim, sum(MONTO_DEVENGADO_ANUAL) devengado,
                sum(MONTO_PIM) FILTER (ESPECIFICA_DET_NOMBRE = 'A PERSONAS JURIDICAS') a_empresas
         FROM gasto_wide WHERE ANO_EJE = ? AND {laudo} GROUP BY 1 ORDER BY pim DESC LIMIT 20""", [ano])}
+    if con.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = 'sin_descripcion'").fetchone()[0]:
+        sd = _rows(con, """SELECT sec_ejec, entidad AS nombre, funcion, lineas, pim, devengado
+                           FROM sin_descripcion ORDER BY pim DESC""")
+        datos["sin_descripcion"] = {"n": len(sd), "pim": sum(r["pim"] or 0 for r in sd),
+                                    "devengado": sum(r["devengado"] or 0 for r in sd), "top": sd[:15]}
     contar = lambda regla, sev=None: sum(a["regla"] == regla and (sev is None or a["severidad"] == sev) for a in alertas)
     datos["conteos"] = {r: {"total": contar(r), "alta": contar(r, "alta")}
-                        for r in ("CAMBIO_TEMA", "CAMBIO_ANUAL", "PIM_CAMBIO", "OBRA_SIN_AVANCE",
+                        for r in ("CAMBIO_TEMA", "CAMBIO_ANUAL", "PIM_CAMBIO", "OBRA_SIN_AVANCE", "SIN_DESCRIPCION",
                                   "GASTO_DICIEMBRE", "RIESGO_EJEC", "PIA_PIM")}
     datos["destacadas"] = [_compacta(a) for a in alertas if a["regla"] in ("CAMBIO_TEMA", "CAMBIO_ANUAL")][:4]
     _write(out / "auditar.json", datos)

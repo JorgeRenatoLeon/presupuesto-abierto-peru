@@ -47,20 +47,29 @@ export function PanelExplicacion({ dimension, id, soloDefinicion = false }:
       {soloDefinicion ? null : <div className="explica-grid">
         <section>
           <h4>¿En qué se usa este dinero?</h4>
+          <p className="explica-nota">Sus actividades y proyectos más grandes en todo el Estado: presupuesto y parte del total.</p>
           <ol className="explica-lista">
-            {e.en_que.map((x) => (
-              <li key={`${x.tipo}-${x.nombre}`}>
+            {e.en_que.map((x, i) => (
+              <li key={`${x.tipo}-${x.nombre}-${i}`} className={x.sd ? "sin-desc" : ""}>
                 <span className="explica-item">
                   <span className={`etiqueta-tipo ${x.tipo}`}>{x.tipo === "proyecto" ? "Obra / proyecto" : "Actividad"}</span>
-                  {fmtNombre(x.nombre)}
+                  {x.nombre?.trim() ? fmtNombre(x.nombre) : <span className="sin-nombre">Sin nombre en los datos del MEF</span>}
+                  {x.sd ? <span className="badge sin-descripcion">Sin descripción</span> : null}
                 </span>
-                <span className="cifra">{fmtSoles(x.pim)} <small>{parte(x.pim)}</small></span>
+                <span className="cifra">{fmtSoles(x.pim)} <small>· {parte(x.pim)} del total</small></span>
               </li>
             ))}
           </ol>
+          {e.en_que.some((x) => x.sd) ? (
+            <p className="aviso-sd">
+              «Sin descripción»: el MEF publica ese presupuesto con un código genérico, sin decir para qué es. Abre la
+              entidad que lo gasta y verás lo único público: el tipo de gasto.
+            </p>
+          ) : null}
         </section>
         <section>
           <h4>{e.dimension === "funcion" ? "¿Cómo se gasta?" : "¿Para qué se gasta?"}</h4>
+          <p className="explica-nota">Parte del presupuesto de esta categoría.</p>
           <ul className="explica-lista">
             {e.como.map((x) => (
               <li key={x.codigo}>
@@ -70,6 +79,7 @@ export function PanelExplicacion({ dimension, id, soloDefinicion = false }:
             ))}
           </ul>
           <h4>¿Quién lo gasta?</h4>
+          <p className="explica-nota">Las entidades con más presupuesto en esta categoría.</p>
           <ul className="explica-lista">
             {e.quien.map((x) => (
               <li key={x.sec_ejec}>

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import duckdb
 
-from compare import DIMENSIONES, _id
+from compare import DIMENSIONES, SIN_DESCRIPCION, _id
 from config import SERVING
 from lake import register_views
 from nombres import con_lugares, lugares
@@ -83,7 +83,7 @@ def explicar() -> None:
         CASE WHEN 'PROYECTO' IN (TIPO_ACT_PROY, TIPO_ACT_PROY_NOMBRE) THEN 'proyecto' ELSE 'actividad' END AS tipo,
         CASE WHEN 'PROYECTO' IN (TIPO_ACT_PROY, TIPO_ACT_PROY_NOMBRE) THEN PRODUCTO_PROYECTO_NOMBRE
              ELSE ACTIVIDAD_ACCION_OBRA_NOMBRE END AS item,
-        CAST(MONTO_PIM AS DOUBLE) AS p, CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE) AS d
+        CAST(MONTO_PIM AS DOUBLE) AS p, CAST(MONTO_DEVENGADO_ANUAL AS DOUBLE) AS d, {SIN_DESCRIPCION} AS sin_desc
         FROM gasto_wide WHERE ANO_EJE = {ano}""")
 
     n_archivos = 0
@@ -96,7 +96,7 @@ def explicar() -> None:
                 f"""SELECT {ident} id, any_value("{col}_NOMBRE"), sum(p), sum(d), count(DISTINCT SEC_EJEC)
                     FROM g GROUP BY 1""").fetchall()}
             en_que = _top(con, f"""SELECT {ident} id, any_value(item) nombre, tipo, sum(p) pim, sum(d) devengado,
-                                          count(DISTINCT SEC_EJEC) entidades
+                                          count(DISTINCT SEC_EJEC) entidades, CASE WHEN bool_or(sin_desc) THEN true END sd
                                    FROM g WHERE item IS NOT NULL GROUP BY {ident}, item, tipo""", TOP_EN_QUE)
             como = _top(con, f"""SELECT {ident} id, "{otro[0]}" codigo, any_value("{otro[1]}") nombre,
                                         sum(p) pim, sum(d) devengado FROM g GROUP BY 1, 2""", TOP_COMO)
@@ -113,7 +113,8 @@ def explicar() -> None:
                     "pim": pim, "devengado": dev, "entidades": n_ent,
                     "oficial": _oficial(dim, id_, defs[dim]),
                     "simple": {"texto": s["simple"], "ejemplos": s["ejemplos"]} if s else None,
-                    "en_que": [{**x, "nombre": con_lugares(x["nombre"], sitios)} for x in en_que.get(id_, [])], "como": como.get(id_, []),
+                    "en_que": [{**{k: v for k, v in x.items() if v is not None},
+                                "nombre": con_lugares(x["nombre"], sitios)} for x in en_que.get(id_, [])], "como": como.get(id_, []),
                     "quien": quien.get(id_, []), "por_nivel": por_nivel.get(id_, []),
                 }
                 path = out / "explicar" / dim / f"{archivo(id_)}.json"

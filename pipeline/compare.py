@@ -45,6 +45,11 @@ OBRA_AVANCE_BAJO = 0.10       # < 10% executed by mid-year
 OBRA_RECORTE = 0.30           # budget cut >= 30% since the previous MEF publication
 # Devengado-Mensual files put the label in TIPO_ACT_PROY; the diario format uses the code '2'
 ES_PROYECTO = "('PROYECTO' IN (TIPO_ACT_PROY, TIPO_ACT_PROY_NOMBRE))"
+# Budget MEF publishes without saying what it is for: the generic project code 2999999 ("PROYECTOS",
+# or blank in the daily files) and lines with no project, activity or meta name. Oct 2026: S/ 2,651 M,
+# almost all defence investment (Fuerza Aérea, Marina, Ejército).
+SIN_DESCRIPCION = (f"(PRODUCTO_PROYECTO = '2999999' OR ({ES_PROYECTO} AND trim(coalesce(PRODUCTO_PROYECTO_NOMBRE, '')) = '')"
+                   " OR trim(coalesce(ACTIVIDAD_ACCION_OBRA_NOMBRE, '')) = '' OR trim(coalesce(META_NOMBRE, '')) = '')")
 
 
 def _id(dim: dict, n: int) -> str:
@@ -111,6 +116,21 @@ def _obras(con, mes_ult: int) -> None:
         FROM c LEFT JOIN p USING (sec_ejec, cui) LEFT JOIN a USING (sec_ejec, cui)""")
     n, sin_avance = con.execute("SELECT count(*), count(*) FILTER (senal = 'sin_avance') FROM obras").fetchone()
     print(f"  obras: {n:,} proyectos ({sin_avance:,} sin avance)")
+
+
+def _sin_descripcion(con) -> None:
+    """sin_descripcion: per entity, the current-year budget published with no description, and the
+    only thing that is public about it: its largest expense types (alert R8, audit agenda)."""
+    con.execute(f"""CREATE OR REPLACE TABLE sin_descripcion AS
+        WITH l AS (SELECT * FROM cur WHERE {SIN_DESCRIPCION}),
+        e AS (SELECT SEC_EJEC, ESPECIFICA_DET_NOMBRE AS n, sum(MONTO_PIM) AS p FROM l GROUP BY 1, 2)
+        SELECT l.SEC_EJEC AS sec_ejec, any_value(EJECUTORA_NOMBRE) AS entidad, any_value(NIVEL_GOBIERNO_NOMBRE) AS nivel,
+               any_value(DEPARTAMENTO_EJECUTORA_NOMBRE) AS dept, any_value(FUNCION_NOMBRE) AS funcion,
+               count(*) AS lineas, CAST(sum(MONTO_PIM) AS DOUBLE) AS pim, CAST(sum(MONTO_DEVENGADO_ANUAL) AS DOUBLE) AS devengado,
+               (SELECT list(n ORDER BY p DESC)[1:3] FROM e WHERE e.SEC_EJEC = l.SEC_EJEC) AS especificas
+        FROM l GROUP BY l.SEC_EJEC""")
+    n, pim = con.execute("SELECT count(*), sum(pim) FROM sin_descripcion").fetchone()
+    print(f"  sin descripción: {n} entities, S/ {(pim or 0)/1e6:,.1f} M")
 
 
 def avance_esperado(pub: str, ano: int, mes_ult: int) -> float:
@@ -195,6 +215,7 @@ def compare() -> dict | None:
                CAST(p.pim AS DOUBLE) AS pim_pub_ant
         FROM c FULL OUTER JOIN p ON c.SEC_EJEC = p.SEC_EJEC""")
     _obras(con, mes_ult)
+    _sin_descripcion(con)
 
     pub_info = lambda p: {"id": p, "fecha": lake.pub_date(p),
                           "mes_ult": m["datasets"]["gasto"][str(ano)]["publications"][p]["mes_ult"]}

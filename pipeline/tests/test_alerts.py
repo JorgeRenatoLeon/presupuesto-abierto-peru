@@ -63,6 +63,12 @@ def build_synthetic(serving) -> None:
         UNION ALL SELECT 2025, m, 'E2', 12e6, 12e6, 1e6 FROM range(1, 13) t(m)""")
     con.execute("""CREATE TABLE fact_nacional_mes AS SELECT ano, mes, 'X' AS nivel, sum(devengado) AS devengado
                    FROM fact_entidad_mes GROUP BY ALL""")
+    # R8: E2 has S/ 150M published with no description (alta); E1's S/ 0.5M is below the threshold
+    con.execute("""CREATE TABLE sin_descripcion AS SELECT * FROM (VALUES
+        ('E2', 'GOBIERNO REGIONAL DEMO', 'GOBIERNOS REGIONALES', 'AMAZONAS', 'DEFENSA Y SEGURIDAD NACIONAL', 12,
+         150e6, 120e6, ['PARA TRANSPORTE AEREO', 'ELECTRICIDAD Y ELECTRONICA']),
+        ('E1', 'MUNICIPALIDAD DE PRUEBA', 'GOBIERNOS LOCALES', 'LIMA', 'TRANSPORTE', 1, 0.5e6, 0.0, ['OTROS BIENES'])
+        ) t(sec_ejec, entidad, nivel, dept, funcion, lineas, pim, devengado, especificas)""")
     con.close()
     (serving / "json" / "comparar").mkdir(parents=True)
     (serving / "json" / "comparar" / "resumen.json").write_text(json.dumps({
@@ -109,6 +115,10 @@ def test_alert_rules(tmp_path, monkeypatch):
     assert r7[0]["datos"]["porcentaje"] == 60.0 and r7[0]["severidad"] == "alta"
     assert all(a["ano"] == 2026 for a in by_rule["RIESGO_EJEC"] + by_rule["PIA_PIM"]), \
         "R2/R3 describe the year in progress, never the closed one"
+
+    r8 = by_rule["SIN_DESCRIPCION"]
+    assert [a["sec_ejec"] for a in r8] == ["E2"] and r8[0]["severidad"] == "alta"
+    assert "«Para transporte aéreo»" in r8[0]["mensaje"] and "Ley de Transparencia" in r8[0]["mensaje"]
 
     assert len({a["id"] for a in result}) == len(result), "alert ids must be unique"
     assert all(a["publicacion"] == "20260903T200428Z" for a in result)

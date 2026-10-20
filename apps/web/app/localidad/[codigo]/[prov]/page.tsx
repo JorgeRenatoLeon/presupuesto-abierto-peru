@@ -10,6 +10,8 @@ import { AlertaCard } from "@/components/AlertaCard";
 import { ListaObras } from "@/components/Obras";
 import { Migas } from "@/components/Migas";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
+import { IndiceSecciones } from "@/components/IndiceSecciones";
+import { MontoPar } from "@/components/MontoPar";
 import { Bandas } from "@/components/Bandas";
 
 const PROV_DIR = join(DATA_DIR, "localidad", "prov");
@@ -33,17 +35,6 @@ export async function generateMetadata(props: { params: Promise<{ codigo: string
     title: `Provincia de ${nombre}: municipalidades, obras y alertas — Presupuesto Abierto Perú`,
     description: `Cada distrito de ${nombre} y su municipalidad: cuánto tiene, cuánto gastó y qué obras no avanzan.`,
   };
-}
-
-function Avance({ e, esperado }: { e: EntidadLugar; esperado: number }) {
-  const a = e.pim ? (e.devengado ?? 0) / e.pim : null;
-  const tono = interpretarAvance(a, 12, esperado).tono;
-  return (
-    <span className={`avance-mini ${tono}`}>
-      <span className="barra"><span style={{ width: `${Math.min(100, (a ?? 0) * 100)}%` }} /></span>
-      <span className="cifra">{fmtPct(a)}</span>
-    </span>
-  );
 }
 
 export default async function ProvinciaPage(props: { params: Promise<{ codigo: string; prov: string }> }) {
@@ -74,7 +65,11 @@ export default async function ProvinciaPage(props: { params: Promise<{ codigo: s
         </p>
       </section>
 
-      <section className="kpis">
+      <IndiceSecciones secciones={[
+        { id: "resumen", titulo: "Resumen" }, { id: "distritos", titulo: "Distritos" }, { id: "en-que", titulo: "En qué se gasta" },
+        { id: "obras", titulo: "Obras sin avance" }, ...(p.alertas.top.length ? [{ id: "alertas", titulo: "Alertas" }] : []),
+      ]} />
+      <section className="kpis" id="resumen">
         <KpiCard etiqueta="Presupuesto vigente" valor={fmtSoles(p.gasto.pim)} nota="De las entidades con sede en la provincia" />
         <KpiCard etiqueta="Ejecutado" valor={fmtSoles(p.gasto.devengado)} nota={`Avance ${fmtPct(avance)}; esperado ${fmtPct(esperado)}`} />
         <KpiCard etiqueta="Proyectos sin avance" valor={String(p.obras.n_sin_avance)} nota={fmtSoles(p.obras.pim_sin_avance)} />
@@ -85,7 +80,7 @@ export default async function ProvinciaPage(props: { params: Promise<{ codigo: s
       <section className="seccion tarjeta" id="distritos">
         <h2>Distritos y sus municipalidades</h2>
         <p className="sub">
-          Toca tu municipalidad para ver en qué gasta. La barra es el avance de ejecución {corte}; lo esperado a la fecha es {fmtPct(esperado)}.
+          Toca tu municipalidad para ver en qué gasta. Cifras {corte}; la marca blanca en cada barra es lo esperado a la fecha ({fmtPct(esperado)}).
         </p>
         <ul className="distritos">
           {p.distritos.map((d) => (
@@ -97,8 +92,7 @@ export default async function ProvinciaPage(props: { params: Promise<{ codigo: s
               {d.municipalidad ? (
                 <Link className="distrito-muni" href={`/entidad/${d.municipalidad.sec_ejec}/`}>
                   <span className="nombre">{fmtLugar(d.municipalidad.nombre)}</span>
-                  <span className="cifra">{fmtSoles(d.municipalidad.pim)}</span>
-                  <Avance e={d.municipalidad} esperado={esperado} />
+                  <MontoPar pim={d.municipalidad.pim} devengado={d.municipalidad.devengado} esperado={esperado} compacto />
                   {d.municipalidad.alertas.alta || d.municipalidad.obras_sin_avance ? (
                     <span className="distrito-senales">
                       {d.municipalidad.alertas.alta ? <span className="badge alta">{d.municipalidad.alertas.alta} alertas altas</span> : null}
@@ -125,10 +119,10 @@ export default async function ProvinciaPage(props: { params: Promise<{ codigo: s
         </ul>
       </section>
 
-      <section className="seccion tarjeta">
+      <section className="seccion tarjeta" id="en-que">
         <h2>¿En qué se gasta en {nombre}?</h2>
         <p className="sub">Gastado {corte} por las entidades con sede en la provincia, por función. Abre cada una para saber qué es.</p>
-        <DesgloseFunciones funciones={p.por_funcion.slice(0, 10).map((f) => ({ codigo: f.id, funcion: f.funcion, devengado: f.devengado ?? 0 }))} />
+        <DesgloseFunciones esperado={esperado} funciones={p.por_funcion.slice(0, 10).map((f) => ({ codigo: f.id, funcion: f.funcion, pim: f.pim, devengado: f.devengado ?? 0 }))} />
       </section>
 
       <section className="seccion tarjeta" id="obras">
@@ -138,7 +132,7 @@ export default async function ProvinciaPage(props: { params: Promise<{ codigo: s
       </section>
 
       {p.alertas.top.length ? (
-        <section className="seccion">
+        <section className="seccion" id="alertas">
           <h2 style={{ marginBottom: 10 }}>Alertas en la provincia ({p.alertas.total})</h2>
           <div style={{ display: "grid", gap: 10 }}>
             {p.alertas.top.map((a, i) => <AlertaCard key={a.id ?? i} alerta={a} />)}

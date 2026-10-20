@@ -363,7 +363,7 @@ select.buscador { appearance: none; padding-right: 36px;
 .ubigeo { font-size: 12px; color: var(--texto-suave); }
 .distrito-muni { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 8px 0; }
 .distrito-muni .nombre { color: var(--celeste); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: break-word; hyphens: auto; }
-.distrito-muni .avance-mini, .distrito-senales { grid-column: 1 / -1; }
+.distrito-muni .avance-mini, .distrito-muni .monto-par, .distrito-senales { grid-column: 1 / -1; }
 .avance-mini { display: grid; grid-template-columns: 1fr 52px; gap: 8px; align-items: center; font-size: 13px; }
 .avance-mini .cifra { text-align: right; }
 .distrito-senales { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -452,3 +452,74 @@ select.buscador { appearance: none; padding-right: 36px;
 }
 .ranking li { grid-template-columns: minmax(9.5em, 1.2fr) 1.6fr 52px; }
 .ranking li.propio a { padding: 1px 6px; max-width: 100%; }
+
+/* ---------- Budget and spending, always labelled ---------- */
+.monto-par { display: grid; gap: 6px; }
+.mp-cifras { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: 14px; }
+.mp-cifra b { color: var(--texto-fuerte); font-weight: 800; white-space: nowrap; }
+.mp-etq { color: var(--texto-suave); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.mp-pct { color: var(--texto); font-weight: 700; }
+.mp-medidor { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.mp-barra { position: relative; display: block; height: 12px; background: var(--regla); }
+.mp-lleno { display: block; height: 100%; background: var(--amarillo); }
+.mp-barra.ok .mp-lleno, .mp-barra.neutro .mp-lleno { background: var(--verde); }
+.mp-barra.warn .mp-lleno, .mp-barra.bad .mp-lleno { background: var(--naranja); }
+.mp-marca { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--texto-fuerte); }
+.mp-valor { font-weight: 800; color: var(--texto-fuerte); font-size: 14px; white-space: nowrap; min-width: 4.5em; }
+.mp-valor small { font-weight: 600; color: var(--texto-suave); font-size: 12px; }
+.mp-ritmo { font-size: 13px; font-weight: 700; }
+.mp-ritmo.ok { color: var(--verde); }
+.mp-ritmo.warn, .mp-ritmo.bad { color: var(--naranja); }
+.mp-ritmo.neutro { color: var(--texto); }
+.monto-par.compacto .mp-cifras { font-size: 13px; }
+.monto-par.compacto .mp-barra { height: 8px; }
+.monto-par.compacto .mp-valor { font-size: 13px; }
+.leyenda-barra { font-size: 12.5px; color: var(--texto-suave); display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.lb-lleno { display: inline-block; width: 18px; height: 8px; background: var(--verde); }
+.lb-marca { display: inline-block; width: 2px; height: 14px; background: var(--texto-fuerte); }
+.cuota { font-size: 12.5px; color: var(--texto-suave); font-weight: 700; white-space: nowrap; }
+.desglose-accion { display: inline-flex; align-items: center; gap: 4px; justify-self: start; }
+.desglose-accion .icono-linea { transition: transform 200ms var(--ease-out); }
+.desglose details[open] .desglose-accion { visibility: visible; }
+.desglose details[open] .desglose-accion .icono-linea { transform: rotate(180deg); }
+
+/* ---------- Activities and projects, and "¿En qué exactamente?" ---------- */
+.items { list-style: none; display: grid; gap: 0; margin-bottom: 10px; }
+.items > li { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--regla); }
+.item-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.item-nombre { font-weight: 700; color: var(--texto-fuerte); overflow-wrap: break-word; min-width: 0; }
+.sin-nombre { font-style: italic; color: var(--texto-suave); font-weight: 600; }
+.badge.sin-descripcion { color: var(--fucsia); border: 1px solid var(--fucsia); background: none; }
+.detalle-item { display: grid; gap: 14px; margin: 4px 0 6px; padding: 12px; background: var(--panel); border: 1px solid var(--regla); }
+.detalle-item h5 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amarillo); margin-bottom: 6px; }
+.detalle-item ul { list-style: none; display: grid; gap: 10px; }
+.detalle-item li { display: grid; gap: 4px; }
+.gasto-nombre { font-weight: 700; color: var(--texto-fuerte); overflow-wrap: break-word; }
+.gasto-nombre small { display: block; font-weight: 400; font-size: 12.5px; color: var(--texto-suave); }
+.fuentes { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+.fuentes b { color: var(--texto-fuerte); }
+.fuentes small { color: var(--texto-suave); }
+.aviso-sd { font-size: 13.5px; color: var(--texto-fuerte); border: 1px solid var(--fucsia); padding: 10px 12px; background: rgba(255, 46, 136, 0.08); }
+.explica-nota { font-size: 12.5px; color: var(--texto-suave); margin: -4px 0 8px; }
+.explica-lista li.sin-desc .explica-item { color: var(--texto-suave); }
+
+/* ---------- "Saltar a…": sticky section strip ---------- */
+.indice { position: sticky; top: 60px; z-index: 15; display: flex; align-items: stretch; gap: 6px; margin: 0 -16px;
+  padding: 8px 16px; background: var(--negro); border-bottom: 1px solid var(--regla); }
+.indice-tira { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.indice-tira::-webkit-scrollbar { display: none; }
+.indice-tira a { flex: none; white-space: nowrap; padding: 7px 10px; font-size: 12.5px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.03em; color: var(--texto-suave); border: 1px solid var(--regla); }
+.indice-tira a[aria-current] { background: var(--amarillo); color: var(--negro); border-color: var(--amarillo); }
+.indice-arriba { flex: none; display: inline-grid; place-items: center; width: 36px; border: 1px solid var(--regla); background: none;
+  color: var(--texto-fuerte); cursor: pointer; transition: transform 160ms var(--ease-out); }
+.indice-arriba:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .indice-tira a:not([aria-current]):hover, .indice-arriba:hover { border-color: var(--texto-suave); color: var(--texto-fuerte); } }
+.pagina section[id] { scroll-margin-top: 118px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* ---------- Long words never widen the page (found by the CI browser checks) ---------- */
+p, li, dd, dt, td, h1, h2, h3, h4, h5, label, summary { overflow-wrap: break-word; }
+code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.88em; background: var(--panel);
+  border: 1px solid var(--regla); padding: 1px 5px; overflow-wrap: anywhere; word-break: break-word; }
+p a { overflow-wrap: anywhere; }

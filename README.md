@@ -117,10 +117,13 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Pipeline: dual-format (pivoted + monthly rows) → lossless canonical Parquet, verified against the CSV
 - [x] Lake with one snapshot per MEF publication + budget change log; Hugging Face mirror
 - [x] Daily refresh (ETag check, chunked downloads) + GitHub Pages deploy + CI quality gates
-- [x] 40 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
+- [x] 48 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
 - [x] Comparisons (PIA→PIM, publication→publication, year→year) by función, genérica, tema, departamento, nivel
-- [x] Alert rules R1–R7 on real data (Jul→Sep 2026 and 2025→2026)
+- [x] Alert rules R1–R8 on real data, incl. R8 "sin descripción": budget MEF publishes with a generic project code
+      and no name or meta (S/ 2,651 M in Oct 2026, mostly defence)
 - [x] Regions, projects with signals, audit agenda with how-to-act, watchlist, RSS + Telegram notifications
+- [x] Down to each activity/project of an entity: its metas, expense types (specific clasificador) and funding sources
+      (`detalle/<sec>.json`, loaded on demand); every figure labelled as budget vs spent, with the pace expected by now
 - [x] Ingresos side, QA (coherence + Consulta Amigable reconciliation), web explorer, entity pages
 - [ ] Deep drill-down to line level in the browser (DuckDB-WASM over the Hugging Face Parquet, ~1 MB per entity)
 - [ ] Backfill 2012–2024; who-gets-paid via OSCE/SEACE contracts; Etapa 2 (reclamos/Contraloría)

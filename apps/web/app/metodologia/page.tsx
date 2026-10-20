@@ -128,6 +128,12 @@ export default function MetodologiaPage() {
           que ejecutaron al menos S/ 5 millones. Señalamos a las que concentraron 35% o más (el promedio del
           Estado ronda 14%).
         </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          El <strong>presupuesto sin descripción</strong> es el que el MEF publica con el código genérico de proyecto
+          2999999 o sin nombre de proyecto, actividad o meta. Avisamos desde S/ 1 millón (prioridad alta desde
+          S/ 100 millones). En octubre de 2026 sumaba S/ 2,651 millones, casi todo inversión en defensa: puede ser
+          información reservada por ley, pero sin descripción no se puede vigilar.
+        </p>
       </section>
 
       <section className="tarjeta seccion">

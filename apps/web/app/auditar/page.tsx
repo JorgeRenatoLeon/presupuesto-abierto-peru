@@ -8,7 +8,7 @@ import { ListaObras } from "@/components/Obras";
 
 export const metadata = {
   title: "Qué vigilar — Presupuesto Abierto Perú",
-  description: "Cinco señales del presupuesto público que vale la pena revisar cada mes, y cómo actuar.",
+  description: "Seis señales del presupuesto público que vale la pena revisar cada mes, y cómo actuar.",
 };
 
 const enlace = { color: "var(--rojo)", fontWeight: 600 } as const;
@@ -46,7 +46,7 @@ export default function AuditarPage() {
       <section className="hero">
         <h1>¿Qué vigilar en el presupuesto?</h1>
         <p>
-          Cinco señales que vale la pena revisar cada mes, con los datos de la publicación del MEF
+          {a.sin_descripcion?.n ? "Seis" : "Cinco"} señales que vale la pena revisar cada mes, con los datos de la publicación del MEF
           {a.publicacion ? ` del ${fmtFecha(a.publicacion.fecha)}` : ""}. No prueban que algo esté mal:
           son buenas preguntas para hacerle a tus autoridades.
         </p>
@@ -132,7 +132,36 @@ export default function AuditarPage() {
         </div>
       </Paso>
 
-      <Paso n={4} titulo="Cambios fuertes de presupuesto">
+      {a.sin_descripcion?.n ? (
+        <Paso n={4} titulo="Presupuesto sin descripción">
+          <p style={{ fontSize: 14 }}>
+            <strong>{fmtSoles(a.sin_descripcion.pim)}</strong> de {a.sin_descripcion.n} entidades figuran en los datos del
+            MEF con un código genérico de proyecto y sin nombre ni meta: no dicen para qué son
+            ({fmtSoles(a.sin_descripcion.devengado)} ya se gastaron).
+          </p>
+          <p className="sub" style={{ margin: "8px 0" }}>
+            Por qué importa: un presupuesto que no dice para qué es no se puede vigilar. Lo único público es el tipo de
+            gasto (ábrelo en la página de la entidad). La ley permite reservar cierta información, por ejemplo de defensa
+            nacional; aun así, puedes pedir a la entidad la que sí sea pública.
+          </p>
+          <div className="tabla-scroll">
+            <table className="tabla-simple">
+              <thead><tr><th>Entidad</th><th>Presupuesto</th><th>Gastado</th></tr></thead>
+              <tbody>
+                {a.sin_descripcion.top.slice(0, 8).map((x) => (
+                  <tr key={x.sec_ejec}>
+                    <td><Link href={`/entidad/${x.sec_ejec}/#en-que`} style={{ color: "var(--tinta)", fontWeight: 600 }}>{fmtLugar(x.nombre)}</Link></td>
+                    <td>{fmtSoles(x.pim)}</td>
+                    <td>{fmtSoles(x.devengado)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Paso>
+      ) : null}
+
+      <Paso n={a.sin_descripcion?.n ? 5 : 4} titulo="Cambios fuertes de presupuesto">
         <p style={{ fontSize: 14 }}>
           {n("CAMBIO_TEMA")} cambios fuertes por tema en la última actualización, {n("CAMBIO_ANUAL")} frente al año
           anterior y {n("PIM_CAMBIO")} entidades cuyo presupuesto cambió 20% o más.
@@ -147,7 +176,7 @@ export default function AuditarPage() {
         <div style={{ marginTop: 10 }}><Link className="tab activo" href="/comparar/">Comparar el presupuesto <ArrowRight className="icono-linea" aria-hidden /></Link></div>
       </Paso>
 
-      <Paso n={5} titulo="Entidades que no ejecutan">
+      <Paso n={a.sin_descripcion?.n ? 6 : 5} titulo="Entidades que no ejecutan">
         <p style={{ fontSize: 14 }}>
           {n("RIESGO_EJEC")} entidades van 15 puntos o más por detrás del calendario
           ({a.conteos.RIESGO_EJEC?.alta ?? 0} de ellas, 25 puntos o más).

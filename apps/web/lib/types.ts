@@ -26,6 +26,7 @@ export const REGLAS_ALERTA: Record<string, string> = {
   CAMBIO_TEMA: "Cambios por tema",
   CAMBIO_ANUAL: "Frente al año anterior",
   OBRA_SIN_AVANCE: "Proyectos sin avance",
+  SIN_DESCRIPCION: "Sin descripción",
   PIM_CAMBIO: "Cambios por entidad",
   GASTO_DICIEMBRE: "Gasto de fin de año",
   RIESGO_EJEC: "Ejecución lenta",
@@ -102,6 +103,11 @@ export type Auditoria = {
   laudos: {
     pim: number | null; devengado: number | null; a_empresas: number | null; entidades: number;
     top: { sec_ejec: string; nombre: string; dept: string | null; pim: number; devengado: number; a_empresas: number | null }[];
+  };
+  /** budget MEF publishes without saying what it is for (pipeline compare.SIN_DESCRIPCION) */
+  sin_descripcion?: {
+    n: number; pim: number; devengado: number;
+    top: { sec_ejec: string; nombre: string; funcion: string | null; lineas: number; pim: number; devengado: number }[];
   };
   conteos: Record<string, { total: number; alta: number }>;
   destacadas: Alerta[];
@@ -214,7 +220,8 @@ export type Explicacion = {
   /** MEF's official definition; `heredado` when it belongs to the nearest parent category */
   oficial: { texto: string; nombre: string; heredado: boolean; fuente: string } | null;
   simple: { texto: string; ejemplos: string } | null;
-  en_que: { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null; entidades: number }[];
+  /** sd: published without a description (generic project code, blank names) */
+  en_que: { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null; entidades: number; sd?: boolean }[];
   como: { codigo: string; nombre: string; pim: number | null; devengado: number | null }[];
   quien: { sec_ejec: string; nombre: string; nivel: string; pim: number | null; devengado: number | null }[];
   por_nivel: { nivel: string; pim: number | null; devengado: number | null }[];

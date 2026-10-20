@@ -43,6 +43,8 @@ UMBRAL_ANUAL_SOLES = 100_000_000
 UMBRAL_ANUAL_ALTA = 0.25
 UMBRAL_OBRA_SOLES = 5_000_000     # R6: 344 projects in 2026 (data to August), 125 of them
 UMBRAL_OBRA_ALTA = 20_000_000     #     executed in 2025 and stopped
+UMBRAL_SIN_DESCRIPCION = 1_000_000       # R8: S/ 2,651 M in 11 entities (Oct 2026)
+UMBRAL_SIN_DESCRIPCION_ALTA = 100_000_000
 UMBRAL_DICIEMBRE = 0.35           # R7: national average is 13.6% (2025); 90 entities >= 35%
 UMBRAL_DICIEMBRE_ALTA = 0.50
 UMBRAL_DICIEMBRE_MINIMO = 5_000_000
@@ -184,6 +186,8 @@ def compute_alerts() -> list[dict]:
     if resumen and _has(con, "obras"):
         alerts += _obras_sin_avance(con, resumen)
     alerts += _gasto_diciembre(con)
+    if resumen and _has(con, "sin_descripcion"):
+        alerts += _sin_descripcion(con, resumen)
     con.close()
     _persist(alerts, resumen["publicacion"]["id"] if resumen else None)
     return alerts
@@ -215,6 +219,31 @@ def _obras_sin_avance(con, resumen: dict) -> list[dict]:
                    "Los proyectos suelen gastar más a fin de año, pero a estas alturas conviene preguntar por su cronograma. ")
                 + "Su ficha oficial está en el Sistema de Seguimiento de Inversiones del MEF."),
             "datos": {"pim": pim, "devengado": 0, "dev_ano_anterior": dev_ant},
+        })
+    return out
+
+
+def _sin_descripcion(con, resumen: dict) -> list[dict]:
+    """R8: budget MEF publishes without saying what it is for (see compare.SIN_DESCRIPCION)."""
+    ano, mes = resumen["ano"], resumen["mes_ult"]
+    out = []
+    for sec, entidad, nivel, dept, funcion, lineas, pim, dev, especificas in con.execute(f"""
+            SELECT sec_ejec, entidad, nivel, dept, funcion, lineas, pim, devengado, especificas FROM sin_descripcion
+            WHERE pim >= {UMBRAL_SIN_DESCRIPCION} ORDER BY pim DESC""").fetchall():
+        tipos = ", ".join(f"«{texto(e)}»" for e in (especificas or []) if e and e.strip())
+        out.append({
+            "regla": "SIN_DESCRIPCION", "severidad": "alta" if pim >= UMBRAL_SIN_DESCRIPCION_ALTA else "media",
+            "ano": ano, "mes": mes, "sec_ejec": sec, "entidad": entidad, "nivel": nivel,
+            "departamento": (dept or "").strip() or None,
+            "titulo": f"{nombre_propio(entidad)}: {_fmt(pim)} sin descripción en los datos del MEF",
+            "mensaje": (
+                f"{nombre_propio(entidad)} tiene {_fmt(pim)} ({_fmt(dev)} ya gastados) registrados sin nombre de "
+                f"proyecto ni meta que digan para qué son: el MEF los publica con un código genérico. "
+                + (f"Lo único público es el tipo de gasto: {tipos}. " if tipos else "")
+                + "La ley permite reservar cierta información (por ejemplo, de defensa nacional); aun así, puedes "
+                  "pedir a la entidad la que sí sea pública, con la Ley de Transparencia."),
+            "enlace": f"/entidad/{sec}/#en-que",
+            "datos": {"pim": pim, "devengado": dev, "lineas": lineas, "funcion": funcion},
         })
     return out
 
@@ -372,8 +401,8 @@ def _de(frase: str) -> str:
     return "del " + frase[3:] if frase.startswith("el ") else "de " + frase
 
 
-PRIORIDAD = {"CAMBIO_TEMA": 0, "CAMBIO_ANUAL": 1, "OBRA_SIN_AVANCE": 2, "PIM_CAMBIO": 3,
-             "GASTO_DICIEMBRE": 4, "RIESGO_EJEC": 5, "PIA_PIM": 6}
+PRIORIDAD = {"CAMBIO_TEMA": 0, "CAMBIO_ANUAL": 1, "OBRA_SIN_AVANCE": 2, "SIN_DESCRIPCION": 3, "PIM_CAMBIO": 4,
+             "GASTO_DICIEMBRE": 5, "RIESGO_EJEC": 6, "PIA_PIM": 7}
 
 
 def _persist(alerts: list[dict], publicacion: str | None = None) -> None:

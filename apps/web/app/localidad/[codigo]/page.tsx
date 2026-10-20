@@ -10,6 +10,7 @@ import { ListaObras } from "@/components/Obras";
 import { ListaEntidades } from "@/components/ListaEntidades";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
+import { IndiceSecciones } from "@/components/IndiceSecciones";
 import { Bandas } from "@/components/Bandas";
 
 // No `dynamicParams = false`: with output "export" only generated paths exist anyway, and
@@ -72,7 +73,14 @@ export default async function LocalidadPage(props: { params: Promise<{ codigo: s
         </div>
       </section>
 
-      <section className="kpis">
+      <IndiceSecciones secciones={[
+        { id: "resumen", titulo: "Resumen" }, { id: "quien", titulo: "Quién gasta" }, { id: "en-que", titulo: "En qué se gasta" },
+        ...(d.provincias?.length ? [{ id: "provincias", titulo: "Provincias" }] : []),
+        { id: "obras", titulo: "Obras sin avance" }, { id: "grandes", titulo: "Proyectos grandes" },
+        ...(d.gobierno_regional.length ? [{ id: "gobierno-regional", titulo: "Gobierno regional" }] : []),
+        { id: "municipalidades", titulo: "Municipalidades" }, { id: "alertas", titulo: "Alertas" },
+      ]} />
+      <section className="kpis" id="resumen">
         <KpiCard etiqueta="Presupuesto vigente" valor={fmtSoles(d.gasto.pim)} nota={`Para gastar en ${nombre}`} />
         <KpiCard etiqueta="Ejecutado" valor={fmtSoles(d.gasto.devengado)} nota={`Avance ${fmtPct(avance)}; esperado ${fmtPct(esperado)}`} />
         <KpiCard etiqueta="Última actualización" valor={c.pim_pub_ant ? fmtDelta((d.gasto.pim ?? 0) - c.pim_pub_ant) : "—"}
@@ -82,7 +90,7 @@ export default async function LocalidadPage(props: { params: Promise<{ codigo: s
       </section>
       <Lectura tono={lectura.tono}>{lectura.texto}</Lectura>
 
-      <section className="seccion tarjeta">
+      <section className="seccion tarjeta" id="quien">
         <h2>¿Quién gasta en {nombre}?</h2>
         <p className="sub">El mismo departamento recibe dinero de tres niveles de gobierno.</p>
         <ListaBarras items={d.por_nivel.map((n) => ({
@@ -90,10 +98,10 @@ export default async function LocalidadPage(props: { params: Promise<{ codigo: s
         }))} />
       </section>
 
-      <section className="seccion tarjeta">
+      <section className="seccion tarjeta" id="en-que">
         <h2>¿En qué se gasta?</h2>
         <p className="sub">Gastado {corte} en {nombre}, por función. Abre cada una para saber qué es y en qué se usa.</p>
-        <DesgloseFunciones funciones={d.por_funcion.slice(0, 10).map((f) => ({ codigo: f.id ?? f.funcion, funcion: f.funcion, devengado: f.devengado }))} />
+        <DesgloseFunciones esperado={esperado} funciones={d.por_funcion.slice(0, 10).map((f) => ({ codigo: f.id ?? f.funcion, funcion: f.funcion, pim: f.pim, devengado: f.devengado }))} />
       </section>
 
       <section className="seccion tarjeta" id="obras">
@@ -105,14 +113,14 @@ export default async function LocalidadPage(props: { params: Promise<{ codigo: s
         <ListaObras obras={d.obras.sin_avance} conEntidad vacio="Ningún proyecto grande está detenido." />
       </section>
 
-      <section className="seccion tarjeta">
+      <section className="seccion tarjeta" id="grandes">
         <h2>Los proyectos más grandes</h2>
         <p className="sub">{d.obras.n.toLocaleString("es-PE")} proyectos de inversión en {nombre}; estos son los de mayor presupuesto.</p>
         <ListaObras obras={d.obras.top} conEntidad />
       </section>
 
       {d.gobierno_regional.length ? (
-        <section className="seccion tarjeta">
+        <section className="seccion tarjeta" id="gobierno-regional">
           <h2>Gobierno regional</h2>
           <p className="sub">Sede central y unidades ejecutoras (hospitales, UGEL, proyectos especiales…).</p>
           <ListaEntidades entidades={d.gobierno_regional} esperado={esperado} buscador={d.gobierno_regional.length > 8} />
@@ -136,13 +144,13 @@ export default async function LocalidadPage(props: { params: Promise<{ codigo: s
         </section>
       ) : null}
 
-      <section className="seccion tarjeta">
+      <section className="seccion tarjeta" id="municipalidades">
         <h2>Municipalidades ({d.municipalidades.length})</h2>
         <p className="sub">Busca la tuya. La barra compara lo ejecutado con el presupuesto vigente.</p>
         <ListaEntidades entidades={d.municipalidades} esperado={esperado} porProvincia />
       </section>
 
-      <section className="seccion">
+      <section className="seccion" id="alertas">
         <h2 style={{ marginBottom: 10 }}>Alertas en {nombre} ({d.alertas.total})</h2>
         {d.alertas.top.length ? (
           <div style={{ display: "grid", gap: 10 }}>

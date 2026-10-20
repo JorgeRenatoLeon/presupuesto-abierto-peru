@@ -1,3 +1,7 @@
+"use client";
+
+// A client component only so the page payload carries its props, not its whole element tree
+// (2,900 entity pages); it has no state and renders on the server like any other.
 import Link from "next/link";
 import { fmtSoles, fmtPct, fichaInversion, type Obra, fmtNombre } from "@/lib/types";
 import { BarraProgreso } from "@/components/ui";
