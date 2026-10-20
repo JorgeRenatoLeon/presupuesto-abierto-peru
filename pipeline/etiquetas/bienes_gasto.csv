@@ -1,0 +1,211 @@
+prefijo,clasificador,clasificador_obra,nota
+10,2.3.1.10,,Material vivo vegetal y animal
+1010,2.6.6.1.1,,Animales vivos (ganado): activo agropecuario
+1012,2.3.1.1.1.2,,Alimento para animales
+1017,2.3.1.10.1.4,,Fertilizantes
+1019,2.3.1.10.1.4,,Control de plagas
+1020,2.3.1.5.2.1,,Plantas y flores (jardinería)
+1021,2.3.1.5.2.1,,Plantas y flores (jardinería)
+1022,2.3.1.5.2.1,,Plantas y flores (jardinería)
+1031,2.3.1.5.2.1,,Flores cortadas
+1034,2.3.1.5.2.1,,Flores cortadas
+1050,2.3.1.5.2.1,,Flores cortadas
+11,2.3.1.99.1.99,,Minerales y fibras
+1110,2.3.1.99.1.2,,Minerales para uso químico (carbón activado)
+1111,2.3.1.11.1.1,2.6.2,"Tierra, piedra, arena: materiales de construcción"
+1112,2.3.1.11.1.1,2.6.2,Madera
+1113,2.3.1.10.1.2,,Material biológico animal
+1115,2.3.1.2.1.2,,Fibras textiles
+1116,2.3.1.2.1.2,,Telas
+12,2.3.1.99.1.2,,Productos químicos
+1213,2.3.1.4.1.1,,Explosivos
+121421,2.3.1.3.1.2,,Gases industriales
+13,2.3.1.99.1.99,,"Resinas, caucho, plásticos"
+14,2.3.1.5.1.2,,Papel y productos de papel
+1510,2.3.1.3.1.1,,Combustibles
+1511,2.3.1.3.1.2,,Gas (GLP)
+1512,2.3.1.3.1.3,,Lubricantes
+20,2.6.3.2.9.99,,Maquinaria minera y de perforación
+21,2.6.3.2.5.2,,Maquinaria agrícola y pesquera
+22,2.6.3.2.9.99,,Maquinaria de construcción
+23,2.6.3.2.9.99,,Maquinaria industrial
+24,2.6.3.2.9.99,,Maquinaria de manejo y almacenamiento
+2411,2.3.1.99.1.99,,"Recipientes, bolsas, tanques"
+2412,2.3.1.99.1.99,,Envases
+2413,2.6.3.2.9.1,,Refrigeración industrial
+2414,2.3.1.99.1.99,,Material de embalaje
+25,2.6.3.1.1.1,,Vehículos
+2511,2.6.3.1.1.3,,Embarcaciones
+2513,2.6.3.1.1.2,,Aeronaves
+2515,2.6.3.1.1.2,,Naves espaciales
+2517,2.3.1.6.1.1,,"Repuestos de vehículos (llantas, partes)"
+2519,2.3.1.6.1.99,,Repuestos y equipo para aeronaves
+2520,2.3.1.6.1.99,,Componentes aeroespaciales
+26,2.6.3.2.9.4,,Equipo de generación eléctrica
+2610,2.3.1.6.1.3,,"Motores, filtros y partes"
+261117,2.3.1.6.1.1,,Baterías
+261118,2.3.1.6.1.3,,Correas y transmisión
+261120,2.3.1.6.1.1,,Embragues
+2612,2.3.1.11.1.4,2.6.2,Cables eléctricos
+27,2.3.1.99.1.1,,Herramientas
+2712,2.6.3.2.9.99,,Maquinaria hidráulica
+30,2.3.1.11.1.1,2.6.2,Materiales de construcción
+31,2.3.1.11.1.5,,Componentes y suministros de fabricación
+3115,2.3.1.11.1.1,2.6.2,"Cables, alambres y mallas"
+3116,2.3.1.11.1.1,2.6.2,"Ferretería: gaviones, clavos, pernos"
+3120,2.3.1.11.1.1,,Adhesivos y selladores
+3121,2.3.1.11.1.1,,Pinturas
+32,2.3.1.5.4.1,,Componentes electrónicos
+3215,2.6.3.2.9.4,,Sistemas de control eléctrico
+39,2.3.1.5.4.1,,Materiales eléctricos y de iluminación
+3911,2.3.1.5.4.1,2.6.2,Luminarias
+3912,2.6.3.2.9.4,2.6.2,"Equipo eléctrico: transformadores, postes"
+40,2.3.1.11.1.4,,Equipo de distribución y acondicionamiento
+4010,2.6.3.2.9.1,,Aire acondicionado
+4014,2.3.1.11.1.1,2.6.2,"Mangueras, válvulas y accesorios"
+4015,2.6.3.2.9.99,,Bombas y compresoras
+4016,2.3.1.6.1.1,,Filtros de vehículos y máquinas
+4017,2.3.1.11.1.1,2.6.2,Tuberías
+4018,2.3.1.11.1.1,2.6.2,Tuberías
+41,2.6.3.2.9.5,,Equipo de laboratorio y medición
+411041,2.3.1.8.2.1,,Material de laboratorio clínico
+411063,2.3.1.8.2.1,,Reactivos de laboratorio
+4111,2.6.3.2.9.5,,Instrumentos de medición
+411158,2.3.1.8.2.1,,Insumos para analizadores clínicos
+411161,2.3.1.8.2.1,,Reactivos
+411162,2.3.1.8.2.1,,Pruebas rápidas
+4112,2.3.1.8.2.1,,Material de laboratorio
+4119,2.3.1.8.2.1,,Material de laboratorio
+4120,2.3.1.8.2.1,,Reactivos
+42,2.3.1.8.2.1,,"Material, insumos e instrumental médico"
+4212,2.3.1.10.1.6,,Productos veterinarios
+4218,2.3.1.8.2.1,,Instrumental de examen
+421819,2.6.3.2.4.2,,Monitores de signos vitales
+421823,2.6.3.2.4.2,,Equipos médicos de diagnóstico
+421817,2.6.3.2.4.2,,Electrocardiógrafos
+4219,2.6.3.2.4.1,,"Mobiliario médico: camas, carros"
+4220,2.6.3.2.4.2,,"Equipo médico de imágenes (ecógrafos, rayos X)"
+4223,2.3.1.8.1.99,,Nutrición clínica
+4230,2.3.1.9.1.2,,Material para enseñanza médica
+43,2.6.3.2.3.1,,Equipos informáticos
+4319,2.6.3.2.3.3,,Teléfonos y equipos de telecomunicaciones
+4320,2.3.1.5.1.1,,"Componentes informáticos (discos, memorias)"
+4322,2.6.3.2.3.2,,Equipos de redes
+4323,2.6.6.1.3.2,,Software
+44,2.3.1.5.1.2,,Útiles y materiales de oficina
+4510,2.3.1.5.1.2,,Insumos de impresión
+4511,2.6.3.2.3.3,,Equipos audiovisuales
+4512,2.6.3.2.9.4,,Cámaras de foto y video
+4514,2.3.1.5.1.2,,Insumos fotográficos
+46,2.6.3.2.8.1,,Equipos de defensa y seguridad
+4610,2.6.3.2.8.2,,Armamento
+461016,2.3.1.4.1.1,,Municiones
+461018,2.3.1.4.1.1,,Accesorios de armas y municiones
+4611,2.3.1.4.1.1,,Municiones (granadas)
+4616,2.3.1.99.1.99,,"Señales y conos de tránsito"
+4617,2.6.3.2.9.3,,Cámaras y sistemas de vigilancia
+4618,2.3.1.2.1.1,,"Equipo de protección personal (botas, guantes, ropa)"
+4619,2.3.1.6.1.4,,"Equipo contra incendios (extintores)"
+47,2.3.1.5.3.1,,Útiles de limpieza
+4710,2.6.3.2.9.99,,Equipo de tratamiento de agua
+4711,2.6.3.2.9.2,,Equipo de lavandería
+48,2.6.3.2.9.2,,Equipo de cocina y servicio
+49,2.6.3.2.7.1,,Equipo deportivo y recreativo
+4910,2.3.1.99.1.4,,"Medallas, placas y recuerdos"
+4912,2.3.1.7.1.1,,"Carpas, catres, colchones"
+4916,2.3.1.99.1.99,,Pelotas y material deportivo
+50,2.3.1.1.1.1,,Alimentos
+51,2.3.1.8.1.2,,Medicamentos
+512016,2.3.1.8.1.1,,Vacunas
+5147,2.3.1.8.1.99,,Antisépticos
+52,2.3.1.7.1.1,,Enseres domésticos
+5214,2.6.3.2.9.2,,Electrodomésticos de cocina
+5215,2.3.1.5.3.2,,Menaje de cocina
+5216,2.6.3.2.9.4,,"Televisores, radios y electrónica"
+53,2.3.1.2.1.1,,Vestuario
+5311,2.3.1.2.1.3,,Calzado
+5313,2.3.1.5.3.1,,"Aseo personal (jabones, repelentes)"
+5314,2.3.1.2.1.2,,Mercería
+54,2.3.1.99.1.4,,"Joyería, distintivos"
+55,2.3.1.99.1.3,,"Libros, diarios y publicaciones"
+5512,2.3.1.99.1.99,,"Carnets, etiquetas y señales impresas"
+56,2.6.3.2.1.2,,Mobiliario
+5612,2.6.3.2.2.2,,Mobiliario escolar
+5613,2.3.1.99.1.99,,Adornos
+5614,2.3.1.99.1.99,,Adornos
+60,2.3.1.9.1.2,,Material didáctico
+6013,2.6.3.2.6.1,,Instrumentos musicales
+70,2.3.2.7.11.99,,Servicios agropecuarios y forestales
+7011,2.3.2.7.11.3,,"Mantenimiento de parques y jardines"
+7016,2.3.2.7.7.1,,Servicios ambientales (ecosistemas)
+71,2.3.2.7.11.99,,Servicios mineros y petroleros
+72,2.3.2.4.2.1,2.6.2,"Mantenimiento de edificaciones (con CUI: obra)"
+721015,2.3.2.4.2.1,2.6.2,Mantenimiento de instalaciones
+721021,2.3.2.3.1.1,,Fumigación y control de plagas
+721033,2.3.2.4.7.1,2.6.2,Mantenimiento de equipos de instalaciones
+7212,2.3.2.4.2.1,2.6.2.2,"Edificios no residenciales (con CUI: construcción)"
+721215,2.3.2.4.99.99,2.6.2.3,"Plantas de tratamiento, centrales eléctricas"
+7211,2.3.2.4.2.1,2.6.2.1,Edificios residenciales
+7214,2.3.2.4.99.99,2.6.2.3,"Obras civiles: puentes, agua, puertos"
+721410,2.3.2.4.3.1,2.6.2.3.2,Carreteras y caminos
+721417,2.3.2.5.1.4,2.6.2,Alquiler de maquinaria de construcción
+7215,2.3.2.4.2.1,2.6.2,"Instalaciones especializadas: eléctricas, techos, cercos"
+721545,2.3.2.4.7.1,,Mantenimiento de maquinaria pesada
+73,2.3.2.7.11.99,,Servicios de fabricación
+7311,2.6.3.2.1.2,,Fabricación de muebles
+7315,2.3.2.4.7.1,,Mantenimiento de equipos industriales
+7316,2.3.2.4.99.99,,"Mantenimiento de aeronaves y embarcaciones"
+7317,2.3.2.4.7.1,,Reparación de equipos eléctricos y ópticos
+76,2.3.2.3.1.1,,Limpieza
+7612,2.3.2.7.8.1,,Recojo y disposición de residuos
+7613,2.3.2.7.7.2,,Remediación ambiental
+77,2.3.2.7.7.1,,Servicios ambientales
+78,2.3.2.7.11.2,,Transporte y almacenamiento
+7811,2.3.2.5.1.2,,Alquiler de vehículos y transporte de personal
+781115,2.3.2.1.2.1,,Pasajes aéreos
+7813,2.3.2.7.11.1,,Almacenamiento
+7818,2.3.2.4.5.1,,Mantenimiento y reparación de vehículos
+80,2.3.2.7,,"Consultorías y servicios profesionales"
+8013,2.3.2.5.1.1,,Alquiler de inmuebles
+8017,2.3.2.2.4.3,,Imagen institucional y prensa
+81,2.3.2.7,,Servicios de ingeniería y técnicos
+8111,2.3.2.7.4,2.6.7.1.2,Servicios informáticos
+811124,2.3.2.5.1.4,,Alquiler de computadoras
+8114,2.3.2.4.7.1,,Calibración y mantenimiento de equipos
+8116,2.3.2.7.4.99,2.6.7.1.2,Servicios de tecnología de la información
+811618,2.3.2.5.1.4,,Alquiler de equipos de comunicación de datos
+82,2.3.2.2.4.1,,Publicidad y difusión
+8211,2.3.2.7,,Redacción y traducción
+8212,2.3.2.7.11.6,,Impresiones
+8213,2.3.2.2.4.3,,Producción audiovisual
+8214,2.3.2.2.4.3,,Diseño gráfico
+8215,2.3.2.7.9,,Artistas y espectáculos
+83,2.3.2.2.3.99,,Servicios públicos y comunicaciones
+831015,2.3.2.2.1.2,,Agua potable y desagüe
+831016,2.3.2.2.1.3,,Gas natural
+831018,2.3.2.2.1.1,,Energía eléctrica
+8311,2.3.2.2.2,,Telefonía
+8312,2.3.2.2.2.3,,Internet
+84,2.3.2.6.2.99,,Servicios financieros
+8411,2.3.2.7,,"Contabilidad, auditoría y presupuesto"
+8413,2.3.2.6.3,,Seguros
+85,2.3.2.6.4.1,,Servicios de salud
+8515,2.3.2.7,,Análisis de alimentos
+8516,2.3.2.4.7.1,,Mantenimiento de equipo médico
+86,2.3.2.7.3,,Capacitación
+90,2.3.2.7.10,,Atenciones y celebraciones
+9010,2.3.2.7.11.5,,Alimentación
+9011,2.3.2.1,,Alojamiento
+9012,2.3.2.1,,"Agencias de viaje y pasajes"
+9013,2.3.2.7.9,,Espectáculos
+9014,2.3.2.7.9,,Eventos deportivos
+91,2.3.2.7.11.5,,"Preparación de alimentos, limpieza y mantenimiento"
+92,2.3.2.3.1.2,,Seguridad y vigilancia
+921018,2.3.2.7,,Servicios legales
+9211,2.3.2.7.11.99,,Servicios militares
+93,2.3.2.7,,"Servicios a la administración pública"
+9313,2.3.2.7.11.99,,Ayuda humanitaria
+94,2.3.2.7.11.99,,Organizaciones
+95,2.6.1.2,2.6.2,"Terrenos, edificaciones y vías"
+9510,2.6.5.1.1,,Terrenos
+9511,2.3.2.4.3.1,2.6.2.3.2,Vías

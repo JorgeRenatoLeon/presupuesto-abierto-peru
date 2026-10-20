@@ -143,12 +143,12 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: 
     # (one ranked table, so the item lists and their detail files stay aligned)
     _lineas_actuales(con)
     con.execute(f"""CREATE OR REPLACE TEMP TABLE _items AS
-        SELECT sec, funcion, item, tipo, sum(p) AS pim, sum(d) AS devengado, bool_or(sin_desc) AS sd,
+        SELECT sec, funcion, item, tipo, sum(p) AS pim, sum(d) AS devengado, bool_or(sin_desc) AS sd, max(cui) AS cui,
                row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) AS k
         FROM _lineas WHERE item IS NOT NULL GROUP BY sec, funcion, item, tipo
         QUALIFY row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) <= {TOP_ITEMS_FUNCION}""")
     items = con.execute("""SELECT sec AS sec_ejec, funcion, item AS nombre, tipo, pim, devengado,
-                                  CASE WHEN sd THEN true END AS sd
+                                  CASE WHEN sd THEN true END AS sd, CASE WHEN tipo = 'proyecto' THEN cui END AS cui
                            FROM _items ORDER BY sec, funcion, k""").fetchdf()
     obras = con.execute(f"""SELECT sec_ejec, cui, nombre, funcion, dept_nombre AS dept, pim, devengado,
                                    pim_pub_ant, dev_ano_ant, senal FROM obras ORDER BY pim DESC NULLS LAST"""
@@ -162,8 +162,9 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: 
     o_groups = dict(tuple(obras.groupby("sec_ejec"))) if obras is not None else {}
     i_groups: dict[str, dict[str, list]] = {}
     for r in _records(items):
-        if not r.get("sd"):
-            r.pop("sd", None)  # only flagged items carry it
+        for opcional in ("sd", "cui"):  # only flagged items carry sd, only projects their CUI
+            if not r.get(opcional):
+                r.pop(opcional, None)
         i_groups.setdefault(r.pop("sec_ejec"), {}).setdefault(r.pop("funcion"), []).append(r)
     a_groups: dict[str, list] = {}
     for a in alertas:
@@ -203,6 +204,7 @@ def _lineas_actuales(con) -> None:
         SELECT SEC_EJEC AS sec, FUNCION AS funcion,
                CASE WHEN {ES_PROYECTO} THEN 'proyecto' ELSE 'actividad' END AS tipo,
                CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO_NOMBRE ELSE ACTIVIDAD_ACCION_OBRA_NOMBRE END AS item,
+               CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO END AS cui,
                META AS meta, META_NOMBRE AS meta_nombre, RUBRO AS rubro, {SIN_DESCRIPCION} AS sin_desc,
                TIPO_TRANSACCION || '.' || GENERICA || '.' || SUBGENERICA || '.' || SUBGENERICA_DET || '.'
                  || ESPECIFICA || '.' || ESPECIFICA_DET AS clas,

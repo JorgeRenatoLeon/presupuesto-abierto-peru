@@ -28,6 +28,10 @@ def test_flattens_contracts_with_documents_amounts_and_project_codes(tmp_path):
     rec = _registro("ocds-1", ("1", "MUNICIPALIDAD DISTRITAL DE PRUEBA", "LIMA", "MIRAFLORES", "20131370645"), [{
         "id": 9, "title": "CONTRATO 1", "dateSigned": "2026-03-02T10:00:00-05:00", "description": " PAVIMENTACION  DE CALLES ",
         "value": {"amount": 1000.0, "currency": "USD"}, "period": {"durationInDays": 120},
+        "items": [{"position": "1", "quantity": 2.0, "unit": {"name": "Unidad"}, "description": "CAMIONETA  PICK UP 4X4",
+                   "totalValue": {"amount": 1000.0, "currency": "USD"},
+                   "classification": {"id": "2510150300012345", "scheme": "CUBSO", "description": "CAMIONETA PICK UP"}},
+                  {"position": "2", "quantity": 1.0, "unit": {"name": "Servicio"}, "description": "SIN CODIGO"}],
         "implementation": {"finalValue": {"amount": 1200.0, "currency": "USD"}},
         "suppliers": [{"id": "PE-RUC-1762914", "name": "CONSORCIO VEGAS"}],
         "documents": [{"id": "111", "documentType": "contractSigned", "title": "Archivos del contrato"},
@@ -44,7 +48,12 @@ def test_flattens_contracts_with_documents_amounts_and_project_codes(tmp_path):
     assert f["monto"] == 3700.0 and f["monto_final"] == 4440.0, "USD converted with the tender's own rate"
     assert f["cui"] == "2543266,2678303" and f["doc_contrato"] == "111" and f["plazo_dias"] == 120
     assert f["eventos"] == "adicional:113,intervencion:114,ampliacion:115", "the guarantee is not an event"
-    assert set(f) == set(C.COLUMNAS)
+    assert set(f) - {"_items"} == set(C.COLUMNAS)
+    camioneta, otra = f["_items"]
+    assert camioneta["unspsc"] == "25101503", "UNSPSC from the CUBSO code when not given apart"
+    assert (camioneta["descripcion"], camioneta["cantidad"], camioneta["unidad"], camioneta["total"]) == \
+        ("CAMIONETA PICK UP 4X4", 2.0, "Unidad", 3700.0)
+    assert otra["unspsc"] is None and set(camioneta) == set(C.COLUMNAS_ITEMS) - {"ocid", "contrato_id"}
 
 
 def test_names_normalised_like_both_sources_write_them():
@@ -110,16 +119,24 @@ def _contrato(i, comprador, nombre, fecha="2026-04-01", cui=None, monto=100.0, *
     return dict(ocid=f"o{i}", contrato_id=str(i), fecha=fecha, ano=int(fecha[:4]), comprador_id=comprador, comprador=nombre,
                 comprador_dep=kw.pop("dep", "CUSCO"), comprador_loc=kw.pop("loc", None), cui=cui, monto=monto,
                 proveedor=kw.pop("proveedor", f"PROVEEDOR {i}"), proveedor_ruc=kw.pop("ruc", f"2060000000{i % 10}"),
-                metodo=kw.pop("metodo", "Licitación Pública"), categoria="works", postores=kw.pop("postores", 3), **kw)
+                metodo=kw.pop("metodo", "Licitación Pública"), categoria=kw.pop("categoria", "services"),
+                postores=kw.pop("postores", 3), **kw)
 
 
-def _escribir(con, tmp_path, monkeypatch):
-    lago = tmp_path / "lago"
-    lago.mkdir()
+def _escribir(con, tmp_path, monkeypatch, items=()):
+    lago, lago_items = tmp_path / "lago", tmp_path / "lago_items"
+    lago.mkdir(); lago_items.mkdir()
     con.execute(f"""COPY (SELECT * REPLACE (CAST(ano AS INTEGER) AS ano, CAST(monto AS DOUBLE) AS monto,
                         CAST(monto_final AS DOUBLE) AS monto_final, CAST(postores AS INTEGER) AS postores
                         ) FROM contratos) TO '{lago / "2026.parquet"}' (FORMAT parquet)""")
+    con.execute("CREATE TABLE items (ocid VARCHAR, contrato_id VARCHAR, pos VARCHAR, cubso VARCHAR, cubso_desc VARCHAR, "
+                "unspsc VARCHAR, unspsc_desc VARCHAR, descripcion VARCHAR, cantidad DOUBLE, unidad VARCHAR, total DOUBLE)")
+    if items:
+        con.executemany("INSERT INTO items VALUES (?, ?, ?, NULL, NULL, ?, NULL, ?, ?, ?, ?)",
+                        [[i[0], i[1], str(k), *i[2:]] for k, i in enumerate(items)])
+    con.execute(f"COPY items TO '{lago_items / '2026.parquet'}' (FORMAT parquet)")
     monkeypatch.setattr(C, "CARPETA", lago)
+    monkeypatch.setattr(C, "CARPETA_ITEMS", lago_items)
 
 
 def test_project_codes_link_buyers_whose_names_differ(tmp_path, monkeypatch):
@@ -140,37 +157,62 @@ def test_exports_each_unit_with_its_contracts_and_red_flags(tmp_path, monkeypatc
     nombre = "MUNICIPALIDAD DISTRITAL DE KIMBIRI"
     filas = [
         _contrato(1, "b-kimbiri", nombre, cui="2500001", monto=1000.0, monto_final=1300.0, postores=1,
-                  doc_contrato="111", eventos="adicional:112,resolucion:113"),
+                  doc_contrato="111", eventos="adicional:112,resolucion:113", objeto="MEJORAMIENTO DE LA VIA",
+                  categoria="works"),
         _contrato(2, "b-kimbiri", nombre, cui="2500002", monto=500.0, metodo="Contratación Directa", postores=1),
-        _contrato(3, "b-kimbiri", nombre, cui="2500003", monto=200.0, fecha="2025-06-01", ruc="20600000001"),
+        _contrato(3, "b-kimbiri", nombre, cui="2500003", monto=200.0, fecha="2025-06-01", ruc="20600000001",
+                  objeto="ELABORACION DEL EXPEDIENTE TECNICO"),
+        _contrato(9, "b-kimbiri", nombre, monto=50.0, fecha="2026-02-01", objeto="MANTENIMIENTO DE CAMIONETA", ruc="10400000009"),
+        _contrato(10, "b-kimbiri", nombre, monto=40.0, fecha="2026-03-01", categoria="works", objeto="REPARACION DEL LOCAL"),
         _contrato(4, "b-kimbiri", nombre, cui="2500001", monto=900.0, fecha="2023-02-01"),  # older: only for its project
         _contrato(5, "b-emape", "EMPRESA MUNICIPAL ADMINISTRADORA DE PEAJE DE LIMA S.A.", cui="2500010", dep="LIMA", monto=70.0),
         _contrato(6, "b-emape", "EMPRESA MUNICIPAL ADMINISTRADORA DE PEAJE DE LIMA S.A.", dep="LIMA", monto=80.0),
         _contrato(8, "b-kimbiri", nombre, fecha="2030-01-01", monto=5.0),  # a typo'd date never shows
     ]
     con = _con_contratos(filas)
-    _escribir(con, tmp_path, monkeypatch)
+    _escribir(con, tmp_path, monkeypatch, items=[
+        ("o1", "1", "72141003", "MEJORAMIENTO DE LA VIA TRAMO 1", 1.0, "Servicio", 1000.0),
+        ("o9", "9", "78181507", "MANTENIMIENTO PREVENTIVO DE CAMIONETA", 2.0, "Servicio", 30.0),
+        ("o9", "9", "25172504", "LLANTAS", 4.0, "Unidad", 20.0),
+        ("o3", "3", "81101508", "EXPEDIENTE TECNICO", 1.0, "Servicio", 200.0)])
     out = tmp_path / "json"
     (out / "contratos").mkdir(parents=True)
     (out / "contratos" / "viejo.json").write_text("{}")
     resumen, por_obra = C.exportar(con, out)
 
     r = resumen["60"]
-    assert r["n"] == 3 and r["monto"] == 1700.0, "signed in 2025-2026 only"
+    assert r["n"] == 5 and r["monto"] == 1790.0, "signed in 2025-2026 only"
     assert r["extra"] == 300.0 and r["con_adicionales"] == 1 and r["resueltos"] == 1
-    assert (r["competitivos"], r["un_postor"]) == (2, 1), "a direct award is not a single-bidder tender"
-    assert r["directo"] == 500.0 and r["proveedores"] == 2
+    assert (r["competitivos"], r["un_postor"]) == (4, 1), "a direct award is not a single-bidder tender"
+    assert r["directo"] == 500.0 and r["proveedores"] == 4
     assert r["top"][0][1] == "PROVEEDOR 1"
     assert por_obra[("60", "2500001")] == [2, 1900.0], "a project lists its contracts of any year"
 
     d = json.loads((out / "contratos" / "60.json").read_text())
     assert d["b"] == [["Municipalidad distrital de Kimbiri", "", "cui"]], "buyer names readable, like the budget's"
-    assert [c[3] for c in d["c"]] == [1000.0, 500.0, 200.0, 900.0], "the period first, by amount; then older ones"
+    assert [c[3] for c in d["c"]] == [1000.0, 500.0, 200.0, 50.0, 40.0, 900.0], "the period first, by amount; then older ones"
     assert d["c"][0][4] == 1300.0 and d["c"][0][9] == "111" and d["c"][0][10] == "adicional:112,resolucion:113"
-    assert d["m"][d["c"][1][5]] == "Contratación Directa" and d["r"]["mostrados"] == 3
+    assert d["m"][d["c"][1][5]] == "Contratación Directa" and d["r"]["mostrados"] == 5
+    gasto = {c[3]: c[12] for c in d["c"]}
+    assert gasto[1000.0] == "2.6.2.3.2", "a project's road works: investment in road infrastructure"
+    assert gasto[200.0] == "2.6.8.1.3.1", "a project's expediente técnico"
+    assert gasto[50.0] == "2.3.2.4.5.1", "no project: vehicle maintenance, by its largest line"
+    assert gasto[40.0] == "2.3.2.4.2.1", "works with no catalogue code and no project: maintenance, of the building it names"
+    assert d["c"][3][13] == [2, [["Mantenimiento preventivo de camioneta", 2.0, "Servicio", 30.0], ["Llantas", 4.0, "Unidad", 20.0]]]
+    assert ["2.3.2.4", 2, 90.0] in r["por_gasto"], "what the unit's contracts buy, by expense group"
+
+    prov = json.loads((out / "proveedor" / "20600000001.json").read_text())
+    assert prov["nombre"] == "PROVEEDOR 1" and prov["tipo"] == "empresa"
+    assert prov["r"]["n"] == 2 and prov["r"]["monto"] == 1200.0, "a supplier's page: its period contracts only"
+    assert prov["e"] == [["60", "Municipalidad distrital de Quimbiri", 2, 1200.0]]
+    assert [c[3] for c in prov["c"]] == [1000.0, 200.0] and prov["c"][0][2] == 0
+    assert json.loads((out / "proveedor" / "10400000009.json").read_text())["tipo"] == "persona"
+    indice = json.loads((out / "proveedores" / "indice.json").read_text())
+    assert indice["p"][0][:4] == ["20600000001", "PROVEEDOR 1", 2, 1200.0] and indice["total"] == len(indice["p"])
 
     lima = json.loads((out / "contratos" / "70.json").read_text())
     assert [c[3] for c in lima["c"]] == [70.0], "the company's contract for Lima's project, not its toll business"
+    assert lima["c"][0][12] is None, "no catalogue code, not works: no expense type rather than a guess"
     assert lima["b"][0][2] is None and resumen["70"]["de_otros"] == 1
     assert not (out / "contratos" / "viejo.json").exists()
     fuente = json.loads((out / "contratos" / "fuente.json").read_text())

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { load, loadOptional, MESES, corteDatos, latestYear, fmtFecha, fmtPct, urlDatos, type Meta, type ResumenAnual } from "@/lib/data";
 
 type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number;
-  monto: number; monto_vinculado: number; compradores: number; compradores_vinculados: number };
+  monto: number; monto_vinculado: number; compradores: number; compradores_vinculados: number;
+  con_tipo_de_gasto?: number; proveedores?: number };
 
 export const metadata = { title: "Metodología — Presupuesto Abierto Perú" };
 
@@ -163,6 +164,24 @@ export default function MetodologiaPage() {
           Lo que falta es casi todo de entidades que no están en el presupuesto público: empresas del Estado
           (Petroperú, Sedapal, las eléctricas), EsSalud y el Banco Central de Reserva. Cada obra muestra además los
           contratos que llevan su CUI, aunque los haya firmado otra entidad (una empresa municipal, por ejemplo).
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          <strong>Qué se compró y con qué tipo de gasto.</strong> Cada contrato trae sus líneas (qué se compró, cuánto y a
+          qué precio) con el código del catálogo de compras del Estado (CUBSO). Con ese código le asignamos el tipo de
+          gasto del presupuesto que le corresponde (por ejemplo, «mantenimiento y reparación de vehículos» o
+          «combustibles») según una tabla pública que cualquiera puede revisar
+          (<code>pipeline/etiquetas/bienes_gasto.csv</code>); en las obras, el tipo de gasto sale del propio proyecto en el
+          presupuesto del MEF. Es una equivalencia, no un registro contable: el SEACE no dice qué partida paga cada
+          contrato. Por eso, junto a cada tipo de gasto de una actividad mostramos los contratos de la entidad de ese
+          tipo, y en cada proyecto, los que llevan su código (CUI).
+          {fc?.con_tipo_de_gasto ? ` ${fmtPct(fc.con_tipo_de_gasto / fc.contratos)} de los contratos tienen tipo de gasto; el resto no trae código de catálogo.` : ""}
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          <strong>Cada proveedor tiene su página</strong>
+          {fc?.proveedores ? ` (${fc.proveedores.toLocaleString("es-PE")} empresas, consorcios y personas)` : ""}: todo lo que
+          firmó con el Estado en el periodo, con qué entidades y qué vende. Búscalos en{" "}
+          <Link href="/proveedores/" style={enlace}>Proveedores</Link>. Su historial completo, con sanciones e
+          impedimentos, está en la Ficha Única del Proveedor del OECE.
         </p>
         <p style={{ fontSize: 14, marginTop: 8 }}>
           Las señales: <strong>«un solo postor»</strong> cuando a un concurso se presentó una sola empresa;{" "}

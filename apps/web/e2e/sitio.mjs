@@ -14,7 +14,10 @@ const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, lo
 const page = await ctx.newPage();
 const errores = [];
 page.on("pageerror", (e) => errores.push(`pageerror ${page.url()}: ${e.message}`));
-page.on("console", (m) => { if (m.type() === "error") errores.push(`console ${page.url()}: ${m.text()}`); });
+page.on("console", (m) => {
+  // an unknown supplier's file is a 404 by design: the page says so
+  if (m.type() === "error" && !(page.url().includes("id=00000000000") && m.text().includes("404"))) errores.push(`console ${page.url()}: ${m.text()}`);
+});
 
 let fallos = 0;
 const check = (ok, msg) => { console.log(`${ok ? "PASS" : "FAIL"} ${msg}`); if (!ok) fallos++; };
@@ -57,6 +60,11 @@ await paso("municipality", async () => {
   check(await detalle.locator("li").count() > 1 && await detalle.getByText("Qué se compra o se paga").isVisible(),
         "entity: an activity opens its metas, expense types and sources");
   check(await detalle.getByText("De dónde sale el dinero").isVisible(), "entity: the detail says where the money comes from");
+  const proyecto = page.locator("details[open] .items li", { has: page.locator(".etiqueta-tipo.proyecto") }).first();
+  check(await proyecto.count() === 1, "entity: Transporte lists its projects");
+  if (!(await proyecto.locator(".detalle-item").count())) await proyecto.getByRole("button", { name: "¿En qué exactamente?" }).click();
+  await proyecto.locator(".ct-del-proyecto").waitFor({ timeout: 15000 });
+  check(true, "entity: a project's detail shows its own contracts (by CUI)");
   await sinScroll("entidad/300790 (detail open)");
   const nav = page.getByRole("navigation", { name: "Secciones de esta página" });
   await nav.getByRole("link", { name: "Obras" }).click();
@@ -96,6 +104,48 @@ await paso("contracts", async () => {
   await sinScroll("entidad/300790#obras (project contracts open)");
   await page.goto(`${BASE}/metodologia/#contratos`);
   check(await page.locator("#contratos h2").isVisible(), "metodologia: explains where contracts come from and their limits");
+});
+
+await paso("what contracts buy, by expense type", async () => {
+  await page.goto(`${BASE}/entidad/300790/#contratos`);
+  const sec = page.locator("#contratos");
+  await sec.locator(".contratos .contrato").first().waitFor({ timeout: 15000 });
+  check(await sec.locator(".ct-lineas").count() > 0, "contracts: rows say what was bought, line by line");
+  check(await sec.locator(".ct-gasto").count() > 0, "contracts: rows carry the budget's expense type");
+  const grupo = sec.locator("button.ct-gasto-fila").first();
+  const nombre = (await grupo.locator(".ct-top-nombre").innerText()).trim();
+  await grupo.click();
+  check(await sec.getByLabel("Tipo de gasto").evaluate((s) => s.selectedOptions[0]?.textContent ?? "") === nombre,
+        `contracts: «${nombre.slice(0, 30)}» filters the list to that expense type`);
+  check(await sec.locator(".contratos .contrato").count() >= 1, "contracts: the filtered list is not empty");
+  await page.goto(`${BASE}/entidad/300790/#tipo-de-gasto`);
+  await page.locator("#tipo-de-gasto details summary", { hasText: /bienes y servicios/i }).first().click();
+  await page.locator("#tipo-de-gasto details[open] .ct-de-gasto button.ct-gasto-fila").first().waitFor({ timeout: 15000 });
+  check(true, "tipo de gasto: «Bienes y servicios» shows the unit's contracts of that type");
+  await sinScroll("entidad/300790#tipo-de-gasto (contracts open)");
+});
+
+await paso("suppliers", async () => {
+  await page.goto(`${BASE}/entidad/300790/#contratos`);
+  const proveedor = page.locator("#contratos .ct-top a.ct-enlace-proveedor").first();
+  const nombre = (await proveedor.innerText()).trim();
+  await proveedor.click();
+  await page.waitForURL(/proveedor\/\?id=/);
+  await page.locator(".hero h1").waitFor({ timeout: 15000 });
+  check((await page.locator(".hero h1").innerText()).trim() === nombre, `supplier: «${nombre.slice(0, 30)}» has its own page`);
+  check(await page.locator("#entidades a[href*='/entidad/300790/']").count() === 1, "supplier: lists the entities it sold to, linked");
+  check(await page.locator("#contratos .contratos .contrato").count() >= 1 && await page.locator(".kpi").count() === 4,
+        "supplier: its contracts and figures");
+  await sinScroll("proveedor");
+  await page.goto(`${BASE}/proveedores/`);
+  check(await page.locator(".ranking-prov li").count() > 5, "proveedores: the largest suppliers are ranked");
+  await page.getByLabel(/Busca una empresa/).fill(nombre.split(" ")[0].toLowerCase());
+  await page.locator(".busca-resultados a").first().waitFor({ timeout: 15000 });
+  check(await page.locator(".busca-resultados a").count() >= 1, "proveedores: name search finds suppliers");
+  const r = await page.goto(`${BASE}/proveedor/?id=00000000000`);
+  await page.getByText("Proveedor no encontrado").waitFor({ timeout: 15000 });
+  check(!!r?.ok(), "supplier: an unknown RUC says so");
+  await sinScroll("proveedores");
 });
 
 await paso("budget without description", async () => {

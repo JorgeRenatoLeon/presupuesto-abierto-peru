@@ -16,7 +16,7 @@ import { MasObras } from "@/components/MasObras";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { Bandas, type Banda } from "@/components/Bandas";
 import { ResumenContratos, ListaContratos } from "@/components/Contratos";
-import type { ContratosResumen } from "@/lib/contratos";
+import type { ContratosResumen, NombresGasto } from "@/lib/contratos";
 
 const ENT_DIR = join(DATA_DIR, "entidad");
 const OBRAS_EN_PAGINA = 10;
@@ -79,6 +79,9 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
   const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos } =
     JSON.parse(raw) as Payload;
   const fuenteContratos = loadOptional<FuenteContratos>("contratos/fuente.json");
+  const todosGastos = fuenteContratos ? loadOptional<NombresGasto>("contratos/gastos.json") : null;
+  // only the names this page's summary uses travel in its payload
+  const nombresGasto = Object.fromEntries((contratos?.por_gasto ?? []).flatMap(([g]) => (todosGastos?.[g] ? [[g, todosGastos[g]]] : [])));
   const periodo = fuenteContratos ? fuenteContratos.anos.join(" y ") : "";
   const detenidas = obras.filter((o) => o.senal === "sin_avance");
 
@@ -159,7 +162,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           Su presupuesto por función del Estado. Abre cada una para ver sus actividades y proyectos, y en cada uno
           «¿En qué exactamente?»: metas, qué se compra o se paga y de dónde sale el dinero.
         </p>
-        <DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} esperado={esperado} />
+        <DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} esperado={esperado} contratos={!!fuenteContratos} />
       </section>
 
       {n_obras ? (
@@ -188,7 +191,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           </p>
           {contratos?.n ? (
             <>
-              <ResumenContratos r={contratos} />
+              <ResumenContratos r={contratos} nombres={nombresGasto} />
               <ListaContratos sec={info.sec_ejec} />
             </>
           ) : (
@@ -244,7 +247,8 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
       <section className="seccion tarjeta" id="tipo-de-gasto">
         <h2>¿En qué tipo de gasto?</h2>
         <p className="sub">Sueldos, compras, obras… Abre cada tipo para ver qué incluye.</p>
-        <DesgloseFunciones funciones={genAno} dimension="generica" esperado={esperado} />
+        <DesgloseFunciones funciones={genAno} dimension="generica" esperado={esperado} sec={info.sec_ejec}
+                           contratos={!!fuenteContratos} />
       </section>
     </div>
   );

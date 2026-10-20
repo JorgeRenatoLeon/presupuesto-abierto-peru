@@ -12,8 +12,11 @@ terminated or annulled; and, for investment projects, the CUI that ties a contra
 the budget. Limits, said on the site too: it records what was contracted, not what was paid (no
 payment transactions are published), and only purchases that went through a SEACE procedure.
 
-  actualizar(anos)  update step: download (weekly), flatten -> lake/contratos/<ano>.parquet
-  exportar(con, out) serving step: link buyers to executing units -> json/contratos/<sec>.json
+  actualizar(anos)  update step: download (weekly), flatten -> lake/contratos/<ano>.parquet and
+                    lake/contratos_items/<ano>.parquet (what was bought, line by line)
+  exportar(con, out) serving step: link buyers to executing units, give each contract the budget's
+                    expense type (etiquetas/bienes_gasto.csv) -> json/contratos/<sec>.json,
+                    json/proveedor/<id>.json (one per supplier), json/proveedores/indice.json
 """
 import gzip
 import json
@@ -27,12 +30,15 @@ import duckdb
 import requests
 from rapidfuzz import fuzz
 
+from compare import ES_PROYECTO
 from config import LAKE, RAW
-from nombres import con_lugares, lugares as lugares_conocidos
+from nombres import con_lugares, texto, lugares as lugares_conocidos
 
 FUENTE = "https://data.open-contracting.org/en/publication/135/download?name={ano}.jsonl.gz"
 DOC = "https://prod4.seace.gob.pe:9000/api/con/documentos/descargar/"  # + document id: signed contract, amendments
 CARPETA = LAKE / "contratos"
+CARPETA_ITEMS = LAKE / "contratos_items"
+BIENES_GASTO = Path(__file__).resolve().parent / "etiquetas" / "bienes_gasto.csv"
 CADENCIA_DIAS = 7       # the mirror changes monthly; checking weekly is plenty
 UMBRAL_NOMBRE = 90      # rapidfuzz score to accept a buyer <-> executing unit match
 TOP_CONTRATOS = 250     # per entity on the site; every contract stays in the lake / Hugging Face
@@ -41,6 +47,9 @@ COLUMNAS = ["ocid", "contrato_id", "contrato", "fecha", "ano", "comprador_id", "
             "comprador_dep", "comprador_prov", "comprador_loc", "metodo", "categoria", "postores", "objeto", "proveedor",
             "proveedor_ruc", "monto", "monto_final", "valor_referencial", "moneda", "plazo_dias", "cui",
             "doc_contrato", "eventos"]
+
+COLUMNAS_ITEMS = ["ocid", "contrato_id", "pos", "cubso", "cubso_desc", "unspsc", "unspsc_desc", "descripcion",
+                  "cantidad", "unidad", "total"]
 
 # what happened to a contract after signing, from the titles of its SEACE documents
 EVENTOS = [("nulidad", r"nulidad"), ("intervencion", r"intervenci[oó]n"), ("resolucion", r"resoluci[oó]n"),
@@ -81,8 +90,22 @@ def _monto_pen(v: dict, tv: dict) -> float | None:
     return None
 
 
+def _item(it: dict, tv: dict, i: int) -> dict:
+    """A line of what was bought: catalogue codes (CUBSO, whose first 8 digits are the UNSPSC
+    commodity), the line as the entity wrote it, quantity, unit and amount in soles."""
+    cl = it.get("classification") or {}
+    un = next((a for a in it.get("additionalClassifications") or [] if a.get("scheme") == "UNSPSC"), {})
+    cubso = cl.get("id") if cl.get("scheme") == "CUBSO" else None
+    return {"pos": str(it.get("position") or i), "cubso": cubso, "cubso_desc": cl.get("description"),
+            "unspsc": un.get("id") or (cubso[:8] if cubso else None), "unspsc_desc": un.get("description"),
+            "descripcion": " ".join((it.get("description") or "").split())[:300] or None,
+            "cantidad": it.get("quantity"), "unidad": (it.get("unit") or {}).get("name"),
+            "total": _monto_pen(it.get("totalValue") or {}, tv)}
+
+
 def filas(path: Path):
-    """One row per signed contract of an OCDS JSONL file (compiled releases)."""
+    """One row per signed contract of an OCDS JSONL file (compiled releases), with its lines of
+    what was bought under "_items" (the contract's own, else its award's, else the tender's)."""
     with gzip.open(path, "rt", encoding="utf-8") as f:
         for linea in f:
             r = json.loads(linea)
@@ -108,6 +131,7 @@ def filas(path: Path):
                         if tipo:
                             eventos.append(f"{tipo}:{d['id']}")
                 cui = str(((r.get("planning") or {}).get("budget") or {}).get("projectID") or "")
+                lineas = c.get("items") or (premios.get(c.get("awardID")) or {}).get("items") or t.get("items") or []
                 yield {
                     "ocid": r.get("ocid"), "contrato_id": str(c.get("id")), "contrato": c.get("title"),
                     "fecha": fecha, "ano": int(fecha[:4]) if fecha else None,
@@ -126,34 +150,43 @@ def filas(path: Path):
                     "plazo_dias": (c.get("period") or {}).get("durationInDays"),
                     "cui": ",".join(x for x in re.findall(r"\d{7}", cui)) or None,
                     "doc_contrato": firmado, "eventos": ",".join(eventos) or None,
+                    "_items": [_item(it, t.get("value") or {}, i) for i, it in enumerate(lineas, 1)],
                 }
 
 
 def actualizar(anos: list[int], forzar: bool = False) -> list[Path]:
-    """Refresh lake/contratos/<ano>.parquet for each year, at most every CADENCIA_DIAS.
-    Returns the lake files written (to push to Hugging Face)."""
+    """Refresh lake/contratos/<ano>.parquet and lake/contratos_items/<ano>.parquet for each year, at
+    most every CADENCIA_DIAS. Returns the lake files written (to push to Hugging Face)."""
     import pandas as pd
     CARPETA.mkdir(parents=True, exist_ok=True)
+    CARPETA_ITEMS.mkdir(parents=True, exist_ok=True)
     meta = _metadatos()
     escritos = []
     for ano in anos:
         info = meta.get(str(ano)) or {}
         dias = (time.time() - info.get("descargado_ts", 0)) / 86400
-        destino = CARPETA / f"{ano}.parquet"
-        if not forzar and destino.exists() and dias < CADENCIA_DIAS:
+        destino, destino_items = CARPETA / f"{ano}.parquet", CARPETA_ITEMS / f"{ano}.parquet"
+        if not forzar and destino.exists() and destino_items.exists() and dias < CADENCIA_DIAS:
             print(f"  contratos {ano}: al día (descargado hace {dias:.1f} días)")
             continue
         print(f"  contratos {ano}: descargando {FUENTE.format(ano=ano)}", flush=True)
         origen = descargar(ano)
-        df = pd.DataFrame(filas(origen), columns=COLUMNAS)
+        contratos = list(filas(origen))
+        df = pd.DataFrame(contratos, columns=COLUMNAS)
+        items = pd.DataFrame([dict(it, ocid=c["ocid"], contrato_id=c["contrato_id"]) for c in contratos for it in c["_items"]],
+                             columns=COLUMNAS_ITEMS)
         con = duckdb.connect()
         con.register("df", df)
+        con.register("items", items)
         con.execute(f"COPY (SELECT * FROM df ORDER BY comprador_id, fecha) TO '{destino}' (FORMAT parquet, COMPRESSION zstd)")
+        con.execute(f"COPY (SELECT * FROM items ORDER BY ocid, contrato_id) TO '{destino_items}' (FORMAT parquet, COMPRESSION zstd)")
         meta[str(ano)] = {"descargado": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                          "descargado_ts": time.time(), "contratos": len(df), "fuente": FUENTE.format(ano=ano)}
-        print(f"  contratos {ano}: {len(df):,} contratos -> {destino.name} ({destino.stat().st_size / 1e6:.1f} MB)")
+                          "descargado_ts": time.time(), "contratos": len(df), "items": len(items),
+                          "fuente": FUENTE.format(ano=ano)}
+        print(f"  contratos {ano}: {len(df):,} contratos, {len(items):,} líneas -> {destino.name} "
+              f"({(destino.stat().st_size + destino_items.stat().st_size) / 1e6:.1f} MB)")
         origen.unlink(missing_ok=True)
-        escritos.append(destino)
+        escritos += [destino, destino_items]
     if escritos:
         (CARPETA / "fuente.json").write_text(json.dumps(meta, indent=1))
         escritos.append(CARPETA / "fuente.json")
@@ -342,7 +375,7 @@ def enlazar(con, vista: str = "_c") -> dict[str, tuple[str, str]]:
     return out
 
 
-# --- serving: contracts per executing unit ------------------------------------------------
+# --- serving: contracts per executing unit and per supplier -------------------------------
 
 # competitive procedures, direct awards (no competition) and special regimes (agreements between
 # public entities, international organisations): "a single bidder" only means something for the first
@@ -351,9 +384,14 @@ VIA = """CASE WHEN regexp_matches(coalesce(metodo, ''), '^(Contratación Directa
               ELSE 'competitivo' END"""
 _CATEGORIA = {"works": "o", "goods": "b", "services": "s"}
 LARGO_OBJETO = 300
+ITEMS_POR_CONTRATO = 3         # lines of what was bought shown per contract; the rest are counted
+TOP_CONTRATOS_PROVEEDOR = 300  # per supplier page, by amount
+INDICE_PROVEEDORES = 12000     # suppliers searchable by name, by amount; any other one by its RUC
+CLAS = ("TIPO_TRANSACCION || '.' || GENERICA || '.' || SUBGENERICA || '.' || SUBGENERICA_DET || '.' "
+        "|| ESPECIFICA || '.' || ESPECIFICA_DET")
 
 
-def texto_objeto(s: str | None, lugares=None) -> str:
+def texto_objeto(s: str | None, lugares=None, largo: int = LARGO_OBJETO) -> str:
     """A contract's object as SEACE wrote it, minus encoding damage (curly quotes arrive as "¿";
     the real "¿...?" always closes with "?") and, when written in capitals, readable like the
     budget's names: "Mejoramiento de la vía ... distrito de Ollantaytambo"."""
@@ -361,16 +399,153 @@ def texto_objeto(s: str | None, lugares=None) -> str:
     if "¿" in t and "?" not in t:
         t = t.replace("¿", '"')
     t = con_lugares(t, lugares) if lugares else t
-    return t if len(t) <= LARGO_OBJETO else t[:LARGO_OBJETO - 1].rstrip() + "…"
+    return t if len(t) <= largo else t[:largo - 1].rstrip() + "…"
+
+
+def tipo_proveedor(id_: str) -> str:
+    """RUC 10/15/17: a person with a business; 20: a company; SEACE's own code: a consortium."""
+    if re.fullmatch(r"\d{11}", id_ or ""):
+        return "persona" if id_[:2] in ("10", "15", "17") else "empresa"
+    return "consorcio"
+
+
+def _hay(con, nombre: str) -> bool:
+    return bool(con.execute("SELECT count(*) FROM information_schema.tables WHERE table_name = ?", [nombre]).fetchone()[0])
+
+
+def _gastos(con) -> None:
+    """_gasto (ocid, contrato_id, gasto): the budget expense type a contract corresponds to, by what
+    it buys: the catalogue code of its largest line (etiquetas/bienes_gasto.csv, the longest prefix
+    wins). A project's contracts (CUI) are investment: the table's own column for them and, when it
+    only says "construction", the line the project itself budgets (road, school, water...).
+    The line matches how it is bought: a works contract the project's "por contrata" line, goods
+    its "bienes" line, services its "servicios" one (obras por administración directa).
+    A correspondence, not a record: SEACE does not say which budget line pays a contract."""
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _reglas AS SELECT prefijo, clasificador, nullif(clasificador_obra, '') AS obra
+                    FROM read_csv('{BIENES_GASTO}', header = true, all_varchar = true)""")
+    con.execute("""CREATE OR REPLACE TEMP TABLE _cg AS
+        SELECT ocid, contrato_id, base, obra FROM (
+            SELECT i.ocid, i.contrato_id, i.pos, i.total, r.clasificador AS base, r.obra,
+                   row_number() OVER (PARTITION BY i.ocid, i.contrato_id, i.pos ORDER BY length(r.prefijo) DESC) AS rk
+            FROM _it i JOIN _reglas r ON starts_with(i.unspsc, r.prefijo))
+        WHERE rk = 1
+        QUALIFY row_number() OVER (PARTITION BY ocid, contrato_id ORDER BY total DESC NULLS LAST, pos) = 1""")
+    estudio = "(g.base LIKE '2.3.2.7%' OR g.obra LIKE '2.6.8%')"
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _gasto0 AS
+        SELECT c.ocid, c.contrato_id, coalesce(
+            CASE WHEN c.cui IS NULL THEN g.base
+                 WHEN {estudio} AND regexp_matches(upper(c.objeto), 'EXPEDIENTE') THEN '2.6.8.1.3.1'
+                 WHEN {estudio} AND regexp_matches(upper(c.objeto), 'PRE ?-?INVERSI|PERFIL|FICHA T[EÉ]CNICA') THEN '2.6.8.1.2.1'
+                 ELSE coalesce(g.obra, CASE WHEN g.base LIKE '2.6%' THEN g.base WHEN g.base LIKE '2.3.1%' THEN '2.6.8.1.4.2'
+                                            WHEN g.base LIKE '2.3.2%' THEN '2.6.8.1.4.3' END) END,
+            CASE WHEN c.categoria = 'works' THEN CASE WHEN c.cui IS NULL THEN '2.3.2.4' ELSE '2.6.2' END END) AS gasto
+        FROM _todos c LEFT JOIN _cg g USING (ocid, contrato_id)""")
+    if not _hay(con, "gasto_wide"):
+        con.execute("CREATE OR REPLACE TEMP TABLE _gasto1 AS SELECT * FROM _gasto0")
+        _por_texto(con)
+        return
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _plin AS
+        SELECT PRODUCTO_PROYECTO AS cui, {CLAS} AS clas, any_value(ESPECIFICA_DET_NOMBRE) AS nombre,
+               sum(CAST(MONTO_PIM AS DOUBLE)) AS pim
+        FROM gasto_wide WHERE ANO_EJE = (SELECT max(ANO_EJE) FROM gasto_wide) AND {ES_PROYECTO} AND GENERICA = '6'
+        GROUP BY 1, 2""")
+    con.execute("""CREATE OR REPLACE TEMP TABLE _gasto1 AS
+        SELECT g.ocid, g.contrato_id, coalesce(b.clas, g.gasto) AS gasto FROM _gasto0 g LEFT JOIN (
+            SELECT g.ocid, g.contrato_id, p.clas FROM _gasto0 g JOIN _todos c USING (ocid, contrato_id)
+            JOIN _plin p ON p.cui = split_part(c.cui, ',', 1) AND (starts_with(p.clas, g.gasto || '.')
+                 -- no line of that branch: goods and services go where the project budgets its purchases
+                 OR (c.categoria = 'goods' AND p.nombre LIKE '%BIENES%') OR (c.categoria = 'services' AND p.nombre LIKE '%SERVICIOS%'))
+            WHERE g.gasto LIKE '2.6%' AND length(g.gasto) - length(replace(g.gasto, '.', '')) < 5
+            QUALIFY row_number() OVER (PARTITION BY g.ocid, g.contrato_id ORDER BY starts_with(p.clas, g.gasto || '.') DESC,
+                        p.nombre LIKE CASE c.categoria WHEN 'goods' THEN '%BIENES%' WHEN 'services' THEN '%SERVICIOS%'
+                                                       ELSE '%CONTRATA%' END DESC, p.pim DESC, p.clas) = 1
+        ) b USING (ocid, contrato_id)""")
+    _por_texto(con)
+
+
+# what a contract builds or maintains, from its own words, when neither its catalogue code nor its
+# project's budget lines say it: [(within, code, pattern on the object)], the first match wins
+_OBRA_POR_TEXTO = [
+    ("2.6.2", "2.6.2.3.2", r"CARRETER|VIAL|TRANSITABILIDAD|MOVILIDAD|PISTA|VEREDA|PUENTE|CAMINO|TROCHA|PAVIMENT|AVENIDA|AV\. |CALLE|JIR[OÓ]N|JR\. "),
+    ("2.6.2", "2.6.2.3.5", r"AGUA POTABLE|SANEAMIENTO|ALCANTARILLADO|DESAG|AGUAS RESIDUALES"),
+    ("2.6.2", "2.6.2.3.4", r"RIEGO|IRRIGACI|CANAL|REPRESA|RESERVORIO|QOCHA"),
+    ("2.6.2", "2.6.2.3.3", r"ELECTRIFICACI|ELECTRIC|ALUMBRADO"),
+    ("2.6.2", "2.6.2.3.6", r"PARQUE|PLAZA|ESPACIOS? P[UÚ]BLICOS?|[AÁ]REAS? VERDES?|ALAMEDA"),
+    ("2.6.2", "2.6.2.2.2", r"EDUCATIV|COLEGIO|ESCUELA|I\.E\.|INICIAL|PRIMARIA|SECUNDARIA"),
+    ("2.6.2", "2.6.2.2.3", r"SALUD|HOSPITAL|POSTA|CL[IÍ]NICA"),
+    ("2.6.2", "2.6.2.2.4", r"DEPORTIV|LOSA|COLISEO|ESTADIO|CULTURAL|COMUNAL|MERCADO|BIBLIOTECA"),
+    ("2.3.2.4", "2.3.2.4.3.1", r"CARRETER|VIAL|TRANSITABILIDAD|MOVILIDAD|PISTA|VEREDA|PUENTE|CAMINO|TROCHA"),
+    ("2.3.2.4", "2.3.2.4.2.1", r"LOCAL|EDIFICI|OFICINA|INSTITUCI|INSTALACI|INFRAESTRUCTURA"),
+]
+
+
+def _por_texto(con) -> None:
+    """_gasto: _gasto1 with the broad construction and maintenance types narrowed by the object's
+    words ("MEJORAMIENTO DE LA CARRETERA..." is road infrastructure), never outside their branch."""
+    casos = " ".join(f"WHEN g.gasto IN ('{dentro}', '{'.'.join(cod.split('.')[:4])}') AND regexp_matches(upper(c.objeto), '{patron}') "
+                     f"AND starts_with('{cod}', g.gasto) THEN '{cod}'" for dentro, cod, patron in _OBRA_POR_TEXTO)
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _gasto AS
+        SELECT g.ocid, g.contrato_id, CASE {casos} ELSE g.gasto END AS gasto
+        FROM _gasto1 g JOIN _todos c USING (ocid, contrato_id)""")
+
+
+def _items_por_contrato(con, tabla: str, lugares) -> dict[tuple, list]:
+    """(ocid, contrato_id) -> [[line, quantity, unit, amount], ..., n lines]: the largest lines of
+    what each contract of `tabla` bought, as the entity wrote them (else the catalogue's name)."""
+    out: dict[tuple, list] = {}
+    for ocid, cid, desc, cat_desc, cant, unidad, total, n in con.execute(f"""
+            SELECT i.ocid, i.contrato_id, i.descripcion, i.cubso_desc, i.cantidad, i.unidad, i.total,
+                   count(*) OVER (PARTITION BY i.ocid, i.contrato_id) AS n
+            FROM _it i JOIN (SELECT DISTINCT ocid, contrato_id FROM {tabla}) k USING (ocid, contrato_id)
+            QUALIFY row_number() OVER (PARTITION BY i.ocid, i.contrato_id ORDER BY i.total DESC NULLS LAST, i.pos)
+                    <= {ITEMS_POR_CONTRATO}""").fetchall():
+        lst = out.setdefault((ocid, cid), [])
+        lst.append([texto_objeto(desc or cat_desc, lugares, 160) or None, cant, unidad, total])
+        if len(lst) == 1:
+            lst.insert(0, n)  # first element: how many lines in all
+    return {k: [v[0], v[1:]] for k, v in out.items()}
+
+
+def _nombres_gasto(con, codigos: set[str]) -> dict[str, list]:
+    """[name, context] of each expense type code the contracts use, at any level (2.3.1 ... 2.3.1.6.1.1):
+    the context is the closest broader level with a different name ("De vehículos" in maintenance,
+    rentals or spare parts)."""
+    if not _hay(con, "gasto_wide"):
+        return {}
+    nombre: dict[str, str] = {}
+    for fila in con.execute("""SELECT DISTINCT TIPO_TRANSACCION, GENERICA, SUBGENERICA, SUBGENERICA_DET, ESPECIFICA,
+                                      ESPECIFICA_DET, GENERICA_NOMBRE, SUBGENERICA_NOMBRE, SUBGENERICA_DET_NOMBRE,
+                                      ESPECIFICA_NOMBRE, ESPECIFICA_DET_NOMBRE
+                               FROM gasto_wide WHERE GENERICA IN ('3', '6')""").fetchall():
+        for k in range(2, 7):
+            nombre.setdefault(".".join(fila[:k]), fila[4 + k])
+    out = {}
+    for c in codigos:
+        partes = c.split(".")
+        for k in range(3, len(partes) + 1):  # the code and its broader levels (summaries group by them)
+            cod = ".".join(partes[:k])
+            if cod in out or cod not in nombre:
+                continue
+            propio = (nombre[cod] or "").strip()
+            ctx = next((nombre[".".join(partes[:j])] for j in range(k - 1, 2, -1)
+                        if (nombre.get(".".join(partes[:j])) or "").strip().upper() not in ("", propio.upper())), None)
+            out[cod] = [texto(propio), texto(ctx) if ctx else None]
+    return out
+
+
+def _grupo(gasto: str | None) -> str | None:
+    """The 4-level group of an expense type (2.3.2.4: maintenance), what summaries add up by."""
+    return ".".join(gasto.split(".")[:4]) if gasto else None
 
 
 def exportar(con, out: Path) -> tuple[dict, dict]:
-    """json/contratos/<sec>.json per executing unit (+ fuente.json). Returns ({sec: summary},
-    {(sec, cui): [contracts, amount]}) for the entity files; empty when the lake has no contracts."""
+    """json/contratos/<sec>.json per executing unit, json/proveedor/<id>.json per supplier, the
+    supplier index and the names of the expense types. Returns ({sec: summary}, {(sec, cui):
+    [contracts, amount]}) for the entity files; empty when the lake has no contracts."""
     archivos = sorted(CARPETA.glob("*.parquet"))
-    carpeta = out / "contratos"
-    for viejo in carpeta.glob("*.json"):
-        viejo.unlink()  # derived output: a unit that lost its contracts must not keep a stale file
+    carpeta, carpeta_prov = out / "contratos", out / "proveedor"
+    for viejo in [*carpeta.glob("*.json"), *carpeta_prov.glob("*.json"), *(out / "proveedores").glob("*.json")]:
+        viejo.unlink()  # derived output: a unit or supplier that lost its contracts must not keep a stale file
     if not archivos:
         return {}, {}
     ano = con.execute("SELECT max(ano) FROM fact_entidad_mes").fetchone()[0]
@@ -382,6 +557,15 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         SELECT DISTINCT ON (ocid, contrato_id) *, {VIA} AS via FROM read_parquet([{lista}], union_by_name = true)
         WHERE ano BETWEEN {ano - 10} AND {ano} AND fecha <= '{hoy}'""")  # no typo'd future dates
     con.execute(f"CREATE OR REPLACE TEMP VIEW _c AS SELECT * FROM _todos WHERE ano >= {ano - 1}")
+    items = sorted(CARPETA_ITEMS.glob("*.parquet"))
+    if items:
+        con.execute(f"""CREATE OR REPLACE TEMP TABLE _it AS SELECT i.* FROM read_parquet([{", ".join(f"'{a}'" for a in items)}]) i
+                        JOIN (SELECT DISTINCT ocid, contrato_id FROM _todos) k USING (ocid, contrato_id)""")
+    else:
+        con.execute("""CREATE OR REPLACE TEMP TABLE _it (ocid VARCHAR, contrato_id VARCHAR, pos VARCHAR, cubso VARCHAR,
+                       cubso_desc VARCHAR, unspsc VARCHAR, unspsc_desc VARCHAR, descripcion VARCHAR, cantidad DOUBLE,
+                       unidad VARCHAR, total DOUBLE)""")
+    _gastos(con)
     enlace = enlazar(con, "_todos")
     con.execute("CREATE OR REPLACE TEMP TABLE _enl (comprador_id VARCHAR, sec_ejec VARCHAR, como VARCHAR)")
     con.executemany("INSERT INTO _enl VALUES (?, ?, ?)", [[c, s, h] for c, (s, h) in enlace.items()])
@@ -394,12 +578,14 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         SELECT DISTINCT x.ocid, x.contrato_id, o.sec_ejec, o.cui
         FROM (SELECT ocid, contrato_id, unnest(string_split(cui, ',')) AS cui FROM _todos WHERE cui IS NOT NULL) x
         JOIN o USING (cui)""")
-    con.execute(f"""CREATE OR REPLACE TEMP TABLE _ct AS
+    con.execute("""CREATE OR REPLACE TEMP TABLE _ct AS
         WITH k AS (SELECT ocid, contrato_id, sec_ejec, bool_or(propio) AS propio FROM (
                      SELECT ocid, contrato_id, sec_ejec, true AS propio FROM _todos JOIN _enl USING (comprador_id)
                      UNION ALL SELECT ocid, contrato_id, sec_ejec, false FROM _cx) GROUP BY ocid, contrato_id, sec_ejec)
-        SELECT k.sec_ejec, k.propio, c.* FROM k JOIN _todos c USING (ocid, contrato_id)""")
+        SELECT k.sec_ejec, k.propio, c.*, g.gasto FROM k JOIN _todos c USING (ocid, contrato_id)
+        LEFT JOIN _gasto g USING (ocid, contrato_id)""")
     con.execute(f"CREATE OR REPLACE TEMP VIEW _cs AS SELECT * FROM _ct WHERE ano >= {ano - 1}")  # the summary's period
+    lugares = lugares_conocidos(con)
 
     resumen = {}
     for (sec, n, monto, extra, proveedores, comp, un_postor, directo, resueltos, intervenidos, nulos, adicionales,
@@ -418,50 +604,62 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
                         "competitivos": comp, "un_postor": un_postor, "directo": directo, "resueltos": resueltos,
                         "intervenidos": intervenidos, "nulos": nulos, "con_adicionales": adicionales,
                         "de_otros": de_otros, "monto_otros": monto_otros, "desde": str(desde), "hasta": str(hasta),
-                        "por_tipo": {"o": o, "b": b, "s": s_}, "top": []}
+                        "por_tipo": {"o": o, "b": b, "s": s_}, "top": [], "por_gasto": []}
     for sec, ruc, nombre, n, monto in con.execute("""
         SELECT sec_ejec, proveedor_ruc, arg_max(proveedor, monto), count(*), sum(monto) FROM _cs
         WHERE proveedor_ruc IS NOT NULL AND proveedor_ruc <> '' GROUP BY sec_ejec, proveedor_ruc
         QUALIFY row_number() OVER (PARTITION BY sec_ejec ORDER BY sum(monto) DESC NULLS LAST, proveedor_ruc) <= 10
         ORDER BY sec_ejec, sum(monto) DESC NULLS LAST""").fetchall():
         resumen[sec]["top"].append([ruc, nombre, n, monto])
+    # what the contracts buy, by the budget's expense groups (maintenance, fuel, construction...)
+    for sec, grupo, n, monto in con.execute("""
+        SELECT sec_ejec, array_to_string(string_split(gasto, '.')[1:4], '.') AS grupo, count(*), sum(monto) FROM _cs
+        WHERE gasto IS NOT NULL GROUP BY 1, 2 ORDER BY 1, 4 DESC NULLS LAST""").fetchall():
+        resumen[sec]["por_gasto"].append([grupo, n, monto])
     por_obra = {(sec, cui): [n, monto] for sec, cui, n, monto in con.execute(
         "SELECT x.sec_ejec, x.cui, count(*), sum(c.monto) FROM _cx x JOIN _todos c USING (ocid, contrato_id) GROUP BY 1, 2").fetchall()}
 
     # the file: the period's largest contracts and every one tied to the unit's projects (any year:
     # who builds each obra); the rest is in the summary and in the Hugging Face dataset
-    filas_ = con.execute(f"""
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _fe AS
         SELECT * FROM (
             SELECT c.sec_ejec, c.fecha, c.objeto, c.proveedor, c.proveedor_ruc, c.monto, c.monto_final, c.metodo,
                    c.categoria, c.postores, c.cui, c.doc_contrato, c.eventos, c.comprador, c.comprador_ruc, e.como,
+                   c.gasto, c.ocid, c.contrato_id,
                    row_number() OVER (PARTITION BY c.sec_ejec ORDER BY (c.ano >= {ano - 1}) DESC, c.monto DESC NULLS LAST,
                                       c.fecha DESC, c.ocid, c.contrato_id) AS k,
                    c.ano >= {ano - 1} AS en_periodo,
                    EXISTS (SELECT 1 FROM _cx x WHERE x.ocid = c.ocid AND x.contrato_id = c.contrato_id
                                                 AND x.sec_ejec = c.sec_ejec) AS de_obra
             FROM _ct c LEFT JOIN _enl e ON e.comprador_id = c.comprador_id AND e.sec_ejec = c.sec_ejec)
-        WHERE (en_periodo AND k <= {TOP_CONTRATOS}) OR de_obra ORDER BY sec_ejec, k""").fetchall()
+        WHERE (en_periodo AND k <= {TOP_CONTRATOS}) OR de_obra""")
+    lineas = _items_por_contrato(con, "_fe", lugares)
     por_sec: dict[str, list] = {}
-    for f in filas_:
+    for f in con.execute("SELECT * EXCLUDE (k, en_periodo, de_obra) FROM _fe ORDER BY sec_ejec, k").fetchall():
         por_sec.setdefault(f[0], []).append(f)
     carpeta.mkdir(parents=True, exist_ok=True)
-    lugares = lugares_conocidos(con)
+    usados: set[str] = set()
     for sec, rows in por_sec.items():
         if sec not in resumen:  # only older contracts, for its projects: no summary for the period
-            resumen[sec] = {"n": 0, "monto": None, "top": [], "desde": None, "hasta": None}
+            resumen[sec] = {"n": 0, "monto": None, "top": [], "por_gasto": [], "desde": None, "hasta": None}
         prov, metodos, comp = {}, {}, {}
         c = []
         for (_, fecha, objeto, proveedor, ruc, monto, final, metodo, categoria, postores, cui, doc, eventos,
-             comprador, comprador_ruc, como, *_) in rows:
+             comprador, comprador_ruc, como, gasto, ocid, cid) in rows:
             p = prov.setdefault((ruc or "", proveedor or ""), len(prov)) if (ruc or proveedor) else None
             m = metodos.setdefault(metodo or "", len(metodos))
             b = comp.setdefault((comprador or "", comprador_ruc or "", como), len(comp))
-            c.append([str(fecha), texto_objeto(objeto, lugares), p, monto, final if final is not None and monto and abs(final - monto) > 0.005 * monto else None,
-                      m, _CATEGORIA.get(categoria), postores, cui, doc, eventos, b])
+            usados.add(gasto) if gasto else None
+            c.append([str(fecha), texto_objeto(objeto, lugares), p, monto,
+                      final if final is not None and monto and abs(final - monto) > 0.005 * monto else None,
+                      m, _CATEGORIA.get(categoria), postores, cui, doc, eventos, b, gasto, lineas.get((ocid, cid))])
         r = dict(resumen[sec], mostrados=sum(1 for x in c if x[0] >= f"{ano - 1}"), desde_ano=ano - 1)
         datos = {"r": r, "p": [list(k) for k in prov], "m": list(metodos),
                  "b": [[con_lugares(n, lugares), ruc, como] for n, ruc, como in comp], "c": c}
         (carpeta / f"{sec}.json").write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), default=str))
+    n_prov = _proveedores(con, out, lugares, ano, usados)
+    usados |= {g for r in resumen.values() for g, *_ in r.get("por_gasto", [])}
+    (carpeta / "gastos.json").write_text(json.dumps(_nombres_gasto(con, usados), ensure_ascii=False, separators=(",", ":")))
     meta = _metadatos()
     (carpeta / "fuente.json").write_text(json.dumps({
         "descargado": max((v.get("descargado") for v in meta.values() if isinstance(v, dict)), default=None),
@@ -472,6 +670,94 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         "monto_vinculado": con.execute("SELECT sum(monto) FROM _c WHERE comprador_id IN (SELECT comprador_id FROM _enl)").fetchone()[0],
         "compradores": con.execute("SELECT count(DISTINCT comprador_id) FROM _c").fetchone()[0],
         "compradores_vinculados": len(enlace), "por_cui": sum(1 for _, h in enlace.values() if h == "cui"),
+        "con_tipo_de_gasto": con.execute("SELECT count(*) FROM _c JOIN _gasto g USING (ocid, contrato_id) WHERE g.gasto IS NOT NULL").fetchone()[0],
+        "proveedores": n_prov,
     }, ensure_ascii=False))
-    print(f"  json: contratos/*.json ({len(por_sec)} units, {sum(len(v) for v in por_sec.values()):,} contracts shown)")
+    print(f"  json: contratos/*.json ({len(por_sec)} units, {sum(len(v) for v in por_sec.values()):,} contracts shown), "
+          f"proveedor/*.json ({n_prov:,} suppliers)")
     return {sec: dict(r, top=r["top"][:5]) for sec, r in resumen.items()}, por_obra
+
+
+def _proveedores(con, out: Path, lugares, ano: int, usados: set[str]) -> int:
+    """proveedor/<id>.json: everything a supplier signed with the State in the period, with which
+    units, of which expense types; proveedores/indice.json: the largest ones, for the search box."""
+    carpeta = out / "proveedor"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    nombres = dict(con.execute("""SELECT proveedor_ruc, arg_max(proveedor, fecha) FROM _c
+                                  WHERE proveedor_ruc <> '' GROUP BY 1""").fetchall())
+    ent = dict(con.execute("SELECT sec_ejec, any_value(nombre) FROM dim_entidad GROUP BY 1").fetchall())
+    con.execute("""CREATE OR REPLACE TEMP TABLE _cp AS
+        SELECT c.*, e.sec_ejec, g.gasto FROM _c c LEFT JOIN _enl e USING (comprador_id) LEFT JOIN _gasto g USING (ocid, contrato_id)
+        WHERE c.proveedor_ruc IS NOT NULL AND c.proveedor_ruc <> ''""")
+    lineas = _items_por_contrato(con, "_cp", lugares)
+    indice = []
+    filas_ = con.execute("""SELECT proveedor_ruc, fecha, objeto, monto, monto_final, metodo, categoria, postores, cui,
+                                   doc_contrato, eventos, gasto, sec_ejec, comprador, via, ocid, contrato_id
+                            FROM _cp ORDER BY proveedor_ruc, monto DESC NULLS LAST, fecha DESC, ocid, contrato_id""").fetchall()
+    grupo: list = []
+    for k, fila in enumerate(filas_ + [None]):
+        if grupo and (fila is None or fila[0] != grupo[0][0]):
+            id_ = grupo[0][0]
+            if re.fullmatch(r"[0-9A-Za-z-]{1,40}", id_):
+                indice.append(_archivo_proveedor(carpeta, id_, nombres.get(id_), grupo, ent, lineas, lugares, ano, usados))
+            grupo = []
+        if fila is not None:
+            grupo.append(fila)
+    indice.sort(key=lambda x: -(x[3] or 0))
+    (out / "proveedores").mkdir(parents=True, exist_ok=True)
+    (out / "proveedores" / "indice.json").write_text(json.dumps(
+        {"total": len(indice), "desde_ano": ano - 1, "p": indice[:INDICE_PROVEEDORES]},
+        ensure_ascii=False, separators=(",", ":")))
+    return len(indice)
+
+
+def _archivo_proveedor(carpeta: Path, id_: str, nombre: str | None, filas_: list, ent: dict, lineas: dict,
+                       lugares, ano: int, usados: set[str]) -> list:
+    entidades: dict[tuple, list] = {}  # (sec or None, name) -> [contracts, amount]
+    metodos: dict[str, int] = {}
+    por_gasto: dict[str, list] = {}
+    c = []
+    n = monto = extra = comp = un_postor = directo = resueltos = nulos = intervenidos = adicionales = 0
+    fechas = []
+    for (_, fecha, objeto, m_, final, metodo, categoria, postores, cui, doc, eventos, gasto, sec, comprador,
+         via, ocid, cid) in filas_:
+        clave = (sec, ent.get(sec) or comprador or "") if sec else (None, comprador or "")
+        e = entidades.setdefault(clave, [len(entidades), 0, 0.0])
+        e[1] += 1; e[2] += m_ or 0
+        n += 1; monto += m_ or 0; fechas.append(str(fecha))
+        if final is not None and m_ is not None and final > m_:
+            extra += final - m_
+        if via == "competitivo" and postores is not None:
+            comp += 1; un_postor += postores == 1
+        if via == "directo":
+            directo += m_ or 0
+        ev = eventos or ""
+        resueltos += "resolucion" in ev; nulos += "nulidad" in ev; intervenidos += "intervencion" in ev
+        adicionales += "adicional" in ev or (final is not None and m_ is not None and final > m_ * 1.005)
+        if gasto:
+            usados.add(gasto)
+            g = por_gasto.setdefault(_grupo(gasto), [0, 0.0]); g[0] += 1; g[1] += m_ or 0
+        if len(c) < TOP_CONTRATOS_PROVEEDOR:
+            c.append([str(fecha), texto_objeto(objeto, lugares), e[0], m_,
+                      final if final is not None and m_ and abs(final - m_) > 0.005 * m_ else None,
+                      metodos.setdefault(metodo or "", len(metodos)), _CATEGORIA.get(categoria), postores, cui, doc,
+                      eventos, gasto, lineas.get((ocid, cid))])
+    lista_ent = sorted(([s, con_lugares(nom, lugares), k, a] for (s, nom), (_, k, a) in entidades.items()),
+                       key=lambda x: -x[3])
+    orden = {(s, nom): i for i, (s, nom, *_) in enumerate(lista_ent)}
+    # contracts point at entities by their position in the (re-sorted) list
+    viejo_a_nuevo = {v[0]: orden[(k[0], con_lugares(k[1], lugares))] for k, v in entidades.items()}
+    for fila in c:
+        fila[2] = viejo_a_nuevo[fila[2]]
+    tipo = tipo_proveedor(id_)
+    datos = {
+        "id": id_, "nombre": nombre, "tipo": tipo, "desde_ano": ano - 1,
+        "r": {"n": n, "monto": monto, "extra": extra or None, "entidades": len(entidades), "competitivos": comp,
+              "un_postor": un_postor, "directo": directo or None, "resueltos": resueltos, "nulos": nulos,
+              "intervenidos": intervenidos, "con_adicionales": adicionales, "desde": min(fechas), "hasta": max(fechas),
+              "mostrados": len(c)},
+        "e": lista_ent, "g": sorted(([k, v[0], v[1]] for k, v in por_gasto.items()), key=lambda x: -x[2]),
+        "m": list(metodos), "c": c,
+    }
+    (carpeta / f"{id_}.json").write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), default=str))
+    return [id_, nombre, n, monto, len(entidades), tipo]

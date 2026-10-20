@@ -579,3 +579,38 @@ p a { overflow-wrap: anywhere; }
 .contratos.compacto { margin-top: 6px; border-left: 2px solid var(--regla); padding-left: 12px; }
 .contratos.compacto .contrato { padding: 10px 0; }
 .contratos.compacto .ct-cuanto b { font-size: 19px; }
+/* what the contracts buy, by the budget's expense types; rows that filter the list */
+.ct-nota-gasto { font-size: 13px; color: var(--texto-suave); margin: -2px 0 6px; max-width: 70ch; }
+.ct-gastos { list-style: none; display: grid; }
+.ct-gastos > li { border-bottom: 1px solid var(--regla); }
+.ct-gastos > li:last-child { border-bottom: none; }
+.ct-gasto-fila { display: grid; gap: 5px; width: 100%; padding: 9px 0; font: inherit; color: inherit; text-align: left;
+  background: none; border: 0; cursor: pointer; transition: transform 160ms var(--ease-out); }
+.ct-gasto-fila:active { transform: scale(0.99); }
+.ct-gasto-fila.estatica { cursor: default; }
+.ct-gasto-fila .detalle span:last-child { color: var(--celeste); font-weight: 700; }
+@media (hover: hover) and (pointer: fine) { .ct-gasto-fila:not(.estatica):hover .ct-top-nombre { color: var(--amarillo); } }
+.ct-enlace-proveedor { color: var(--texto-fuerte); text-decoration: underline; text-decoration-color: var(--celeste);
+  text-underline-offset: 3px; text-decoration-thickness: 1px; }
+@media (hover: hover) and (pointer: fine) { .ct-enlace-proveedor:hover { color: var(--celeste); } }
+/* "Qué se compró": the contract's own lines, with quantities and unit prices */
+.ct-lineas { display: grid; gap: 3px; font-size: 13.5px; border-left: 2px solid var(--amarillo); padding-left: 10px; }
+.ct-lineas ul { list-style: none; display: grid; gap: 4px; }
+.ct-lineas li { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: 12px; }
+.ct-linea-desc { color: var(--texto-fuerte); min-width: 0; flex: 1 1 220px; overflow-wrap: anywhere; }
+.ct-linea-cifra { color: var(--texto-suave); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ct-lineas small { color: var(--texto-suave); font-size: 12px; }
+.ct-gasto { font-size: 13px; color: var(--texto); }
+.ct-gasto .mp-etq { margin-right: 4px; }
+.ct-tipo { margin-top: 6px; display: grid; gap: 6px; }
+.ct-de-gasto { margin: 4px 0 12px; }
+.ct-de-gasto h4 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amarillo); margin: 8px 0 4px; }
+.ct-del-proyecto { border-top: 1px solid var(--regla); padding-top: 8px; }
+.ct-controles-simple { grid-template-columns: minmax(0, 1fr) !important; max-width: 520px; }
+/* supplier pages */
+.hero .prov-tipo { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amarillo); }
+.busca-prov { display: grid; }
+.prov-resultado { display: grid; gap: 3px; padding: 10px 0; width: 100%; }
+.prov-resultado-nombre { font-weight: 800; color: var(--texto-fuerte); font-size: 15.5px; overflow-wrap: anywhere; }
+.prov-resultado .detalle { font-size: 13px; }
+.enlace-texto { color: var(--celeste); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }

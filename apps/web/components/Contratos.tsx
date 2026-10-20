@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ChevronDown, FileText } from "lucide-react";
 import { fmtSoles, fmtPct, fmtNombre, fichaInversion, urlDatos } from "@/lib/types";
 import {
-  CATEGORIA, EVENTOS, esRuc, eventosDe, metodoInfo, plano, urlDocumento,
-  type ArchivoContratos, type ContratosResumen, type FilaContrato, type Via,
+  CATEGORIA, EVENTOS, cargarDatos, coincideGasto, esRuc, etiquetaGasto, eventosDe, grupoGasto, metodoInfo, mismoGasto, plano,
+  urlDocumento,
+  type ArchivoContratos, type ArchivoProveedor, type ContratosResumen, type FilaContrato, type Lineas, type NombresGasto, type Via,
 } from "@/lib/contratos";
 import { KpiCard } from "@/components/ui";
 
@@ -15,20 +17,61 @@ const fechaCorta = (iso: string) => {
   const [y, m, d] = iso.split("-").map(Number);
   return `${d} ${MESES_CORTOS[m]} ${y}`;
 };
-const plural = (n: number, uno: string, varios: string) => `${n.toLocaleString("es-PE")} ${n === 1 ? uno : varios}`;
-
-const pedidos = new Map<string, Promise<ArchivoContratos | null>>();
-/** contratos/<sec>.json, fetched once per page: the list and every project panel share it. */
-function cargarContratos(sec: string): Promise<ArchivoContratos | null> {
-  if (!pedidos.has(sec)) {
-    pedidos.set(sec, fetch(urlDatos(`contratos/${sec}.json`)).then((r) => (r.ok ? r.json() : null)).catch(() => null));
-  }
-  return pedidos.get(sec)!;
+export const plural = (n: number, uno: string, varios: string) => `${n.toLocaleString("es-PE")} ${n === 1 ? uno : varios}`;
+const numero = (v: number) => v.toLocaleString("es-PE", { maximumFractionDigits: 2 });
+const IRREGULARES: Record<string, string> = { mes: "meses", dia: "dias", día: "días", vez: "veces" };
+/** "179 100 unidades", "3 250 galones": SEACE writes units in the singular. */
+function unidades(unidad: string | null, n: number): string {
+  const t = (unidad ?? "").toLowerCase().trim();
+  if (n === 1 || !t) return t;
+  return t.split(/\s+/).map((w) => IRREGULARES[w] ?? (w.length <= 2 || /\d|s$/.test(w) || ["de", "del", "por", "con"].includes(w) ? w
+    : /[aeiouáéó]$/.test(w) ? `${w}s` : /z$/.test(w) ? `${w.slice(0, -1)}ces` : /[ndlrj]$/.test(w) ? `${w}es` : w)).join(" ");
 }
 
-/** The period's contracts in figures: how much, with how many suppliers, how they were chosen and
- *  what went wrong after signing. No hooks: part of the static page. */
-export function ResumenContratos({ r }: { r: ContratosResumen }) {
+export const cargarContratos = (sec: string) => cargarDatos<ArchivoContratos>(urlDatos(`contratos/${sec}.json`));
+export const cargarGastos = () => cargarDatos<NombresGasto>(urlDatos("contratos/gastos.json"));
+export const urlProveedor = (id: string) => `/proveedor/?id=${encodeURIComponent(id)}`;
+
+/** One contract as every list shows it, whichever file it comes from. */
+export type Vista = {
+  fecha: string; objeto: string; monto: number | null; final: number | null; metodo: string; via: Via;
+  cat: "o" | "b" | "s" | null; postores: number | null; cui: string | null; doc: string | null; eventos: string | null;
+  gasto: string | null; lineas: Lineas | null;
+  /** on a unit's page: who was contracted (linked when it has a page: contracts of the period) */
+  proveedor: { id: string; nombre: string; enlace: boolean } | null;
+  /** on a supplier's page: which unit contracted it */
+  entidad: { sec: string | null; nombre: string } | null;
+  nota: string | null;
+};
+
+export function vistaEntidad(c: FilaContrato, d: ArchivoContratos): Vista {
+  const [fecha, objeto, p, monto, final, m, cat, postores, cui, doc, eventos, b, gasto, lineas] = c;
+  const prov = p != null ? d.p[p] : null;
+  const comprador = d.b[b];
+  const propios = d.b.filter((x) => x[2] !== null).length;
+  const metodo = d.m[m] ?? "";
+  return {
+    fecha, objeto, monto, final, metodo, via: metodoInfo(metodo).via, cat, postores, cui, doc, eventos,
+    gasto: gasto ?? null, lineas: lineas ?? null, entidad: null,
+    proveedor: prov ? { id: prov[0], nombre: prov[1], enlace: !!prov[0] && fecha >= String(d.r.desde_ano ?? "") } : null,
+    nota: comprador && comprador[2] === null ? `Lo firmó ${fmtNombre(comprador[0])}, para una obra de esta entidad.`
+      : propios > 1 && comprador ? `Comprador en el SEACE: ${fmtNombre(comprador[0])}` : null,
+  };
+}
+
+export function vistaProveedor(c: ArchivoProveedor["c"][number], d: ArchivoProveedor): Vista {
+  const [fecha, objeto, e, monto, final, m, cat, postores, cui, doc, eventos, gasto, lineas] = c;
+  const ent = d.e[e];
+  const metodo = d.m[m] ?? "";
+  return {
+    fecha, objeto, monto, final, metodo, via: metodoInfo(metodo).via, cat, postores, cui, doc, eventos, gasto, lineas,
+    proveedor: null, entidad: ent ? { sec: ent[0], nombre: ent[1] } : null, nota: null,
+  };
+}
+
+/** The period's contracts in figures: how much, with how many suppliers, how they were chosen, what
+ *  went wrong after signing and what they buy. No hooks: part of the static page. */
+export function ResumenContratos({ r, nombres }: { r: ContratosResumen; nombres?: NombresGasto }) {
   const unPostor = r.competitivos ? (r.un_postor ?? 0) / r.competitivos : null;
   const sinCompetencia = r.monto ? (r.directo ?? 0) / r.monto : null;
   const mayor = r.top[0];
@@ -38,6 +81,8 @@ export function ResumenContratos({ r }: { r: ContratosResumen }) {
   if (r.intervenidos) senales.push({ tono: "alta", texto: `${plural(r.intervenidos, "obra intervenida", "obras intervenidas")}: la entidad tomó el control por problemas del contratista.` });
   if (r.extra) senales.push({ tono: "media", texto: `${fmtSoles(r.extra)} más de lo firmado, por adicionales en ${plural(r.con_adicionales ?? 0, "contrato", "contratos")}.` });
   if (r.de_otros) senales.push({ tono: "info", texto: `${plural(r.de_otros, "contrato lo firmó", "contratos los firmó")} otra entidad para obras de esta (${fmtSoles(r.monto_otros)}).` });
+  const grupos = (r.por_gasto ?? []).filter(([g]) => nombres?.[g]);
+  const maxGrupo = Math.max(...grupos.map(([, , m]) => m ?? 0), 1);
   return (
     <>
       <div className="kpis">
@@ -53,6 +98,28 @@ export function ResumenContratos({ r }: { r: ContratosResumen }) {
           {senales.map((s) => <li key={s.texto} className={s.tono}>{s.texto}</li>)}
         </ul>
       ) : null}
+      {grupos.length ? (
+        <>
+          <h3 className="ct-h3">Qué compra o paga con estos contratos</h3>
+          <p className="ct-nota-gasto">
+            Por tipo de gasto del presupuesto, según el bien o servicio de cada contrato. Toca uno para ver sus contratos.
+          </p>
+          <ul className="ct-gastos">
+            {grupos.slice(0, 8).map(([g, n, monto]) => (
+              <li key={g}>
+                <button type="button" className="ct-gasto-fila" onClick={() => filtrarContratos(g)}>
+                  <span className="ct-top-cab">
+                    <span className="ct-top-nombre">{nombres![g][0]}</span>
+                    <span className="cifra">{fmtSoles(monto)}</span>
+                  </span>
+                  <span className="reparto-barra"><span style={{ width: `${((monto ?? 0) / maxGrupo) * 100}%` }} /></span>
+                  <span className="detalle"><span>{plural(n, "contrato", "contratos")}</span><span>Ver los contratos</span></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
       {r.top.length ? (
         <>
           <h3 className="ct-h3">Sus principales proveedores</h3>
@@ -60,7 +127,7 @@ export function ResumenContratos({ r }: { r: ContratosResumen }) {
             {r.top.map(([id, nombre, n, monto]) => (
               <li key={id}>
                 <div className="ct-top-cab">
-                  <span className="ct-top-nombre">{nombre}</span>
+                  <Link className="ct-top-nombre ct-enlace-proveedor" href={urlProveedor(id)}>{nombre}</Link>
                   <span className="cifra">{fmtSoles(monto)}</span>
                 </div>
                 <span className="reparto-barra"><span style={{ width: `${r.monto ? Math.min(1, (monto ?? 0) / r.monto) * 100 : 0}%` }} /></span>
@@ -77,13 +144,19 @@ export function ResumenContratos({ r }: { r: ContratosResumen }) {
   );
 }
 
+/** "Show me those contracts": a summary row filters the list below and brings it into view. */
+function filtrarContratos(gasto: string) {
+  window.dispatchEvent(new CustomEvent("contratos:filtrar", { detail: gasto }));
+  document.getElementById("contratos-lista")?.scrollIntoView({ block: "start" });
+}
+
 type Senal = "todas" | "un_postor" | "directo" | "adicional" | "problemas";
 
-function cumple(c: FilaContrato, senal: Senal, via: Via): boolean {
-  const ev = c[10] ?? "";
-  if (senal === "un_postor") return via === "competitivo" && c[7] === 1;
-  if (senal === "directo") return via === "directo";
-  if (senal === "adicional") return ev.includes("adicional") || (c[4] != null && c[3] != null && c[4] > c[3]);
+function cumple(v: Vista, senal: Senal): boolean {
+  const ev = v.eventos ?? "";
+  if (senal === "un_postor") return v.via === "competitivo" && v.postores === 1;
+  if (senal === "directo") return v.via === "directo";
+  if (senal === "adicional") return ev.includes("adicional") || (v.final != null && v.monto != null && v.final > v.monto);
   if (senal === "problemas") return /resolucion|nulidad|intervencion/.test(ev);
   return true;
 }
@@ -92,8 +165,10 @@ function cumple(c: FilaContrato, senal: Senal, via: Via): boolean {
 export function ListaContratos({ sec }: { sec: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [d, setD] = useState<ArchivoContratos | null | undefined>(undefined);
+  const [nombres, setNombres] = useState<NombresGasto | null>(null);
   const [q, setQ] = useState("");
   const [tipo, setTipo] = useState("todos");
+  const [gasto, setGasto] = useState("todos");
   const [senal, setSenal] = useState<Senal>("todas");
   const [orden, setOrden] = useState<"monto" | "fecha">("monto");
   const [ver, setVer] = useState(PAGINA);
@@ -101,37 +176,44 @@ export function ListaContratos({ sec }: { sec: string }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const cargar = () => { cargarContratos(sec).then(setD); cargarGastos().then(setNombres); };
     const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        obs.disconnect();
-        cargarContratos(sec).then(setD);
-      }
+      if (e.isIntersecting) { obs.disconnect(); cargar(); }
     }, { rootMargin: "400px 0px" });
-    obs.observe(el);
-    return () => obs.disconnect();
+    obs.observe(el.closest("section") ?? el);  // as soon as the reader reaches the section, not the list below its summary
+    const filtrar = (e: Event) => { setGasto((e as CustomEvent<string>).detail); cargar(); };
+    window.addEventListener("contratos:filtrar", filtrar);
+    return () => { obs.disconnect(); window.removeEventListener("contratos:filtrar", filtrar); };
   }, [sec]);
 
-  const vias = useMemo(() => (d ? d.m.map((m) => metodoInfo(m).via) : []), [d]);
-  const buscable = useMemo(() => (d ? d.c.map((c) => {
-    const p = c[2] != null ? d.p[c[2]] : null;
-    return plano(`${c[1]} ${p?.[1] ?? ""} ${p?.[0] ?? ""} ${c[8] ?? ""}`);
-  }) : []), [d]);
+  const vistas = useMemo(() => (d ? d.c.map((c) => vistaEntidad(c, d)) : []), [d]);
+  const buscable = useMemo(() => vistas.map((v) => plano(
+    `${v.objeto} ${v.proveedor?.nombre ?? ""} ${v.proveedor?.id ?? ""} ${v.cui ?? ""} ${(v.lineas?.[1] ?? []).map((l) => l[0]).join(" ")}`)), [vistas]);
+  const grupos = useMemo(() => {
+    const g = new Map<string, number>();
+    for (const v of vistas) {
+      const k = grupoGasto(v.gasto);
+      if (k && v.fecha >= String(d?.r.desde_ano ?? "")) g.set(k, (g.get(k) ?? 0) + (v.monto ?? 0));
+    }
+    return [...g.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
+  }, [vistas, d]);
   const filas = useMemo(() => {
     if (!d) return [];
     const desde = String(d.r.desde_ano ?? "");
     const t = plano(q.trim());
-    const f = d.c.map((_, i) => i).filter((i) => {
-      const c = d.c[i];
-      return c[0] >= desde && (tipo === "todos" || c[6] === tipo) && cumple(c, senal, vias[c[5]])
+    const f = vistas.map((_, i) => i).filter((i) => {
+      const v = vistas[i];
+      return v.fecha >= desde && (tipo === "todos" || v.cat === tipo) && cumple(v, senal)
+        && (gasto === "todos" || (!!v.gasto && mismoGasto(v.gasto, gasto)))
         && (!t || buscable[i].includes(t));
     });
-    return orden === "fecha" ? f.sort((a, b) => d.c[b][0].localeCompare(d.c[a][0])) : f;
-  }, [d, q, tipo, senal, orden, vias, buscable]);
-  useEffect(() => setVer(PAGINA), [q, tipo, senal, orden]);
+    return orden === "fecha" ? f.sort((a, b) => vistas[b].fecha.localeCompare(vistas[a].fecha)) : f;
+  }, [d, vistas, q, tipo, gasto, senal, orden, buscable]);
+  useEffect(() => setVer(PAGINA), [q, tipo, gasto, senal, orden]);
 
-  const filtrado = !!q.trim() || tipo !== "todos" || senal !== "todas";
+  const filtrado = !!q.trim() || tipo !== "todos" || senal !== "todas" || gasto !== "todos";
   return (
-    <div ref={ref} className="ct-lista">
+    <div ref={ref} className="ct-lista" id="contratos-lista">
       <h3 className="ct-h3">Todos sus contratos</h3>
       {d === undefined ? <p className="explica cargando">Cargando contratos…</p> : null}
       {d === null ? <p className="vacio">No se pudieron cargar los contratos. Vuelve a intentarlo recargando la página.</p> : null}
@@ -140,8 +222,13 @@ export function ListaContratos({ sec }: { sec: string }) {
           <div className="ct-controles">
             <input type="search" className="buscador" value={q} onChange={(e) => setQ(e.target.value)}
                    placeholder="Busca proveedor, RUC, obra u objeto" aria-label="Buscar en los contratos" />
+            <select className="buscador" value={gasto} onChange={(e) => setGasto(e.target.value)} aria-label="Tipo de gasto">
+              <option value="todos">Todo tipo de gasto</option>
+              {grupos.map((g) => <option key={g} value={g}>{nombres?.[g]?.[0] ?? g}</option>)}
+              {gasto !== "todos" && !grupos.includes(gasto) ? <option value={gasto}>{nombres?.[gasto]?.[0] ?? gasto}</option> : null}
+            </select>
             <select className="buscador" value={tipo} onChange={(e) => setTipo(e.target.value)} aria-label="Tipo de contrato">
-              <option value="todos">Todos los tipos</option>
+              <option value="todos">Obras, bienes y servicios</option>
               <option value="o">Solo obras</option>
               <option value="b">Solo bienes</option>
               <option value="s">Solo servicios</option>
@@ -166,7 +253,7 @@ export function ListaContratos({ sec }: { sec: string }) {
           </p>
           {filas.length ? (
             <ol className="contratos">
-              {filas.slice(0, ver).map((i) => <Contrato key={i} c={d.c[i]} d={d} via={vias[d.c[i][5]]} />)}
+              {filas.slice(0, ver).map((i) => <Contrato key={i} v={vistas[i]} nombres={nombres} />)}
             </ol>
           ) : <p className="vacio">Ningún contrato coincide. Prueba sin tildes, con el RUC o con otra señal.</p>}
           {filas.length > ver ? (
@@ -181,9 +268,9 @@ export function ListaContratos({ sec }: { sec: string }) {
   );
 }
 
-/** The words the rows use, explained once instead of on every row: the signals, and the ways
- *  this entity chose its suppliers. */
-function SignificadoSenales({ metodos }: { metodos: string[] }) {
+/** The words the rows use, explained once instead of on every row: the signals, how expense types
+ *  are worked out, and the ways suppliers were chosen. */
+export function SignificadoSenales({ metodos }: { metodos: string[] }) {
   const senales: [string, string, string][] = [
     ["media", "Un solo postor", "Se convocó un concurso, pero solo una empresa se presentó: no hubo con quién comparar precios."],
     ["media", "Sin competencia", metodoInfo("Contratación Directa").explica],
@@ -197,6 +284,13 @@ function SignificadoSenales({ metodos }: { metodos: string[] }) {
         {senales.map(([tono, texto, explica]) => (
           <div key={texto}><dt><span className={`badge ${tono}`}>{texto}</span></dt><dd>{explica}</dd></div>
         ))}
+        <div>
+          <dt>Tipo de gasto</dt>
+          <dd>
+            El SEACE no dice qué partida del presupuesto paga cada contrato. Lo deducimos del catálogo del bien o
+            servicio contratado (y, en las obras, de su proyecto): es una equivalencia, no un registro contable.
+          </dd>
+        </div>
         {metodos.filter(Boolean).sort().map((m) => (
           <div key={m}><dt>{m}</dt><dd>{metodoInfo(m).explica}</dd></div>
         ))}
@@ -205,52 +299,88 @@ function SignificadoSenales({ metodos }: { metodos: string[] }) {
   );
 }
 
-function Contrato({ c, d, via, compacto = false }: { c: FilaContrato; d: ArchivoContratos; via: Via; compacto?: boolean }) {
-  const [fecha, objeto, p, monto, final, m, cat, postores, cui, doc, ev, b] = c;
-  const prov = p != null ? d.p[p] : null;
-  const eventos = eventosDe(ev);
+/** "Qué se compró": the largest lines of a contract, with quantity and unit price. */
+function LineasCompradas({ lineas, compacto }: { lineas: Lineas; compacto: boolean }) {
+  const [n, filas] = lineas;
+  const visibles = filas.filter(([desc]) => desc);
+  if (!visibles.length) return null;
+  const mostradas = visibles.slice(0, compacto ? 2 : 3);
+  return (
+    <div className="ct-lineas">
+      <span className="mp-etq">Qué se compró</span>
+      <ul>
+        {mostradas.map(([desc, cant, unidad, total], k) => (
+          <li key={k}>
+            <span className="ct-linea-desc">{desc}</span>
+            <span className="ct-linea-cifra">
+              {[cant != null ? `${numero(cant)} ${unidades(unidad, cant)}`.trim() : null,
+                cant != null && cant > 1 && total ? `${fmtSoles(total / cant)} c/u` : null,
+                total != null ? fmtSoles(total) : null].filter(Boolean).join(" · ")}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {n > mostradas.length ? <small>y {plural(n - mostradas.length, "línea más", "líneas más")} en el contrato</small> : null}
+    </div>
+  );
+}
+
+export function Contrato({ v, nombres, compacto = false }: { v: Vista; nombres: NombresGasto | null; compacto?: boolean }) {
+  const eventos = eventosDe(v.eventos);
   const tipos = new Set(eventos.map((e) => e.tipo));
-  const comprador = d.b[b];
-  const cambio = final != null && monto ? (final - monto) / monto : null;
+  const cambio = v.final != null && v.monto ? (v.final - v.monto) / v.monto : null;
   const cuenta: Record<string, number> = {};
-  const metodo = d.m[m];
+  const gasto = etiquetaGasto(v.gasto, nombres);
   return (
     <li className="contrato">
       <div className="ct-cab">
-        <time dateTime={fecha}>{fechaCorta(fecha)}</time>
-        {cat ? <span className="etiqueta-tipo">{CATEGORIA[cat]}</span> : null}
-        {via === "directo" ? <span className="badge media">Sin competencia</span> : null}
-        {via === "competitivo" && postores === 1 ? <span className="badge media">Un solo postor</span> : null}
+        <time dateTime={v.fecha}>{fechaCorta(v.fecha)}</time>
+        {v.cat ? <span className="etiqueta-tipo">{CATEGORIA[v.cat]}</span> : null}
+        {v.via === "directo" ? <span className="badge media">Sin competencia</span> : null}
+        {v.via === "competitivo" && v.postores === 1 ? <span className="badge media">Un solo postor</span> : null}
         {(["nulidad", "resolucion", "intervencion", "adicional"] as const).filter((t) => tipos.has(t)).map((t) => (
           <span key={t} className={`badge ${EVENTOS[t].tono}`}>{EVENTOS[t].texto}</span>
         ))}
       </div>
-      <p className="ct-objeto">{objeto ? fmtNombre(objeto) : "Sin descripción en el SEACE"}</p>
+      <p className="ct-objeto">{v.objeto ? fmtNombre(v.objeto) : "Sin descripción en el SEACE"}</p>
       <div className="ct-cifras">
-        <span className="ct-quien">
-          <span className="mp-etq">Proveedor</span>
-          <b>{prov?.[1] || "No registrado en el SEACE"}</b>
-          {prov ? <span className="ct-ruc">{esRuc(prov[0]) ? `RUC ${prov[0]}` : "Consorcio"}</span> : null}
-        </span>
+        {v.entidad ? (
+          <span className="ct-quien">
+            <span className="mp-etq">Entidad</span>
+            {v.entidad.sec
+              ? <Link href={`/entidad/${v.entidad.sec}/`} className="ct-enlace-proveedor"><b>{v.entidad.nombre}</b></Link>
+              : <b>{v.entidad.nombre}</b>}
+          </span>
+        ) : (
+          <span className="ct-quien">
+            <span className="mp-etq">Proveedor</span>
+            {v.proveedor?.enlace
+              ? <Link href={urlProveedor(v.proveedor.id)} className="ct-enlace-proveedor"><b>{v.proveedor.nombre}</b></Link>
+              : <b>{v.proveedor?.nombre || "No registrado en el SEACE"}</b>}
+            {v.proveedor ? <span className="ct-ruc">{esRuc(v.proveedor.id) ? `RUC ${v.proveedor.id}` : "Consorcio"}</span> : null}
+          </span>
+        )}
         <span className="ct-cuanto">
           <span className="mp-etq">Monto firmado</span>
-          <b>{fmtSoles(monto)}</b>
+          <b>{fmtSoles(v.monto)}</b>
           {cambio != null ? (
             <small className={cambio > 0 ? "sube" : ""}>
-              Monto final {fmtSoles(final)} ({cambio > 0 ? "+" : "−"}{fmtPct(Math.abs(cambio))})
+              Monto final {fmtSoles(v.final)} ({cambio > 0 ? "+" : "−"}{fmtPct(Math.abs(cambio))})
             </small>
           ) : null}
         </span>
       </div>
+      {v.lineas ? <LineasCompradas lineas={v.lineas} compacto={compacto} /> : null}
+      {gasto ? <p className="ct-gasto"><span className="mp-etq">Tipo de gasto</span> {gasto}</p> : null}
       {!compacto ? (
-        <p className="ct-como" title={metodo ? metodoInfo(metodo).explica : undefined}>
-          {metodo || "Procedimiento no indicado"}
-          {postores != null && via === "competitivo" ? ` · ${plural(postores, "postor", "postores")}` : ""}
+        <p className="ct-como">
+          {v.metodo || "Procedimiento no indicado"}
+          {v.postores != null && v.via === "competitivo" ? ` · ${plural(v.postores, "postor", "postores")}` : ""}
         </p>
       ) : null}
       <div className="ct-docs">
-        {doc ? (
-          <a href={urlDocumento(doc)} target="_blank" rel="noopener">
+        {v.doc ? (
+          <a href={urlDocumento(v.doc)} target="_blank" rel="noopener">
             <FileText size={14} aria-hidden /> Contrato firmado (PDF)
           </a>
         ) : null}
@@ -264,26 +394,32 @@ function Contrato({ c, d, via, compacto = false }: { c: FilaContrato; d: Archivo
           );
         })}
         {eventos.length > 8 ? <span>y {eventos.length - 8} documentos más</span> : null}
-        {cui && !compacto ? cui.split(",").map((x) => (
+        {v.cui && !compacto ? v.cui.split(",").map((x) => (
           <a key={x} href={fichaInversion(x)} target="_blank" rel="noopener">Obra CUI {x} ↗</a>
         )) : null}
       </div>
-      {comprador && comprador[2] === null ? (
-        <p className="ct-otro">Lo firmó {fmtNombre(comprador[0])}, para una obra de esta entidad.</p>
-      ) : d.b.filter((x) => x[2] !== null).length > 1 && comprador ? (
-        <p className="ct-otro">Comprador en el SEACE: {fmtNombre(comprador[0])}</p>
-      ) : null}
+      {v.nota ? <p className="ct-otro">{v.nota}</p> : null}
     </li>
   );
+}
+
+/** A unit's contracts and the expense type names, loaded the first time a panel needs them. */
+function useContratos(sec: string, activo: boolean) {
+  const [d, setD] = useState<ArchivoContratos | null | undefined>(undefined);
+  const [nombres, setNombres] = useState<NombresGasto | null>(null);
+  useEffect(() => {
+    if (activo && d === undefined) {
+      cargarContratos(sec).then(setD);
+      cargarGastos().then(setNombres);
+    }
+  }, [activo, d, sec]);
+  return { d, nombres };
 }
 
 /** Who builds a project and for how much: the contracts that carry its CUI, of any year. */
 export function ContratosDeObra({ sec, cui, n, monto }: { sec: string; cui: string; n: number; monto: number | null }) {
   const [abierto, setAbierto] = useState(false);
-  const [d, setD] = useState<ArchivoContratos | null | undefined>(undefined);
-  useEffect(() => {
-    if (abierto && d === undefined) cargarContratos(sec).then(setD);
-  }, [abierto, d, sec]);
+  const { d, nombres } = useContratos(sec, abierto);
   const filas = d ? d.c.filter((c) => (c[8] ?? "").split(",").includes(cui)) : [];
   return (
     <div className="ct-obra">
@@ -295,8 +431,117 @@ export function ContratosDeObra({ sec, cui, n, monto }: { sec: string; cui: stri
       {abierto && d === null ? <p className="vacio">No se pudieron cargar los contratos.</p> : null}
       {abierto && d ? (
         <ol className="contratos compacto">
-          {filas.map((c, i) => <Contrato key={i} c={c} d={d} via={metodoInfo(d.m[c[5]] ?? "").via} compacto />)}
+          {filas.map((c, i) => <Contrato key={i} v={vistaEntidad(c, d)} nombres={nombres} compacto />)}
         </ol>
+      ) : null}
+    </div>
+  );
+}
+
+/** Inside a project's detail: its own contracts (by CUI). */
+export function ContratosDelProyecto({ sec, cui }: { sec: string; cui: string }) {
+  const { d, nombres } = useContratos(sec, true);
+  if (d === undefined) return <p className="explica cargando">Cargando contratos…</p>;
+  const filas = d ? d.c.filter((c) => (c[8] ?? "").split(",").includes(cui)) : [];
+  return (
+    <section className="ct-del-proyecto">
+      <h5>Quién lo hace: contratos de este proyecto</h5>
+      {filas.length ? (
+        <ol className="contratos compacto">
+          {filas.slice(0, 10).map((c, i) => <Contrato key={i} v={vistaEntidad(c, d!)} nombres={nombres} compacto />)}
+        </ol>
+      ) : (
+        <p className="explica-nota">
+          No encontramos contratos de este proyecto (CUI {cui}) en el SEACE: puede ejecutarse por administración
+          directa, con compras pequeñas o a través de otra entidad.
+        </p>
+      )}
+      {filas.length > 10 ? <p className="explica-nota">Y {filas.length - 10} más en la sección «A quién contrata».</p> : null}
+    </section>
+  );
+}
+
+/** Next to an expense type of an activity: the unit's contracts of that type (not tied to a project). */
+export function ContratosDeTipo({ sec, clas }: { sec: string; clas: string }) {
+  const [abierto, setAbierto] = useState(false);
+  const { d, nombres } = useContratos(sec, true);
+  const filas = useMemo(() => (d ? d.c.filter((c) => !c[8] && !!c[12] && coincideGasto(clas, c[12])
+    && c[0] >= String(d.r.desde_ano ?? "")) : []), [d, clas]);
+  if (!d || !filas.length) return null;
+  const total = filas.reduce((a, c) => a + (c[3] ?? 0), 0);
+  return (
+    <div className="ct-tipo">
+      <button type="button" className="ct-obra-boton" aria-expanded={abierto} onClick={() => setAbierto((a) => !a)}>
+        {plural(filas.length, "contrato", "contratos")} de este tipo · {fmtSoles(total)}
+        <ChevronDown size={15} aria-hidden />
+      </button>
+      {abierto ? (
+        <>
+          <p className="explica-nota">
+            Contratos de toda la entidad de este tipo de gasto: el SEACE no dice qué actividad paga cada uno.
+          </p>
+          <ol className="contratos compacto">
+            {filas.slice(0, 10).map((c, i) => <Contrato key={i} v={vistaEntidad(c, d)} nombres={nombres} compacto />)}
+          </ol>
+          {filas.length > 10 ? (
+            <button type="button" className="tab" onClick={() => filtrarContratos(grupoGasto(clas)!)}>
+              Ver los {filas.length} en la lista de contratos
+            </button>
+          ) : null}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/** In a genérica's panel ("Bienes y servicios"): what the unit's contracts bought there, by type. */
+export function ContratosDeGasto({ sec, prefijo }: { sec: string; prefijo: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  const { d, nombres } = useContratos(sec, visible);
+  useEffect(() => {
+    const det = ref.current?.closest("details");
+    if (!det) return;
+    const abrir = () => det.open && setVisible(true);
+    abrir();
+    det.addEventListener("toggle", abrir);
+    return () => det.removeEventListener("toggle", abrir);
+  }, []);
+  const grupos = useMemo(() => {
+    if (!d) return [];
+    const g = new Map<string, { n: number; monto: number }>();
+    for (const c of d.c) {
+      const k = grupoGasto(c[12]);
+      if (!k || !k.startsWith(`${prefijo}.`) || c[0] < String(d.r.desde_ano ?? "")) continue;
+      const x = g.get(k) ?? { n: 0, monto: 0 };
+      x.n += 1; x.monto += c[3] ?? 0;
+      g.set(k, x);
+    }
+    return [...g.entries()].sort((a, b) => b[1].monto - a[1].monto);
+  }, [d, prefijo]);
+  return (
+    <div ref={ref} className="ct-de-gasto">
+      {visible && d === undefined ? <p className="explica cargando">Cargando contratos…</p> : null}
+      {d && grupos.length ? (
+        <>
+          <h4>Sus contratos de este tipo de gasto</h4>
+          <ul className="ct-gastos">
+            {grupos.map(([g, x]) => (
+              <li key={g}>
+                <button type="button" className="ct-gasto-fila" onClick={() => filtrarContratos(g)}>
+                  <span className="ct-top-cab">
+                    <span className="ct-top-nombre">{nombres?.[g]?.[0] ?? g}</span>
+                    <span className="cifra">{fmtSoles(x.monto)}</span>
+                  </span>
+                  <span className="detalle"><span>{plural(x.n, "contrato", "contratos")}</span><span>Ver los contratos</span></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {d && !grupos.length && (prefijo === "2.3" || prefijo === "2.6") ? (
+        <p className="explica-nota">No encontramos contratos del SEACE de este tipo de gasto en esta entidad.</p>
       ) : null}
     </div>
   );

@@ -18,13 +18,18 @@ export type ContratosResumen = {
   por_tipo?: { o: number | null; b: number | null; s: number | null };
   /** largest suppliers: [RUC or SEACE code, name, contracts, amount] */
   top: [string, string, number, number | null][];
+  /** what the contracts buy, by the budget's expense group (2.3.2.4: maintenance): [group, contracts, amount] */
+  por_gasto?: [string, number, number | null][];
   mostrados?: number; desde_ano?: number;
 };
 
+/** What was bought, line by line: [lines in all, [[line, quantity, unit, amount], …the largest ones]] */
+export type Lineas = [number, [string | null, number | null, string | null, number | null][]];
+
 /** [date, object, supplier, amount, final amount, method, category, bidders, CUIs, signed contract,
- *  events "type:document,…", buyer] — indexes into the file's lists */
+ *  events "type:document,…", buyer, expense type, lines] — indexes into the file's lists */
 export type FilaContrato = [string, string, number | null, number | null, number | null, number,
-  "o" | "b" | "s" | null, number | null, string | null, string | null, string | null, number];
+  "o" | "b" | "s" | null, number | null, string | null, string | null, string | null, number, string | null, Lineas | null];
 
 export type ArchivoContratos = {
   r: ContratosResumen;
@@ -36,6 +41,54 @@ export type ArchivoContratos = {
   b: [string, string, "nombre" | "cui" | null][];
   c: FilaContrato[];
 };
+
+/** proveedor/<id>.json: everything a supplier signed with the State in the period */
+export type ArchivoProveedor = {
+  id: string; nombre: string | null; tipo: "empresa" | "persona" | "consorcio"; desde_ano: number;
+  r: { n: number; monto: number | null; extra: number | null; entidades: number; competitivos: number; un_postor: number;
+       directo: number | null; resueltos: number; nulos: number; intervenidos: number; con_adicionales: number;
+       desde: string; hasta: string; mostrados: number };
+  /** units it sold to: [executing unit (null: a buyer outside the budget), name, contracts, amount] */
+  e: [string | null, string, number, number | null][];
+  /** what it sold, by expense group: [group, contracts, amount] */
+  g: [string, number, number | null][];
+  m: string[];
+  /** [date, object, unit (index in e), amount, final amount, method, category, bidders, CUIs, signed
+   *  contract, events, expense type, lines] */
+  c: [string, string, number, number | null, number | null, number, "o" | "b" | "s" | null, number | null,
+      string | null, string | null, string | null, string | null, Lineas | null][];
+};
+
+/** proveedores/indice.json: the largest suppliers, [id, name, contracts, amount, units, type] */
+export type IndiceProveedores = { total: number; desde_ano: number; p: [string, string | null, number, number | null, number, string][] };
+
+/** contratos/gastos.json: [name, context] of each expense type code contracts correspond to */
+export type NombresGasto = Record<string, [string, string | null]>;
+
+/** The 4-level expense group summaries add up by ("2.3.2.4": maintenance and repairs). */
+export const grupoGasto = (g: string | null | undefined) => (g ? g.split(".").slice(0, 4).join(".") : null);
+/** Two expense type codes at different depths that name the same spending: one contains the other. */
+export const mismoGasto = (a: string, b: string) => a === b || a.startsWith(`${b}.`) || b.startsWith(`${a}.`);
+/** The budget records some purchases under another branch than the goods themselves: food bought for
+ *  Vaso de Leche or comedores is "apoyo alimentario" (2.2.2.3), a social benefit, not "alimentos" (2.3.1.1). */
+const EQUIVALENTES: [string, string][] = [["2.2.2.3", "2.3.1.1"]];
+/** Does a contract of expense type `contrato` belong next to the budget line `linea`? */
+export const coincideGasto = (linea: string, contrato: string) => mismoGasto(linea, contrato)
+  || EQUIVALENTES.some(([l, c]) => mismoGasto(linea, l) && mismoGasto(contrato, c));
+/** "Servicio de mantenimiento…: de vehículos": the name, with the broader type when the name alone is ambiguous. */
+export function etiquetaGasto(g: string | null | undefined, n: NombresGasto | null | undefined): string | null {
+  if (!g || !n) return null;
+  const [nombre, contexto] = n[g] ?? [null, null];
+  if (!nombre) return null;
+  return contexto ? `${contexto}: ${nombre.charAt(0).toLowerCase()}${nombre.slice(1)}` : nombre;
+}
+
+const pedidos = new Map<string, Promise<unknown>>();
+/** A data file fetched once per page (the list, project panels and expense rows share it). */
+export function cargarDatos<T>(url: string): Promise<T | null> {
+  if (!pedidos.has(url)) pedidos.set(url, fetch(url).then((r) => (r.ok ? r.json() : null)).catch(() => null));
+  return pedidos.get(url) as Promise<T | null>;
+}
 
 /** A document of the contract in SEACE (signed contract, amendments): downloads the PDF. */
 export const urlDocumento = (id: string) => `https://prod4.seace.gob.pe:9000/api/con/documentos/descargar/${id}`;

@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { fmtSoles, fmtNombre, urlDatos } from "@/lib/types";
 import { MontoPar } from "@/components/MontoPar";
 import { BotonExplicar, PanelExplicacion } from "@/components/Explicacion";
+import { ContratosDelProyecto, ContratosDeTipo } from "@/components/Contratos";
 
-type Item = { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null; sd?: boolean };
+type Item = { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null; sd?: boolean;
+               /** projects: their CUI, which ties them to their contracts */ cui?: string };
 /** detalle/<sec>.json, per función, aligned with the entity's items: metas, expense types
  *  (clasificador code), the rest of the expense types summed, funding sources (rubro code). */
 type Detalle = { m: [string, number, number][]; e: [string, number, number][]; o?: [number, number]; f: [string, number, number][] };
@@ -21,7 +23,10 @@ function cargar<T>(ruta: string): Promise<T | null> {
 
 /** An entity's largest activities and projects in one función, fetched from its data file the
  *  first time the <details> row opens (kept out of the page: 2,900 pages × 12 rows). */
-export function ItemsAlAbrir({ sec, codigo, esperado }: { sec: string; codigo: string; esperado?: number | null }) {
+/** contratos: the site has SEACE contracts, so each detail can show the ones behind its spending */
+export function ItemsAlAbrir({ sec, codigo, esperado, contratos = false }: {
+  sec: string; codigo: string; esperado?: number | null; contratos?: boolean;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<Item[] | null>(null);
   const [abierto, setAbierto] = useState(false);
@@ -57,7 +62,8 @@ export function ItemsAlAbrir({ sec, codigo, esperado }: { sec: string; codigo: s
                   {i.sd ? <span className="badge sin-descripcion">Sin descripción</span> : null}
                 </div>
                 <MontoPar pim={i.pim} devengado={i.devengado} esperado={esperado} compacto />
-                <DetalleItem sec={sec} codigo={codigo} k={k} sinDescripcion={!!i.sd} />
+                <DetalleItem sec={sec} codigo={codigo} k={k} sinDescripcion={!!i.sd} cui={contratos ? i.cui ?? null : null}
+                             contratos={contratos} />
               </li>
             ))}
           </ol>
@@ -67,7 +73,9 @@ export function ItemsAlAbrir({ sec, codigo, esperado }: { sec: string; codigo: s
   );
 }
 
-function DetalleItem({ sec, codigo, k, sinDescripcion }: { sec: string; codigo: string; k: number; sinDescripcion: boolean }) {
+function DetalleItem({ sec, codigo, k, sinDescripcion, cui, contratos }: {
+  sec: string; codigo: string; k: number; sinDescripcion: boolean; cui: string | null; contratos: boolean;
+}) {
   const [abierto, setAbierto] = useState(false);
   const [datos, setDatos] = useState<{ d: Detalle | null; c: Clasificador | null } | null>(null);
   useEffect(() => {
@@ -83,14 +91,17 @@ function DetalleItem({ sec, codigo, k, sinDescripcion }: { sec: string; codigo: 
       </button>
       {abierto ? (
         !datos ? <p className="explica cargando">Cargando…</p>
-          : datos.d && datos.c ? <PanelDetalle d={datos.d} c={datos.c} sinDescripcion={sinDescripcion} />
+          : datos.d && datos.c ? <PanelDetalle d={datos.d} c={datos.c} sinDescripcion={sinDescripcion} sec={sec} cui={cui}
+                                                contratos={contratos} />
             : <p className="explica">No hay más detalle para esta línea.</p>
       ) : null}
     </>
   );
 }
 
-function PanelDetalle({ d, c, sinDescripcion }: { d: Detalle; c: Clasificador; sinDescripcion: boolean }) {
+function PanelDetalle({ d, c, sinDescripcion, sec, cui, contratos }: {
+  d: Detalle; c: Clasificador; sinDescripcion: boolean; sec: string; cui: string | null; contratos: boolean;
+}) {
   const [explicado, setExplicado] = useState<string | null>(null);
   const totalFuentes = d.f.reduce((a, [, p]) => a + p, 0) || 1;
   return (
@@ -129,6 +140,7 @@ function PanelDetalle({ d, c, sinDescripcion }: { d: Detalle; c: Clasificador; s
                 </span>
                 <MontoPar pim={pim} devengado={dev} compacto />
                 {explicado === cod ? <PanelExplicacion dimension="generica" id={cod} soloDefinicion /> : null}
+                {contratos && !cui ? <ContratosDeTipo sec={sec} clas={cod} /> : null}
               </li>
             );
           })}
@@ -140,6 +152,7 @@ function PanelDetalle({ d, c, sinDescripcion }: { d: Detalle; c: Clasificador; s
           ) : null}
         </ul>
       </section>
+      {contratos && cui ? <ContratosDelProyecto sec={sec} cui={cui} /> : null}
       {d.f.length ? (
         <section>
           <h5>De dónde sale el dinero</h5>

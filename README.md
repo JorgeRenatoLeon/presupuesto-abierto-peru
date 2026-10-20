@@ -111,10 +111,16 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
   Ley 27806 information request (Portal de Transparencia Estándar) or a Contraloría complaint (gob.pe/9260).
 - `/entidad/<id>` — an executing unit's budget, monthly execution, projects (each linked to its MEF investment record by CUI) and alerts.
   **"¿A quién le contrata?"**: the contracts it signed in SEACE (supplier and RUC, amount and final amount, procedure, number of
-  bidders, the signed contract and its amendments as PDFs), its largest suppliers and the signals worth a question (single bidder,
-  no competition, adicionales, terminated or annulled contracts); each project opens the contracts that carry its CUI. Buyers are
-  linked to executing units by name and by the CUIs they contract (`pipeline/contratos.py`): 88% of the 2025–2026 contracts. What
-  was contracted, not what was paid: the State publishes no payments per supplier, and purchases up to 8 UIT skip SEACE.
+  bidders, the signed contract and its amendments as PDFs, and what was bought line by line with quantities and unit prices), its
+  largest suppliers and the signals worth a question (single bidder, no competition, adicionales, terminated or annulled contracts).
+  Each contract gets the budget's expense type it corresponds to, from the catalogue code of what it buys
+  (`pipeline/etiquetas/bienes_gasto.csv`) or, for works, from its project's budget lines: so each expense type of an activity
+  ("Combustibles", "Alimentos para programas sociales"…) opens the unit's contracts of that type, and each project its own
+  contracts (CUI). Buyers are linked to executing units by name and by the CUIs they contract (`pipeline/contratos.py`): 88% of the
+  2025–2026 contracts. What was contracted, not what was paid: the State publishes no payments per supplier, and purchases up to
+  8 UIT skip SEACE.
+- `/proveedores`, `/proveedor/?id=<RUC>` — **suppliers**: every company, consortium or person that signed with the State in the period
+  (~50,000, one data file each, one page for all): which units contracted it, what it sells by expense type, its contracts and signals.
 - `/seguimiento` — **"Siguiendo"**: entities, regions and temas the visitor follows (☆ Seguir), kept in the browser
   (no accounts), with alerts that are new since the last visit.
 - `/alertas` — R1 entity PIM changed ≥20% (≥S/5M) between publications · R2 slow execution · R3 PIM far from PIA · R4 category changed ≥5% (≥S/100M) between publications · R5 approved budget ≥10% (≥S/100M) different from last year · R6 project of ≥S/5M with no spending by mid-year · R7 ≥35% of last year's spending made in December. Thresholds live in `pipeline/alerts.py`. The page loads one rule's or one department's list on demand (`?regla=…&dep=…` deep links).
@@ -126,7 +132,7 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Pipeline: dual-format (pivoted + monthly rows) → lossless canonical Parquet, verified against the CSV
 - [x] Lake with one snapshot per MEF publication + budget change log; Hugging Face mirror
 - [x] Daily refresh (ETag check, chunked downloads) + GitHub Pages deploy + CI quality gates
-- [x] 60 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
+- [x] 76 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
 - [x] Comparisons (PIA→PIM, publication→publication, year→year) by función, genérica, tema, departamento, nivel
 - [x] Alert rules R1–R8 on real data, incl. R8 "sin descripción": budget MEF publishes with a generic project code
       and no name or meta (S/ 2,651 M in Oct 2026, mostly defence)
@@ -136,6 +142,8 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Ingresos side, QA (coherence + Consulta Amigable reconciliation), web explorer, entity pages
 - [x] Who the State contracts with: SEACE contracts (OECE, OCDS) linked to executing units and their projects (CUI), with
       the signed contract and amendments as PDFs and red flags; contracted amounts, not payments
+- [x] What exactly was bought (contract lines with quantity and unit price), the expense type each contract corresponds to
+      (83% of them), and a page per supplier
 - [ ] Deep drill-down to line level in the browser (DuckDB-WASM over the Hugging Face Parquet, ~1 MB per entity)
 - [ ] Backfill 2012–2024; Perú Compras framework orders and small purchases (≤ 8 UIT); Etapa 2 (reclamos/Contraloría)
 

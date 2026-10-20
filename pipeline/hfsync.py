@@ -70,7 +70,7 @@ def pull() -> None:
     # who the State contracts with (contratos.py): the site's years, and when they were fetched
     desde = max(lake.years(m, "gasto"), default=0) - (ANOS_SITIO - 1)
     c = [f for f in sorted(remotos) if f == "contratos/fuente.json"
-         or (re.fullmatch(r"contratos/(\d{4})\.parquet", f) and int(f[10:14]) >= desde)]
+         or ((m_ := re.fullmatch(r"contratos(_items)?/(\d{4})\.parquet", f)) and int(m_.group(2)) >= desde)]
     for f in c:
         get(f)
     print(f"  pulled manifest + {n} snapshots + {len(c)} contract files from hf://datasets/{r}")
@@ -119,6 +119,8 @@ configs:
   data_files: "ingreso/*.parquet"
 - config_name: contratos
   data_files: "contratos/*.parquet"
+- config_name: contratos_items
+  data_files: "contratos_items/*.parquet"
 ---
 
 # Presupuesto Abierto Perú — datos
@@ -139,6 +141,7 @@ presupuestal y los meses como columnas.
 | `cambios/<dataset>/<año>/<publicación>.parquet` | Líneas nuevas, eliminadas o con PIA/PIM modificado respecto a la publicación anterior |
 | `manifest.json` | Origen (ETag, fecha, tamaño), filas y totales de cada publicación |
 | `contratos/<año>.parquet` | Contratos firmados en el SEACE (proveedor y RUC, monto, monto final, procedimiento, postores, CUI de la obra, documentos), registros actualizados ese año. Fuente: OECE, datos de contrataciones abiertas (OCDS) vía [Open Contracting Partnership](https://data.open-contracting.org/en/publication/135), CC BY 4.0 |
+| `contratos_items/<año>.parquet` | Qué se compró en cada contrato, línea por línea: código del catálogo (CUBSO y UNSPSC), descripción, cantidad, unidad y monto. Se une a `contratos` por `ocid` y `contrato_id` |
 
 ```sql
 -- DuckDB
