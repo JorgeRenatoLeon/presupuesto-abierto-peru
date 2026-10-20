@@ -4,7 +4,8 @@ name: Refresh budget data
 # ingest them into the lake (Hugging Face dataset), rebuild the site and deploy it to
 # GitHub Pages. Since October 2026 MEF only publishes the *-Diario files (8-10 GB, re-stamped
 # daily), so a dataset-year is downloaded at most every 7 days (previous year: 30), see
-# pipeline/config.py CADENCIA_DIAS.
+# pipeline/config.py CADENCIA_DIAS. The SEACE contracts (OECE, OCDS) are refreshed weekly in the same
+# step (pipeline/contratos.py); if their source is down, the site keeps the last ones on Hugging Face.
 #
 # Setup (once): HF_DATASET (repo variable or secret, e.g. "usuario/presupuesto-abierto-peru"),
 # repo secret HF_TOKEN (Hugging Face write token), Settings > Pages > Source: GitHub Actions.
@@ -134,8 +135,8 @@ jobs:
           NEXT_PUBLIC_TELEGRAM_CANAL: ${{ vars.TELEGRAM_CANAL_URL }}   # optional: link shown on /metodologia
         run: npm ci && npm run build
 
-      # The built site in a real browser, with this run's data, before anyone sees it: 40 checks
-      # (municipality search, explanations, province pages, follow list, alerts, 375 px layout).
+      # The built site in a real browser, with this run's data, before anyone sees it: 76 checks
+      # (municipality search, explanations, contracts and suppliers, province pages, follow list, alerts, 375 px layout).
       # A failure stops the deploy and the previous version stays online. About 1 minute.
       - name: Browser checks
         if: steps.plan.outputs.deploy == 'true'
