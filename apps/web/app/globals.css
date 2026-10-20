@@ -523,3 +523,59 @@ p, li, dd, dt, td, h1, h2, h3, h4, h5, label, summary { overflow-wrap: break-wor
 code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.88em; background: var(--panel);
   border: 1px solid var(--regla); padding: 1px 5px; overflow-wrap: anywhere; word-break: break-word; }
 p a { overflow-wrap: anywhere; }
+
+/* ---------- "¿A quién le contrata?": contracts from SEACE ---------- */
+.ct-h3 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amarillo); margin: 20px 0 6px; }
+.ct-senales { list-style: none; display: grid; gap: 6px; margin: 14px 0 4px; font-size: 14px; color: var(--texto-fuerte); }
+.ct-senales li { border-left: 3px solid var(--celeste); padding: 2px 0 2px 10px; }
+.ct-senales li.alta { border-color: var(--fucsia); }
+.ct-senales li.media { border-color: var(--naranja); }
+.ct-top { list-style: none; display: grid; }
+.ct-top li { display: grid; gap: 5px; padding: 9px 0; border-bottom: 1px solid var(--regla); }
+.ct-top li:last-child { border-bottom: none; }
+.ct-top-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14.5px; }
+.ct-top-nombre { font-weight: 600; color: var(--texto-fuerte); min-width: 0; overflow-wrap: anywhere; }
+.ct-controles { display: grid; gap: 8px; margin-top: 4px; }
+@media (min-width: 768px) { .ct-controles { grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); } }
+.ct-controles .buscador { font-size: 15px; padding: 10px 12px; }
+.ct-controles select.buscador { padding-right: 34px; }
+.ct-cuenta { font-size: 13px; color: var(--texto-suave); margin: 10px 0 0; }
+.contratos { list-style: none; display: grid; }
+.contrato { display: grid; gap: 6px; padding: 13px 0; border-bottom: 1px solid var(--regla); min-width: 0; }
+.contrato:last-child { border-bottom: none; }
+.ct-cab { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--texto-suave); }
+.ct-cab time { font-weight: 700; color: var(--texto-fuerte); margin-right: 2px; }
+.ct-cab .etiqueta-tipo { margin-right: 0; }
+.ct-objeto { font-size: 14.5px; color: var(--texto-fuerte); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ct-cifras { display: grid; gap: 6px 18px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 560px) { .ct-cifras { grid-template-columns: minmax(0, 1fr) auto; align-items: end; } .ct-cuanto { text-align: right; } }
+.ct-quien, .ct-cuanto { display: grid; gap: 1px; min-width: 0; }
+.ct-quien b { font-weight: 700; color: var(--texto-fuerte); overflow-wrap: anywhere; }
+.ct-ruc { font-size: 12.5px; color: var(--texto-suave); }
+.ct-cuanto b { font-family: var(--f-display); font-weight: 400; font-size: 22px; line-height: 1.1; color: var(--amarillo); }
+.ct-cuanto small { font-size: 12.5px; color: var(--texto-suave); }
+.ct-cuanto small.sube { color: var(--naranja); font-weight: 700; }
+.ct-como { font-size: 12.5px; color: var(--texto-suave); }
+.ct-docs { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--texto-suave); }
+.ct-docs a { display: inline-flex; align-items: center; gap: 5px; color: var(--celeste); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.ct-otro { font-size: 12.5px; color: var(--texto-suave); border-left: 2px solid var(--celeste); padding-left: 8px; }
+.ct-glosario { margin-top: 14px; border: 1px solid var(--regla); padding: 10px 12px; font-size: 13.5px; }
+.ct-glosario summary { cursor: pointer; font-weight: 700; color: var(--celeste); }
+.ct-glosario dl { display: grid; gap: 10px; margin-top: 10px; }
+.ct-glosario dt { font-weight: 700; color: var(--texto-fuerte); }
+.ct-glosario dd { color: var(--texto); margin-top: 2px; }
+.aviso-contratos { margin-top: 16px; font-size: 13px; color: var(--texto-suave); border: 1px dashed var(--regla); padding: 10px 12px; max-width: 80ch; }
+.aviso-contratos strong { color: var(--texto-fuerte); }
+.aviso-contratos a { color: var(--celeste); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+/* a project's own contracts, inside its row */
+.ct-obra { margin-top: 2px; }
+.ct-obra-boton { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 13px; font-weight: 700; color: var(--celeste);
+  background: none; border: 1px solid var(--regla); padding: 6px 10px; cursor: pointer; text-align: left;
+  transition: transform 160ms var(--ease-out), border-color 160ms ease; }
+.ct-obra-boton svg { flex: none; transition: transform 200ms var(--ease-out); }
+.ct-obra-boton[aria-expanded="true"] svg { transform: rotate(180deg); }
+.ct-obra-boton:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .ct-obra-boton:hover { border-color: var(--celeste); } }
+.contratos.compacto { margin-top: 6px; border-left: 2px solid var(--regla); padding-left: 12px; }
+.contratos.compacto .contrato { padding: 10px 0; }
+.contratos.compacto .ct-cuanto b { font-size: 19px; }

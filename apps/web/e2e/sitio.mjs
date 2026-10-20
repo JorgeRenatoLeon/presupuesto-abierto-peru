@@ -65,6 +65,39 @@ await paso("municipality", async () => {
   check(await nav.isVisible(), "entity: the section strip stays visible while scrolling");
 });
 
+await paso("contracts", async () => {
+  await page.goto(`${BASE}/entidad/300790/#contratos`);
+  const sec = page.locator("#contratos");
+  check(await sec.locator("h2").isVisible(), "contracts: «¿A quién le contrata?» on a municipality");
+  check(await page.getByRole("navigation", { name: "Secciones de esta página" }).getByRole("link", { name: "A quién contrata" }).count() === 1,
+        "contracts: the section strip links to it");
+  check(await sec.locator(".kpi").count() === 4 && await sec.getByText("Un solo postor", { exact: true }).first().isVisible(),
+        "contracts: amount, suppliers, single bidder and no-competition figures");
+  check(await sec.locator(".ct-top li").count() >= 1, "contracts: its largest suppliers are listed");
+  const filas = sec.locator(".contratos .contrato");
+  await filas.first().waitFor({ timeout: 15000 });
+  check(await filas.count() >= 1, `contracts: the list loads (${await filas.count()} rows)`);
+  const pdf = await sec.locator(".ct-docs a", { hasText: "Contrato firmado" }).first().getAttribute("href");
+  check(/^https:\/\/prod4\.seace\.gob\.pe:9000\/api\/con\/documentos\/descargar\/\d+$/.test(pdf ?? ""),
+        "contracts: the signed contract links to its PDF in SEACE");
+  const proveedor = await sec.locator(".contratos .ct-quien b").first().innerText();
+  const buscar = sec.getByLabel("Buscar en los contratos");
+  await buscar.fill(proveedor);
+  check(await filas.count() >= 1 && (await sec.locator(".contratos .ct-quien b").allInnerTexts()).every((t) => t === proveedor),
+        `contracts: searching «${proveedor.slice(0, 30)}» keeps only that supplier`);
+  await buscar.fill("zzzz sin coincidencias");
+  check(await sec.getByText("Ningún contrato coincide").isVisible(), "contracts: a search with no match says so");
+  await buscar.fill("");
+  await sinScroll("entidad/300790#contratos");
+  const boton = page.locator("#obras .ct-obra-boton").first();
+  await boton.click();
+  await page.locator("#obras .contratos.compacto .contrato").first().waitFor();
+  check(await boton.getAttribute("aria-expanded") === "true", "contracts: a project opens the contracts that carry its CUI");
+  await sinScroll("entidad/300790#obras (project contracts open)");
+  await page.goto(`${BASE}/metodologia/#contratos`);
+  check(await page.locator("#contratos h2").isVisible(), "metodologia: explains where contracts come from and their limits");
+});
+
 await paso("budget without description", async () => {
   await page.goto(`${BASE}/entidad/472/#en-que`);  // Fuerza Aérea del Perú: S/ 2,061 M under the generic code
   await page.locator("details summary", { hasText: /Defensa y seguridad/i }).first().click();

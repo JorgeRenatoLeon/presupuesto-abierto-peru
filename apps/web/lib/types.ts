@@ -64,6 +64,8 @@ export type ComparacionResumen = {
 // --- Projects, departments, audit agenda (pipeline exportar.py) ---
 export type Obra = {
   cui: string; nombre: string; funcion?: string | null; dept?: string | null;
+  /** contracts that carry its CUI (pipeline contratos.py), on its entity's page: [n, amount] */
+  c?: [number, number | null];
   entidad?: string | null; sec_ejec?: string;
   pim: number | null; devengado: number | null; pim_pub_ant: number | null; dev_ano_ant: number | null;
   /** sin_avance | avance_bajo | recortada | null (pipeline compare._obras) */

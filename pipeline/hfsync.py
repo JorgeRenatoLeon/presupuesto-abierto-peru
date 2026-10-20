@@ -7,6 +7,7 @@ Enabled when HF_DATASET is set (e.g. 'usuario/presupuesto-abierto-peru'); pushin
 needs HF_TOKEN with write access. Without HF_DATASET everything stays in data/lake/.
 """
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -44,7 +45,8 @@ def pull() -> None:
         print(f"  {r}: repository not found yet (first run: push will create it)")
         return
     _remoto.update(existia=True, sha=info.sha)
-    if "manifest.json" not in {s.rfilename for s in (info.siblings or [])}:
+    remotos = {s.rfilename for s in (info.siblings or [])}
+    if "manifest.json" not in remotos:
         print(f"  {r}: empty repository (first run)")
         return
     # pinned to the commit we just inspected: one consistent snapshot of the lake
@@ -65,7 +67,13 @@ def pull() -> None:
             latest = lake.latest_path(ds, y)
             latest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(lake.snapshot_path(ds, y, lake.latest_pub(m, ds, y)), latest)
-    print(f"  pulled manifest + {n} snapshots from hf://datasets/{r}")
+    # who the State contracts with (contratos.py): the site's years, and when they were fetched
+    desde = max(lake.years(m, "gasto"), default=0) - (ANOS_SITIO - 1)
+    c = [f for f in sorted(remotos) if f == "contratos/fuente.json"
+         or (re.fullmatch(r"contratos/(\d{4})\.parquet", f) and int(f[10:14]) >= desde)]
+    for f in c:
+        get(f)
+    print(f"  pulled manifest + {n} snapshots + {len(c)} contract files from hf://datasets/{r}")
 
 
 def push(paths: list[Path], message: str) -> None:
@@ -87,9 +95,10 @@ def push(paths: list[Path], message: str) -> None:
         if _remoto["existia"] is False and api.file_exists(r, "manifest.json", repo_type="dataset"):
             raise SystemExit(f"{r} got a manifest after this run's pull; rerun to start from it")
     # parent_commit: rejected if the repo moved since pull() (e.g. a concurrent manual push)
-    api.create_commit(r, repo_type="dataset", commit_message=message, parent_commit=_remoto["sha"],
-                      operations=[CommitOperationAdd(path_in_repo=lake.rel(p), path_or_fileobj=str(p))
-                                  for p in files])
+    info = api.create_commit(r, repo_type="dataset", commit_message=message, parent_commit=_remoto["sha"],
+                             operations=[CommitOperationAdd(path_in_repo=lake.rel(p), path_or_fileobj=str(p))
+                                         for p in files])
+    _remoto.update(existia=True, sha=info.oid)  # the next push in this run builds on this commit
     print(f"  pushed {len(files)} files to hf://datasets/{r}")
 
 
@@ -108,6 +117,8 @@ configs:
   data_files: "gasto/*.parquet"
 - config_name: ingreso
   data_files: "ingreso/*.parquet"
+- config_name: contratos
+  data_files: "contratos/*.parquet"
 ---
 
 # Presupuesto Abierto Perú — datos
@@ -127,6 +138,7 @@ presupuestal y los meses como columnas.
 | `snapshots/<dataset>/<año>/<publicación>.parquet` | Cada publicación del MEF, sin reescribir (el MEF sobrescribe sus archivos: esta es la historia) |
 | `cambios/<dataset>/<año>/<publicación>.parquet` | Líneas nuevas, eliminadas o con PIA/PIM modificado respecto a la publicación anterior |
 | `manifest.json` | Origen (ETag, fecha, tamaño), filas y totales de cada publicación |
+| `contratos/<año>.parquet` | Contratos firmados en el SEACE (proveedor y RUC, monto, monto final, procedimiento, postores, CUI de la obra, documentos), registros actualizados ese año. Fuente: OECE, datos de contrataciones abiertas (OCDS) vía [Open Contracting Partnership](https://data.open-contracting.org/en/publication/135), CC BY 4.0 |
 
 ```sql
 -- DuckDB

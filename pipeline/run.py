@@ -1,10 +1,12 @@
 """CLI orchestrator.
 
 Daily job (what CI runs):
-  python run.py update     pull lake -> check MEF -> ingest new publications -> push lake -> rebuild serving
+  python run.py update     pull lake -> check MEF -> ingest new publications -> push lake ->
+                           refresh contracts (OECE, weekly) -> rebuild serving
 
 Individual steps:
-  catalog | download | normalize | aggregate | compare | alerts | exportar | validate | qa | serving | pull | push | all
+  catalog | download | normalize | aggregate | compare | alerts | exportar | validate | qa | serving | pull | push |
+  contratos | all
 """
 import argparse
 import datetime
@@ -17,7 +19,8 @@ from pathlib import Path
 def main() -> None:
     p = argparse.ArgumentParser(description="Presupuesto Peru ETL")
     p.add_argument("command", choices=["update", "serving", "catalog", "download", "normalize", "aggregate",
-                                        "compare", "alerts", "exportar", "validate", "qa", "pull", "push", "all"])
+                                        "compare", "alerts", "exportar", "validate", "qa", "pull", "push", "all",
+                                        "contratos"])
     p.add_argument("--year", type=int)
     p.add_argument("--years", type=int, nargs="+")
     p.add_argument("--dataset", choices=["gasto", "ingreso", "ambos"], default="ambos",
@@ -76,6 +79,9 @@ def main() -> None:
         from qa import qa
         if not qa(args.year or _current_year(), strict=args.strict, skip_external=args.skip_external):
             raise SystemExit(1)
+    elif args.command == "contratos":
+        import contratos
+        contratos.actualizar(args.years or [_current_year() - 1, _current_year()], forzar=args.force)
     elif args.command == "pull":
         import hfsync
         hfsync.pull()
@@ -104,13 +110,29 @@ def _update(args, datasets: list[str], force: bool) -> None:
             if lake.changes_path(ds, y, pub).exists():
                 files.append(lake.changes_path(ds, y, pub))
         hfsync.push(files, "MEF: " + ", ".join(f"{ds} {y} publicado {lake.pub_date(p)}" for ds, y, p in nuevas))
-    _output("changed", bool(nuevas))
-    if nuevas or force:
+    contratos_nuevos = _contratos(years, push=not args.no_push)
+    _output("changed", bool(nuevas) or contratos_nuevos)
+    if nuevas or force or contratos_nuevos:
         _serving(args)
     else:
         print("No new MEF publications: serving layer left as is (use --force to rebuild).")
     if nuevas:
         _notificar()
+
+
+def _contratos(years: list[int], push: bool) -> bool:
+    """Refresh the OECE contracts (weekly) and push them. Best effort: if the source is down, the
+    site keeps the contracts pulled from Hugging Face, and the budget update goes on."""
+    import contratos
+    import hfsync
+    try:
+        escritos = contratos.actualizar(sorted(years))
+    except Exception as e:  # noqa: BLE001 - a third-party mirror must not stop the budget update
+        print(f"  WARN contratos: {e}")
+        return False
+    if escritos and push:
+        hfsync.push(escritos, "OECE: contratos " + ", ".join(p.stem for p in escritos if p.suffix == ".parquet"))
+    return bool(escritos)
 
 
 def _notificar() -> None:

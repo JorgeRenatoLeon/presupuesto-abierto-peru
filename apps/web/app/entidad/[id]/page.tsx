@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import Link from "next/link";
 import {
-  DATA_DIR, loadOptional, fmtSoles, fmtPct, fmtLugar, interpretarAvance, corteDatos,
+  DATA_DIR, loadOptional, fmtSoles, fmtPct, fmtLugar, fmtFecha, interpretarAvance, corteDatos,
   type Alerta, type Obra, type ComparacionResumen, type Provincia,
 } from "@/lib/data";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
@@ -15,6 +15,8 @@ import { ListaObras } from "@/components/Obras";
 import { MasObras } from "@/components/MasObras";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { Bandas, type Banda } from "@/components/Bandas";
+import { ResumenContratos, ListaContratos } from "@/components/Contratos";
+import type { ContratosResumen } from "@/lib/contratos";
 
 const ENT_DIR = join(DATA_DIR, "entidad");
 const OBRAS_EN_PAGINA = 10;
@@ -53,7 +55,10 @@ type Payload = {
   /** top projects by budget (pipeline exportar.py), n_obras = all of them */
   obras?: Obra[]; n_obras?: number;
   alertas?: Alerta[];
+  /** contracts signed in SEACE in the period (pipeline contratos.py); absent: none linked */
+  contratos?: ContratosResumen;
 };
+type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number };
 
 /** "MUNICIPALIDAD DISTRITAL DE OLLANTAYTAMBO" -> a small band for the kind of entity and a big
  *  one for the place; any other entity keeps its full name (smaller when long). */
@@ -71,8 +76,10 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
     return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de entidades procesados.</div></div>;
   }
   const raw = readFileSync(archivo, "utf-8");
-  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [] } =
+  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos } =
     JSON.parse(raw) as Payload;
+  const fuenteContratos = loadOptional<FuenteContratos>("contratos/fuente.json");
+  const periodo = fuenteContratos ? fuenteContratos.anos.join(" y ") : "";
   const detenidas = obras.filter((o) => o.senal === "sin_avance");
 
   const anos = Array.from(new Set(series.map((s) => s.ano))).sort();
@@ -129,6 +136,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
         { id: "resumen", titulo: "Resumen" },
         { id: "en-que", titulo: "En qué gasta" },
         ...(n_obras ? [{ id: "obras", titulo: "Obras" }] : []),
+        ...(fuenteContratos ? [{ id: "contratos", titulo: "A quién contrata" }] : []),
         { id: "mes-a-mes", titulo: "Mes a mes" },
         ...(esMunicipal && ranking.length > 1 ? [{ id: "comparacion", titulo: "Frente a otras" }] : []),
         ...(alertasEntidad.length ? [{ id: "alertas", titulo: `Alertas (${alertasEntidad.length})` }] : []),
@@ -161,7 +169,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
             {detenidas.length ? `${detenidas.length} sin ningún gasto ${corte}. ` : ""}
             Los de mayor presupuesto; cada uno enlaza a su ficha oficial en el MEF.
           </p>
-          <ListaObras obras={obras.slice(0, OBRAS_EN_PAGINA)} />
+          <ListaObras obras={obras.slice(0, OBRAS_EN_PAGINA)} sec={fuenteContratos ? info.sec_ejec : undefined} />
           <MasObras sec={info.sec_ejec} desde={OBRAS_EN_PAGINA} total={obras.length} />
         </section>
       ) : (
@@ -170,6 +178,34 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           <p className="sub">Esta entidad no tiene proyectos de inversión este año.</p>
         </section>
       )}
+
+      {fuenteContratos ? (
+        <section className="seccion tarjeta" id="contratos">
+          <h2>¿A quién le contrata?</h2>
+          <p className="sub">
+            Los contratos que firmó en {periodo}, según el SEACE, el registro oficial de compras del Estado: con quién,
+            por cuánto, cómo se eligió al proveedor y el contrato firmado, para descargar.
+          </p>
+          {contratos?.n ? (
+            <>
+              <ResumenContratos r={contratos} />
+              <ListaContratos sec={info.sec_ejec} />
+            </>
+          ) : (
+            <div className="vacio">
+              No encontramos contratos de esta entidad en el SEACE en {periodo}. Puede que solo haga compras pequeñas
+              (que no pasan por el SEACE) o que su nombre ahí sea muy distinto al del MEF.
+            </div>
+          )}
+          <p className="aviso-contratos">
+            <strong>Lo contratado no es lo pagado:</strong> el Estado no publica cada pago a cada proveedor. Las compras
+            pequeñas (hasta 8 UIT), hechas con órdenes de compra o de servicio, no pasan por el SEACE y no aparecen aquí.
+            Unimos los compradores del SEACE con esta entidad por su nombre y por los códigos de sus obras (CUI).
+            {fuenteContratos.hasta ? ` Contratos firmados hasta el ${fmtFecha(fuenteContratos.hasta)}.` : ""}{" "}
+            <Link href="/metodologia/#contratos">Cómo lo hacemos</Link>
+          </p>
+        </section>
+      ) : null}
 
       <section className="seccion tarjeta" id="mes-a-mes">
         <h2>Gasto mes a mes</h2>

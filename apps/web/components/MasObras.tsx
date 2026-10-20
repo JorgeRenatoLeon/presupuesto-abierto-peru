@@ -10,7 +10,7 @@ export function MasObras({ sec, desde, total }: { sec: string; desde: number; to
   const [obras, setObras] = useState<Obra[] | null>(null);
   const [cargando, setCargando] = useState(false);
   if (total <= desde) return null;
-  if (obras) return <ListaObras obras={obras.slice(desde)} />;
+  if (obras) return <ListaObras obras={obras.slice(desde)} sec={sec} />;
   const cargar = () => {
     setCargando(true);
     fetch(urlDatos(`entidad/${sec}.json`)).then((r) => r.json()).then((d) => setObras(d.obras ?? [])).catch(() => setCargando(false));

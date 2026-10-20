@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { load, MESES, corteDatos, latestYear, fmtFecha, urlDatos, type Meta, type ResumenAnual } from "@/lib/data";
+import { load, loadOptional, MESES, corteDatos, latestYear, fmtFecha, fmtPct, urlDatos, type Meta, type ResumenAnual } from "@/lib/data";
+
+type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number;
+  monto: number; monto_vinculado: number; compradores: number; compradores_vinculados: number };
 
 export const metadata = { title: "Metodología — Presupuesto Abierto Perú" };
 
@@ -10,6 +13,7 @@ export default function MetodologiaPage() {
   const resumen = load<ResumenAnual[]>("resumen_anual.json");
   const actual = latestYear(resumen);
   const publicaciones = meta.publicaciones ?? [];
+  const fc = loadOptional<FuenteContratos>("contratos/fuente.json");
 
   return (
     <div className="pagina">
@@ -136,6 +140,46 @@ export default function MetodologiaPage() {
         </p>
       </section>
 
+      <section className="tarjeta seccion" id="contratos">
+        <h2>¿A quién le contrata el Estado?</h2>
+        <p style={{ fontSize: 14 }}>
+          Los contratos vienen del <strong>SEACE</strong>, el sistema donde las entidades registran sus compras. Lo
+          publica el OECE (antes OSCE) en el estándar de datos de contrataciones abiertas (OCDS); usamos la copia de la{" "}
+          <a style={enlace} href="https://data.open-contracting.org/en/publication/135" target="_blank" rel="noopener">Open
+          Contracting Partnership</a> (licencia CC BY 4.0) y la revisamos cada semana. De cada contrato mostramos el
+          objeto, el proveedor y su RUC, el monto firmado y el final, la fecha, cómo se eligió al proveedor, cuántos
+          postores se presentaron y sus documentos: el contrato firmado y lo que vino después (adicionales,
+          ampliaciones, resoluciones, nulidades), que se descargan directamente del SEACE.
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          El SEACE no usa los códigos del MEF, así que unimos cada comprador con una unidad ejecutora del presupuesto
+          de dos formas: <strong>por el nombre</strong>, dentro del mismo departamento y cuidando de no confundir
+          unidades hermanas (la red de salud y la UGEL de una misma provincia, dos distritos con el mismo nombre), y{" "}
+          <strong>por los códigos de obra (CUI)</strong> que contrata: si la mayoría de sus obras son de una unidad,
+          es esa unidad.
+          {fc ? <> Así quedan unidos {fc.vinculados.toLocaleString("es-PE")} de los {fc.contratos.toLocaleString("es-PE")}{" "}
+            contratos firmados en {fc.anos.join(" y ")} ({fmtPct(fc.vinculados / fc.contratos)}; {fmtPct(fc.monto_vinculado / fc.monto)}{" "}
+            del monto).</> : null}{" "}
+          Lo que falta es casi todo de entidades que no están en el presupuesto público: empresas del Estado
+          (Petroperú, Sedapal, las eléctricas), EsSalud y el Banco Central de Reserva. Cada obra muestra además los
+          contratos que llevan su CUI, aunque los haya firmado otra entidad (una empresa municipal, por ejemplo).
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          Las señales: <strong>«un solo postor»</strong> cuando a un concurso se presentó una sola empresa;{" "}
+          <strong>«sin competencia»</strong> cuando el proveedor se eligió por contratación directa o exoneración;{" "}
+          <strong>«adicional»</strong>, <strong>«resuelto»</strong>, <strong>«declarado nulo»</strong> y{" "}
+          <strong>«obra intervenida»</strong> según los documentos registrados después de la firma. Son preguntas que
+          vale la pena hacer, no pruebas de una irregularidad.
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          <strong>Lo contratado no es lo pagado:</strong> el Estado no publica cada pago a cada proveedor. Las compras
+          de hasta 8 UIT se hacen con órdenes de compra o de servicio y no pasan por un procedimiento del SEACE. Un
+          comprador con un nombre muy distinto al del MEF puede quedar sin unir o, rara vez, unirse a una unidad
+          parecida: en cada contrato se ve quién lo firmó.
+          {fc?.hasta ? ` Contratos firmados hasta el ${fmtFecha(fc.hasta)}.` : ""}
+        </p>
+      </section>
+
       <section className="tarjeta seccion">
         <h2>Avisos</h2>
         <p style={{ fontSize: 14 }}>
@@ -161,6 +205,8 @@ export default function MetodologiaPage() {
             </a>{" "}
             en formato Parquet: se pueden consultar directamente con DuckDB, Python o R, por ejemplo{" "}
             <code>{`SELECT * FROM 'hf://datasets/${meta.hf_dataset}/gasto/${actual?.ano ?? 2026}.parquet'`}</code>.
+            Los contratos del SEACE, con su proveedor, monto y CUI, están en{" "}
+            <code>{`contratos/${actual?.ano ?? 2026}.parquet`}</code>.
           </p>
         ) : (
           <p style={{ fontSize: 14 }}>
@@ -177,8 +223,8 @@ export default function MetodologiaPage() {
           la Contraloría. Las cifras del año en curso son preliminares y cambian con cada actualización.
           La sección de ingresos cubre lo que las entidades registran directamente (canon, recursos
           propios, deuda, transferencias) y no incluye los Recursos Ordinarios del tesoro público.
-          Estos datos no indican a qué empresa o persona se pagó: eso requiere cruzarlos con las
-          contrataciones del Estado (OSCE/SEACE). Cada actualización pasa controles automáticos de
+          Los datos del MEF no dicen a qué empresa se pagó; los contratos del SEACE dicen con quién se
+          contrató y por cuánto, pero no cada pago. Cada actualización pasa controles automáticos de
           consistencia interna y de contraste con la Consulta Amigable. Si detectas una inconsistencia,
           compárala con la Consulta Amigable del MEF y escríbenos.
         </p>

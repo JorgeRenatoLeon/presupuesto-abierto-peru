@@ -1,6 +1,6 @@
 # Presupuesto Abierto Perú
 
-Web app to make Peru's national budget (allocation, spending, execution status, and how it changes) transparent and actionable for citizens. Data from MEF's open-data portal.
+Web app to make Peru's national budget (allocation, spending, execution status, how it changes, and who the State contracts with) transparent and actionable for citizens. Data from MEF's open-data portal and OECE's public procurement data (SEACE).
 
 ## How it works
 
@@ -13,9 +13,11 @@ normalize: CSV (2–3 GB) ──lossless──▶ Parquet (60–90 MB/year), ver
 lake (data/lake, mirrored to a Hugging Face dataset)
   ├─ gasto|ingreso/<año>.parquet              latest publication
   ├─ snapshots/<dataset>/<año>/<pub>.parquet  every MEF publication (MEF overwrites its files: this is the history)
-  └─ cambios/<dataset>/<año>/<pub>.parquet    budget changes vs the previous publication
+  ├─ cambios/<dataset>/<año>/<pub>.parquet    budget changes vs the previous publication
+  └─ contratos/<año>.parquet                  SEACE contracts (OECE, OCDS mirror by Open Contracting Partnership), weekly
       ▼
-serving: aggregate → compare → alerts → validate → QA  (data/serving: DuckDB + JSON)
+serving: aggregate → compare → alerts → exportar (+ contracts linked to each executing unit) → validate → QA
+         (data/serving: DuckDB + JSON)
       ▼
 Next.js static export ──▶ GitHub Pages
 ```
@@ -70,11 +72,12 @@ presupuesto-app/
   | Ingest the previous year (10.5 GB: 21 min download) | monthly, +25 min | ~25 |
   | CI on pushes and pull requests | ~3 min each | ~60 |
   | Browser checks before each deploy | +1 min per deploy | ~10 |
+  | Refresh the SEACE contracts (two ~150 MB files) | weekly, ~2 min | ~10 |
 
-  `timeout-minutes: 120` caps a run against a slow MEF server; the deploy artifact (the 342 MB site) is kept 1 day.
+  `timeout-minutes: 120` caps a run against a slow MEF server; the deploy artifact (the ~570 MB site) is kept 1 day.
   To use less, raise `CADENCIA_DIAS` in `pipeline/config.py` or check fewer days in the workflow's `cron`.
-- **Hugging Face:** a free public dataset; each weekly snapshot adds ~60–80 MB (~4 GB/year).
-- **GitHub Pages:** free for public repos; the site is ~340 MB of the 1 GB limit (mostly the 2,900 entity pages).
+- **Hugging Face:** a free public dataset; each weekly snapshot adds ~60–80 MB (~4 GB/year), the contracts ~16 MB a week.
+- **GitHub Pages:** free for public repos; the site is ~570 MB of the 1 GB limit (mostly the 2,900 entity pages).
 
 ## Pipeline (local)
 
@@ -88,6 +91,7 @@ python run.py update --force     # also rebuild serving when MEF published nothi
 python run.py update --years 2024 2023   # backfill older years (~90 MB each in the lake)
 python run.py update --ignore-cadence     # download now even if ingested < 7 days ago (CADENCIA_DIAS)
 python run.py serving            # rebuild only: aggregate → compare → alerts → exportar → validate → qa
+python run.py contratos --force  # refresh the SEACE contracts now (the update step does it weekly)
 python -m pytest tests -q        # tests (fixtures, no network)
 ```
 
@@ -106,6 +110,11 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
   spending rush, court/arbitration payouts, sharp budget changes, entities that don't execute) and how to act: a
   Ley 27806 information request (Portal de Transparencia Estándar) or a Contraloría complaint (gob.pe/9260).
 - `/entidad/<id>` — an executing unit's budget, monthly execution, projects (each linked to its MEF investment record by CUI) and alerts.
+  **"¿A quién le contrata?"**: the contracts it signed in SEACE (supplier and RUC, amount and final amount, procedure, number of
+  bidders, the signed contract and its amendments as PDFs), its largest suppliers and the signals worth a question (single bidder,
+  no competition, adicionales, terminated or annulled contracts); each project opens the contracts that carry its CUI. Buyers are
+  linked to executing units by name and by the CUIs they contract (`pipeline/contratos.py`): 88% of the 2025–2026 contracts. What
+  was contracted, not what was paid: the State publishes no payments per supplier, and purchases up to 8 UIT skip SEACE.
 - `/seguimiento` — **"Siguiendo"**: entities, regions and temas the visitor follows (☆ Seguir), kept in the browser
   (no accounts), with alerts that are new since the last visit.
 - `/alertas` — R1 entity PIM changed ≥20% (≥S/5M) between publications · R2 slow execution · R3 PIM far from PIA · R4 category changed ≥5% (≥S/100M) between publications · R5 approved budget ≥10% (≥S/100M) different from last year · R6 project of ≥S/5M with no spending by mid-year · R7 ≥35% of last year's spending made in December. Thresholds live in `pipeline/alerts.py`. The page loads one rule's or one department's list on demand (`?regla=…&dep=…` deep links).
@@ -117,7 +126,7 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Pipeline: dual-format (pivoted + monthly rows) → lossless canonical Parquet, verified against the CSV
 - [x] Lake with one snapshot per MEF publication + budget change log; Hugging Face mirror
 - [x] Daily refresh (ETag check, chunked downloads) + GitHub Pages deploy + CI quality gates
-- [x] 48 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
+- [x] 60 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
 - [x] Comparisons (PIA→PIM, publication→publication, year→year) by función, genérica, tema, departamento, nivel
 - [x] Alert rules R1–R8 on real data, incl. R8 "sin descripción": budget MEF publishes with a generic project code
       and no name or meta (S/ 2,651 M in Oct 2026, mostly defence)
@@ -125,8 +134,10 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Down to each activity/project of an entity: its metas, expense types (specific clasificador) and funding sources
       (`detalle/<sec>.json`, loaded on demand); every figure labelled as budget vs spent, with the pace expected by now
 - [x] Ingresos side, QA (coherence + Consulta Amigable reconciliation), web explorer, entity pages
+- [x] Who the State contracts with: SEACE contracts (OECE, OCDS) linked to executing units and their projects (CUI), with
+      the signed contract and amendments as PDFs and red flags; contracted amounts, not payments
 - [ ] Deep drill-down to line level in the browser (DuckDB-WASM over the Hugging Face Parquet, ~1 MB per entity)
-- [ ] Backfill 2012–2024; who-gets-paid via OSCE/SEACE contracts; Etapa 2 (reclamos/Contraloría)
+- [ ] Backfill 2012–2024; Perú Compras framework orders and small purchases (≤ 8 UIT); Etapa 2 (reclamos/Contraloría)
 
 Known follow-ups:
 

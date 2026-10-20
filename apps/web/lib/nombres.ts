@@ -6,13 +6,13 @@ const ACRONIMOS = new Set([
   "MEF", "SUNAT", "ONP", "INPE", "UGEL", "SIS", "PNP", "ONPE", "JNE", "RENIEC", "SUNARP", "INEI", "PCM", "MINSA",
   "MINEDU", "MTC", "MIDIS", "MIMP", "MINAM", "MIDAGRI", "MINAGRI", "SENASA", "SERFOR", "OSCE", "SUNASS", "EPS",
   "FONCODES", "PRONIS", "PRONIED", "DEVIDA", "SERVIR", "INDECI", "CENEPRED", "PRONABEC", "OEFA", "OSINERGMIN",
-  "OSIPTEL", "SUNEDU", "SUCAMEC", "DIRESA", "DRE", "GRE", "RED", "CAS", "PIA", "PIM", "CUI", "IE", "I.E.", "EE",
+  "OSIPTEL", "SUNEDU", "SUCAMEC", "DIRESA", "DRE", "GRE", "CAS", "PIA", "PIM", "CUI", "IE", "I.E.", "EE",
   "SA", "S.A.", "SAC", "S.A.C.", "VRAEM", "ANA", "SENAMHI", "INGEMMET", "PROINVERSION", "CONCYTEC", "INACAL",
   "II", "III", "IV", "VI", "VII", "VIII", "IX", "XI", "XII", "XIII", "XIV", "XV", "UNSAAC", "UNMSM", "UNI",
 ]);
 
 const DICC: Record<string, string> = {
-  PERU: "Perú", AMBITO: "ámbito", AMBITOS: "ámbitos", AREA: "área", AREAS: "áreas", VIA: "vía", VIAS: "vías", INTERES: "interés", ENERGIA: "energía",
+  PERU: "Perú", PROVIAS: "Provías", AMBITO: "ámbito", AMBITOS: "ámbitos", AREA: "área", AREAS: "áreas", VIA: "vía", VIAS: "vías", INTERES: "interés", ENERGIA: "energía",
   MINERIA: "minería", POLICIA: "policía", CIUDADANIA: "ciudadanía", ECONOMIA: "economía", TECNOLOGIA: "tecnología",
   GANADERIA: "ganadería", INGENIERIA: "ingeniería", CONTRALORIA: "contraloría", DEFENSORIA: "defensoría",
   ASESORIA: "asesoría", AUDITORIA: "auditoría", CONSULTORIA: "consultoría", SECRETARIA: "secretaría",
@@ -58,7 +58,12 @@ export function textoMEF(s: string, modo: "oracion" | "titulo" = "oracion"): str
   const t = (s ?? "").trim();
   if (!t || /[a-zà-ÿ]/.test(t)) return t;
   let primera = true;
-  return t.replace(/[A-ZÑÁÉÍÓÚÜ.]+/g, (tok) => {
+  return t.replace(/[A-ZÑÁÉÍÓÚÜ.]+/g, (tok, i: number) => {
+    // part of a code: road "PE-1NR", "3S", a stretch "KM 12+300" stays as published
+    if (/\d/.test(t[i - 1] ?? "") || /^-?\d/.test(t.slice(i + tok.length, i + tok.length + 2).replace(/^-(?=\d)/, ""))) {
+      primera = false;
+      return tok;
+    }
     const { texto, sigla } = palabra(tok.normalize("NFD").replace(/[̀-ͯ]/g, "") === tok ? tok : tok);
     const conMayus = sigla ? texto
       : (primera || (modo === "titulo" && !CONECTORES.has(texto))) ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;

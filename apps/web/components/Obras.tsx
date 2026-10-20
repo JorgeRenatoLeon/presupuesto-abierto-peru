@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { fmtSoles, fmtPct, fichaInversion, type Obra, fmtNombre } from "@/lib/types";
 import { BarraProgreso } from "@/components/ui";
+import { ContratosDeObra } from "@/components/Contratos";
 
 /** Signals computed by the pipeline (compare._obras): same words everywhere on the site. */
 export const SENAL_OBRA: Record<string, { texto: string; clase: "alta" | "media" }> = {
@@ -13,8 +14,9 @@ export const SENAL_OBRA: Record<string, { texto: string; clase: "alta" | "media"
   recortada: { texto: "Presupuesto recortado", clase: "media" },
 };
 
-export function ListaObras({ obras, conEntidad = false, vacio }: {
-  obras: Obra[]; conEntidad?: boolean; vacio?: string;
+/** sec: the entity whose page this is; its projects then open the contracts that carry their CUI. */
+export function ListaObras({ obras, conEntidad = false, vacio, sec }: {
+  obras: Obra[]; conEntidad?: boolean; vacio?: string; sec?: string;
 }) {
   if (!obras.length) return <div className="vacio">{vacio ?? "Sin proyectos de inversión registrados."}</div>;
   return (
@@ -40,6 +42,7 @@ export function ListaObras({ obras, conEntidad = false, vacio }: {
             {o.dev_ano_ant ? (
               <div className="detalle"><span>El año pasado ejecutó {fmtSoles(o.dev_ano_ant)}</span></div>
             ) : null}
+            {sec && o.c ? <ContratosDeObra sec={sec} cui={o.cui} n={o.c[0]} monto={o.c[1]} /> : null}
           </li>
         );
       })}

@@ -5,3 +5,4 @@ pandas>=2.2,<4
 requests>=2.31,<3
 ftfy>=6.1,<7
 huggingface_hub>=2.0,<3
+rapidfuzz>=3.9,<4
