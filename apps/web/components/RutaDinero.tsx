@@ -37,13 +37,15 @@ export function RutaDinero({ pasos }: { pasos: Paso[] }) {
 const plural = (n: number, uno: string, varios: string) => `${n.toLocaleString("es-PE")} ${n === 1 ? uno : varios}`;
 
 /** The steps of an entity, from its figures; a step without data is left out. */
-export function pasosEntidad({ pim, avance, ano, funciones, items, contratos }: {
+export function pasosEntidad({ pim, avance, ano, funciones, items, contratos, ordenes }: {
   pim: number | null; avance: number | null; ano: number;
   /** its areas (funciones), largest first, with their budget */
   funciones: { nombre: string; pim: number }[];
   /** [activities, projects, budget of the activities, budget of the projects] */
   items: [number, number, number, number];
   contratos?: { n: number; monto: number | null; proveedores: number | null; periodo: string } | null;
+  /** purchase and service orders this year */
+  ordenes?: { n: number; monto: number; sin_contrato: number; personas: number; monto_personas: number } | null;
 }): Paso[] {
   const total = funciones.reduce((a, f) => a + Math.max(f.pim, 0), 0) || pim || 0;
   const mayor = funciones[0];
@@ -78,6 +80,12 @@ export function pasosEntidad({ pim, avance, ano, funciones, items, contratos }: 
     pasos.push({
       href: "#contratos", verbo: "Contrata a", cifra: plural(contratos.proveedores ?? 0, "proveedor", "proveedores"),
       nota: `${fmtSoles(contratos.monto)} firmados en ${plural(contratos.n, "contrato", "contratos")} (${contratos.periodo})`,
+    });
+  }
+  if (ordenes?.n) {
+    pasos.push({
+      href: "#ordenes", verbo: "Compra con órdenes", cifra: fmtSoles(ordenes.monto),
+      nota: `${plural(ordenes.n, "orden", "órdenes")} en ${ano}; ${fmtSoles(ordenes.monto_personas)} a ${plural(ordenes.personas, "persona", "personas")}`,
     });
   }
   return pasos;

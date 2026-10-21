@@ -2,11 +2,14 @@
 
 Daily job (what CI runs):
   python run.py update     pull lake -> check MEF -> ingest new publications -> push lake ->
-                           refresh contracts (OECE) and investment projects (MEF), weekly -> rebuild serving
+                           refresh contracts and purchase orders (OECE) and investment projects (MEF),
+                           weekly -> rebuild serving
+  python run.py historia   backfill: fetch the next missing past year(s) into the lake, push, keep
+                           the Hugging Face dataset within its storage budget (historia.py)
 
 Individual steps:
   catalog | download | normalize | aggregate | compare | alerts | exportar | validate | qa | serving | pull | push |
-  contratos | all
+  contratos | ordenes | inversiones | historia | all
 """
 import argparse
 import datetime
@@ -20,7 +23,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Presupuesto Peru ETL")
     p.add_argument("command", choices=["update", "serving", "catalog", "download", "normalize", "aggregate",
                                         "compare", "alerts", "exportar", "validate", "qa", "pull", "push", "all",
-                                        "contratos", "inversiones"])
+                                        "contratos", "ordenes", "inversiones", "historia"])
     p.add_argument("--year", type=int)
     p.add_argument("--years", type=int, nargs="+")
     p.add_argument("--dataset", choices=["gasto", "ingreso", "ambos"], default="ambos",
@@ -37,6 +40,8 @@ def main() -> None:
     p.add_argument("--ignore-cadence", action="store_true",
                    help="update: download a re-published file even if ingested less than CADENCIA_DIAS ago")
     p.add_argument("--strict", action="store_true", help="QA: fail if Consulta Amigable is unreachable")
+    p.add_argument("--unidades", type=int, default=1, help="historia: how many missing dataset-years to fetch this run")
+    p.add_argument("--solo", nargs="+", help="historia: only these sources (gasto ingreso contratos ordenes)")
     p.add_argument("--skip-external", action="store_true", help="QA: coherence checks only (no network)")
     args = p.parse_args()
     datasets = ["gasto", "ingreso"] if args.dataset == "ambos" else [args.dataset]
@@ -82,9 +87,15 @@ def main() -> None:
     elif args.command == "contratos":
         import contratos
         contratos.actualizar(args.years or [_current_year() - 1, _current_year()], forzar=args.force)
+    elif args.command == "ordenes":
+        import ordenes
+        ordenes.actualizar(args.years or [_current_year() - 1, _current_year()], forzar=args.force)
     elif args.command == "inversiones":
         import inversiones
         inversiones.actualizar(forzar=args.force)
+    elif args.command == "historia":
+        import historia
+        historia.correr(unidades=args.unidades, push=not args.no_push, solo=args.solo)
     elif args.command == "pull":
         import hfsync
         hfsync.pull()
@@ -114,6 +125,7 @@ def _update(args, datasets: list[str], force: bool) -> None:
                 files.append(lake.changes_path(ds, y, pub))
         hfsync.push(files, "MEF: " + ", ".join(f"{ds} {y} publicado {lake.pub_date(p)}" for ds, y, p in nuevas))
     contratos_nuevos = _contratos(years, push=not args.no_push)
+    contratos_nuevos |= _ordenes(years, push=not args.no_push)
     contratos_nuevos |= _inversiones(push=not args.no_push)
     _output("changed", bool(nuevas) or contratos_nuevos)
     if nuevas or force or contratos_nuevos:
@@ -136,6 +148,22 @@ def _contratos(years: list[int], push: bool) -> bool:
         return False
     if escritos and push:
         hfsync.push(escritos, "OECE: contratos " + ", ".join(p.stem for p in escritos if p.suffix == ".parquet"))
+    return bool(escritos)
+
+
+def _ordenes(years: list[int], push: bool) -> bool:
+    """Refresh the purchase and service orders (OECE, republished monthly) and push them. Best
+    effort, like the contracts."""
+    import hfsync
+    import ordenes
+    try:
+        escritos = ordenes.actualizar(sorted(years))
+    except Exception as e:  # noqa: BLE001 - an extra source must not stop the budget update
+        print(f"  WARN ordenes: {e}")
+        return False
+    if escritos and push:
+        hfsync.push(escritos, "OECE: órdenes de compra y servicio " + ", ".join(
+            f"{p.parent.name}-{p.stem}" for p in escritos if p.suffix == ".parquet"))
     return bool(escritos)
 
 

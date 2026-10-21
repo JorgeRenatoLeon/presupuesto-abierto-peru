@@ -720,3 +720,7 @@ p a { overflow-wrap: anywhere; }
 .detalle-pie { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; }
 .detalle-pie .explica-pie { margin: 0; }
 .detalle-pie .cerrar-panel { margin-top: 0; }
+
+/* Purchase and service orders */
+.ct-estado { font-size: 12px; color: var(--texto-suave); }
+.contrato.orden .ct-cuanto b { font-size: 19px; }

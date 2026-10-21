@@ -87,9 +87,33 @@ def actualizar(forzar: bool = False) -> list:
         origen.unlink(missing_ok=True)
         escritos.append(destino)
     if escritos:
+        escritos += _avance_del_mes(meta)
         (CARPETA / "fuente.json").write_text(json.dumps(meta, indent=1))
         escritos.append(CARPETA / "fuente.json")
     return escritos
+
+
+def _avance_del_mes(meta: dict) -> list:
+    """lake/inversiones/avance/<YYYY-MM>.parquet: each project's cost, spending and progress as of
+    this month, in a few columns. MEF overwrites its files with the current state, and the weekly
+    copies above are rewritten too: this monthly record is how a project's progress over time is
+    kept (and survives squashing the dataset's history, see historia.py)."""
+    detalle, seguimiento = CARPETA / "detalle.parquet", CARPETA / "seguimiento.parquet"
+    mes = f"{datetime.now(timezone.utc):%Y-%m}"
+    destino = CARPETA / "avance" / f"{mes}.parquet"
+    if meta.get("avance") == mes or not detalle.exists():  # the metadata pulled from Hugging Face knows
+        return []
+    meta["avance"] = mes
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    seg = f"'{seguimiento}'" if seguimiento.exists() else "(SELECT NULL::VARCHAR AS cui WHERE false)"
+    duckdb.connect().execute(f"""COPY (
+        SELECT d.cui, d.estado, d.costo_actualizado, d.monto_viable, d.pim_actual, d.dev_actual,
+               coalesce(s.devengado_acumulado, d.dev_acum_ant + coalesce(d.dev_actual, 0)) AS devengado_acumulado,
+               coalesce(d.avance_fisico, s.avance_fisico) AS avance_fisico, s.fecha_reporte
+        FROM '{detalle}' d LEFT JOIN {seg} s USING (cui) ORDER BY d.cui)
+        TO '{destino}' (FORMAT parquet, COMPRESSION zstd)""")
+    print(f"  inversiones: avance del mes -> {destino.relative_to(LAKE)} ({destino.stat().st_size / 1e6:.1f} MB)")
+    return [destino]
 
 
 # what entities write when there is nothing to report: not a problem

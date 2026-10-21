@@ -15,7 +15,9 @@ lake (data/lake, mirrored to a Hugging Face dataset)
   ├─ snapshots/<dataset>/<año>/<pub>.parquet  every MEF publication (MEF overwrites its files: this is the history)
   ├─ cambios/<dataset>/<año>/<pub>.parquet    budget changes vs the previous publication
   ├─ contratos/<año>.parquet                  SEACE contracts (OECE, OCDS mirror by Open Contracting Partnership), weekly
-  └─ inversiones/*.parquet                    each investment project as a whole (MEF Banco de Inversiones, Formato 12B), weekly
+  ├─ ordenes/<año>/<mes>.parquet              purchase and service orders each entity registers in SEACE (OECE open data), monthly
+  ├─ inversiones/*.parquet                    each investment project as a whole (MEF Banco de Inversiones, Formato 12B), weekly
+  └─ historia.json                            what the backfill fetched (or pruned) per source-year (pipeline/historia.py)
       ▼
 serving: aggregate → compare → alerts → exportar (+ contracts linked to each executing unit) → validate → QA
          (data/serving: DuckDB + JSON)
@@ -77,7 +79,13 @@ presupuesto-app/
 
   `timeout-minutes: 120` caps a run against a slow MEF server; the deploy artifact (the ~570 MB site) is kept 1 day.
   To use less, raise `CADENCIA_DIAS` in `pipeline/config.py` or check fewer days in the workflow's `cron`.
-- **Hugging Face:** a free public dataset; each weekly snapshot adds ~60–80 MB (~4 GB/year), the contracts ~16 MB a week.
+- **Hugging Face:** a free public dataset ("best effort" past the first few GB). Each weekly snapshot adds ~60–80 MB, the
+  contracts ~16 MB a week, the purchase orders ~175 MB a year. The nightly **Backfill history** workflow
+  (`.github/workflows/backfill-history.yml`, `pipeline/historia.py`) fetches past years a few at a time (MEF spending and
+  revenue since 2009, contracts since 2009, orders since 2018; ~3.5 GB in all) and keeps the dataset under `HF_LIMITE_GB`
+  (repo variable, default 10): first it squashes the history of rewritten files, then, only if the current files don't fit,
+  prunes the oldest backfilled year (its publisher still serves it). The current and previous year and every snapshot of
+  them are never touched; projects' progress is kept as a small monthly file (`inversiones/avance/`).
 - **GitHub Pages:** free for public repos; the site is ~570 MB of the 1 GB limit (mostly the 2,900 entity pages).
 
 ## Pipeline (local)
@@ -93,6 +101,8 @@ python run.py update --years 2024 2023   # backfill older years (~90 MB each in 
 python run.py update --ignore-cadence     # download now even if ingested < 7 days ago (CADENCIA_DIAS)
 python run.py serving            # rebuild only: aggregate → compare → alerts → exportar → validate → qa
 python run.py contratos --force  # refresh the SEACE contracts now (the update step does it weekly)
+python run.py ordenes            # refresh the purchase and service orders (OECE, republished monthly)
+python run.py historia --unidades 2 [--solo ordenes contratos]   # backfill the next missing past years
 python -m pytest tests -q        # tests (fixtures, no network)
 ```
 
@@ -119,8 +129,14 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
   (`pipeline/etiquetas/bienes_gasto.csv`) or, for works, from its project's budget lines: so each expense type of an activity
   ("Combustibles", "Alimentos para programas sociales"…) opens the unit's contracts of that type, and each project its own
   contracts (CUI). Buyers are linked to executing units by name and by the CUIs they contract (`pipeline/contratos.py`): 88% of the
-  2025–2026 contracts. What was contracted, not what was paid: the State publishes no payments per supplier, and purchases up to
-  8 UIT skip SEACE.
+  2025–2026 contracts. What was contracted, not what was paid: the State publishes no payments per supplier.
+  **"¿Qué compra en el día a día?"**: the purchase and service orders it registered this year (`pipeline/ordenes.py`):
+  small purchases up to 8 UIT, services by people (locadores), utilities, catalogue purchases and contract payments, how it
+  bought, what (expense type inferred from each order's description, `pipeline/etiquetas/ordenes_gasto.csv`) and from whom.
+  Each expense type of an activity also opens the orders of that type, and each project the orders that cite its CUI: what
+  catch-all lines such as "Servicios diversos" or "Locación de servicios" paid for. 86% of 2026's order amounts are linked.
+  The page opens with the route of the money (budget → areas → activities and works → contracts and orders); an activity's
+  detail lists every expense type, the largest first and the rest grouped by family.
 - `/proveedores`, `/proveedor/?id=<RUC>` — **suppliers**: every company, consortium or person that signed with the State in the period
   (~50,000, one data file each, one page for all): which units contracted it, what it sells by expense type, its contracts and signals.
 - `/seguimiento` — **"Siguiendo"**: entities, regions and temas the visitor follows (☆ Seguir), kept in the browser
@@ -150,7 +166,9 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
       from MEF's Banco de Inversiones (total vs approved cost, spending since it began, physical progress, the entity's latest
       report and problems), since a year's budget is only that year's slice of a project (`pipeline/inversiones.py`)
 - [ ] Deep drill-down to line level in the browser (DuckDB-WASM over the Hugging Face Parquet, ~1 MB per entity)
-- [ ] Backfill 2012–2024; Perú Compras framework orders and small purchases (≤ 8 UIT); Etapa 2 (reclamos/Contraloría)
+- [x] Purchase and service orders (≤ 8 UIT purchases, locadores, utilities, catalogue), linked to units, expense types and projects
+- [x] Backfill of past years within a storage budget (nightly; history squashed, oldest backfilled year pruned only if needed)
+- [ ] Etapa 2 (reclamos/Contraloría)
 
 Known follow-ups:
 

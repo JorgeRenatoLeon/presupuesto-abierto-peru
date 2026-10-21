@@ -34,11 +34,12 @@ CADENCIA_DIAS = {"actual": 7, "anterior": 30}
 
 def source_files(dataset: str, year: int, prefer_diario: bool = False) -> list[str]:
     """The single source file per dataset-year, in order of preference (first existing wins)."""
+    # closed years (2009-2024 as of 2026) are one final file each: <year>-Gasto.csv, <year>-Ingreso.csv
     if dataset == "gasto":
         files = [f"{year}-Gasto-Devengado-Mensual.csv", f"{year}-Gasto-Mensual.csv", f"{year}-Gasto-Diario.csv"]
-        return files[::-1] if prefer_diario else files
+        return (files[::-1] if prefer_diario else files) + [f"{year}-Gasto.csv"]
     return [f"{year}-Ingreso-Recaudado-Mensual.csv", f"{year}-Ingreso-Mensual.csv",
-            f"{year}-Ingreso-Diario.csv", f"{year}-Ingreso-Recaudado.csv"]
+            f"{year}-Ingreso-Diario.csv", f"{year}-Ingreso-Recaudado.csv", f"{year}-Ingreso.csv"]
 
 
 # Ingreso dataset (dataset page: /dataset/presupuesto-y-ejecucion-de-ingreso).

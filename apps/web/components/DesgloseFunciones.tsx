@@ -16,10 +16,10 @@ export type FuncionEntidad = { codigo: string; funcion: string; pim?: number | n
 /** Budget by función (or genérica): one ink band for the split, then a row per category with its
  *  budget and spending labelled. Each row opens, with no JavaScript, what the entity itself pays for
  *  there (activities and projects, each with "¿En qué exactamente?") and the MEF definition. */
-export function DesgloseFunciones({ funciones, sec, dimension = "funcion", esperado, contratos = false }: {
+export function DesgloseFunciones({ funciones, sec, dimension = "funcion", esperado, contratos = false, ordenes = false }: {
   funciones: FuncionEntidad[]; sec?: string; dimension?: "funcion" | "generica"; esperado?: number | null;
-  /** the site has SEACE contracts: rows show the unit's contracts behind their spending */
-  contratos?: boolean;
+  /** the site has SEACE contracts / the unit has purchase orders: rows show those behind their spending */
+  contratos?: boolean; ordenes?: boolean;
 }) {
   if (!funciones.length) return <div className="vacio">Sin presupuesto registrado este año.</div>;
   const conPim = funciones.some((f) => f.pim != null);
@@ -51,7 +51,7 @@ export function DesgloseFunciones({ funciones, sec, dimension = "funcion", esper
               </summary>
               <div className="desglose-panel">
                 {conItems ? <ItemsAlAbrir sec={sec!} codigo={f.codigo} nombre={fmtNombre(f.funcion)} total={f.pim ?? null}
-                                          esperado={esperado} contratos={contratos} /> : null}
+                                          esperado={esperado} contratos={contratos} ordenes={ordenes} /> : null}
                 {sec && contratos && dimension === "generica" ? <ContratosDeGasto sec={sec} prefijo={f.codigo} /> : null}
                 <Explicable dimension={dimension} id={f.codigo} nombre={fmtNombre(f.funcion)} soloDefinicion
                             texto={`¿Qué es «${fmtNombre(f.funcion)}»? Definición oficial`} />

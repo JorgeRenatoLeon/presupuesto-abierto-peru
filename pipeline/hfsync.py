@@ -69,12 +69,70 @@ def pull() -> None:
             shutil.copyfile(lake.snapshot_path(ds, y, lake.latest_pub(m, ds, y)), latest)
     # who the State contracts with (contratos.py): the site's years, and when they were fetched
     desde = max(lake.years(m, "gasto"), default=0) - (ANOS_SITIO - 1)
-    c = [f for f in sorted(remotos) if f in ("contratos/fuente.json", "inversiones/fuente.json")
+    # purchase orders (ordenes.py): the current year's months, which the site summarizes
+    c = [f for f in sorted(remotos) if f in ("contratos/fuente.json", "inversiones/fuente.json", "ordenes/fuente.json")
          or ((m_ := re.fullmatch(r"contratos(_items)?/(\d{4})\.parquet", f)) and int(m_.group(2)) >= desde)
-         or re.fullmatch(r"inversiones/\w+\.parquet", f)]
+         or re.fullmatch(r"inversiones/\w+\.parquet", f)
+         or ((m_ := re.fullmatch(r"ordenes/(\d{4})/\d{2}\.parquet", f)) and int(m_.group(1)) > desde)]
     for f in c:
         get(f)
     print(f"  pulled manifest + {n} snapshots + {len(c)} contract files from hf://datasets/{r}")
+
+
+def api():
+    from huggingface_hub import HfApi
+    return HfApi(token=os.environ.get("HF_TOKEN"))
+
+
+def remotos() -> set[str]:
+    """Every file path in the remote dataset (empty without HF_DATASET)."""
+    r = repo()
+    if not r:
+        return {str(p.relative_to(LAKE)) for p in LAKE.rglob("*") if p.is_file()}
+    return {f.path for f in api().list_repo_tree(r, repo_type="dataset", recursive=True) if hasattr(f, "size")}
+
+
+def pull_metadatos() -> None:
+    """For the backfill (historia.py): only the small files that say what the lake holds (the
+    manifest, the backfill record, the contracts' and orders' download records), not the data."""
+    r = repo()
+    if not r:
+        return
+    from huggingface_hub import hf_hub_download
+    from huggingface_hub.errors import RepositoryNotFoundError
+    try:
+        info = api().repo_info(r, repo_type="dataset")
+    except RepositoryNotFoundError:
+        _remoto.update(existia=False, sha=None)
+        return
+    _remoto.update(existia=True, sha=info.sha)
+    hay = {s.rfilename for s in (info.siblings or [])}
+    for f in ("manifest.json", "historia.json", "contratos/fuente.json", "ordenes/fuente.json"):
+        if f in hay:
+            hf_hub_download(r, f, repo_type="dataset", local_dir=LAKE, token=os.environ.get("HF_TOKEN"), revision=info.sha)
+
+
+def borrar(rutas: list[str], message: str) -> None:
+    """Delete files from the remote dataset in one commit (their bytes stay in the history until
+    compactar())."""
+    r = repo()
+    if not r or not rutas:
+        return
+    from huggingface_hub import CommitOperationDelete
+    info = api().create_commit(r, repo_type="dataset", commit_message=message, parent_commit=_remoto["sha"],
+                               operations=[CommitOperationDelete(path_in_repo=p) for p in rutas])
+    _remoto.update(existia=True, sha=info.oid)
+
+
+def compactar(message: str) -> None:
+    """Squash the dataset's history into one commit: every current file stays, old versions of
+    rewritten or deleted files go. Irreversible; historia.py calls it only when over budget."""
+    r = repo()
+    if not r:
+        return
+    a = api()
+    a.super_squash_history(repo_id=r, repo_type="dataset", commit_message=message)
+    _remoto.update(sha=a.repo_info(r, repo_type="dataset").sha)
 
 
 def push(paths: list[Path], message: str) -> None:
@@ -124,6 +182,8 @@ configs:
   data_files: "contratos_items/*.parquet"
 - config_name: inversiones
   data_files: "inversiones/detalle.parquet"
+- config_name: ordenes
+  data_files: "ordenes/*/*.parquet"
 ---
 
 # Presupuesto Abierto Perú — datos
@@ -146,6 +206,7 @@ presupuestal y los meses como columnas.
 | `contratos/<año>.parquet` | Contratos firmados en el SEACE (proveedor y RUC, monto, monto final, procedimiento, postores, CUI de la obra, documentos), registros actualizados ese año. Fuente: OECE, datos de contrataciones abiertas (OCDS) vía [Open Contracting Partnership](https://data.open-contracting.org/en/publication/135), CC BY 4.0 |
 | `inversiones/detalle.parquet`, `inversiones/seguimiento.parquet` | Cada proyecto de inversión completo (Banco de Inversiones del MEF): costo actualizado y viable, devengado acumulado, avance físico, modalidad, ubicación, y el último reporte de la entidad (Formato 12B: situación, problemas, acciones) |
 | `contratos_items/<año>.parquet` | Qué se compró en cada contrato, línea por línea: código del catálogo (CUBSO y UNSPSC), descripción, cantidad, unidad y monto. Se une a `contratos` por `ocid` y `contrato_id` |
+| `ordenes/<año>/<mes>.parquet` | Órdenes de compra y de servicio que cada entidad registra en el SEACE (compras de hasta 8 UIT, servicios públicos, catálogo electrónico y órdenes que ejecutan contratos): entidad y RUC, descripción, proveedor y RUC, monto, estado, fechas. Un archivo por mes de registro. Fuente: OECE, [Portal de Datos Abiertos](https://www.gob.pe/14272-acceder-al-portal-de-datos-abiertos-del-oece) |
 
 ```sql
 -- DuckDB

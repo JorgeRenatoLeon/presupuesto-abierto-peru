@@ -18,6 +18,8 @@ import { Bandas, type Banda } from "@/components/Bandas";
 import { ResumenContratos, ListaContratos } from "@/components/Contratos";
 import { RutaDinero, pasosEntidad } from "@/components/RutaDinero";
 import { VistasGasto } from "@/components/VistasGasto";
+import { CifrasOrdenes, PanelOrdenes } from "@/components/Ordenes";
+import type { ResumenOrdenes, FuenteOrdenes } from "@/lib/ordenes";
 import type { ContratosResumen, NombresGasto } from "@/lib/contratos";
 
 const ENT_DIR = join(DATA_DIR, "entidad");
@@ -61,6 +63,8 @@ type Payload = {
   contratos?: ContratosResumen;
   /** [activities, projects, budget of the activities, budget of the projects] this year */
   n_items?: [number, number, number, number];
+  /** purchase and service orders registered this year (pipeline ordenes.py) */
+  ordenes?: ResumenOrdenes;
 };
 type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number };
 
@@ -80,8 +84,9 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
     return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de entidades procesados.</div></div>;
   }
   const raw = readFileSync(archivo, "utf-8");
-  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos, n_items } =
+  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos, n_items, ordenes } =
     JSON.parse(raw) as Payload;
+  const fuenteOrdenes = loadOptional<FuenteOrdenes>("ordenes/fuente.json");
   const fuenteContratos = loadOptional<FuenteContratos>("contratos/fuente.json");
   const todosGastos = fuenteContratos ? loadOptional<NombresGasto>("contratos/gastos.json") : null;
   // only the names this page's summary uses travel in its payload
@@ -144,6 +149,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
         funciones: [...funcAno].sort((a, b) => (b.pim ?? 0) - (a.pim ?? 0)).map((f) => ({ nombre: f.funcion, pim: f.pim ?? 0 })),
         items: n_items ?? [0, n_obras, 0, 0],
         contratos: contratos?.n ? { n: contratos.n, monto: contratos.monto, proveedores: contratos.proveedores ?? null, periodo } : null,
+        ordenes: ordenes?.n ? ordenes : null,
       })} />
 
       <IndiceSecciones secciones={[
@@ -152,6 +158,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
         { id: "en-que", titulo: "En qué lo gasta" },
         { id: "obras", titulo: "Obras" },
         ...(fuenteContratos ? [{ id: "contratos", titulo: "A quién contrata" }] : []),
+        ...(fuenteOrdenes ? [{ id: "ordenes", titulo: "Compras del día a día" }] : []),
       ]} />
 
       <section className="seccion tarjeta" id="resumen">
@@ -203,7 +210,8 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           «¿En qué exactamente?»: metas, todo lo que se compra o se paga y de dónde sale el dinero.
         </p>
         <VistasGasto
-          porFuncion={<DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} esperado={esperado} contratos={!!fuenteContratos} />}
+          porFuncion={<DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} esperado={esperado} contratos={!!fuenteContratos}
+                                         ordenes={!!ordenes?.n} />}
           porTipo={<DesgloseFunciones funciones={genAno} dimension="generica" esperado={esperado} sec={info.sec_ejec}
                                       contratos={!!fuenteContratos} />} />
       </section>
@@ -246,10 +254,38 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           )}
           <p className="aviso-contratos">
             <strong>Lo contratado no es lo pagado:</strong> el Estado no publica cada pago a cada proveedor. Las compras
-            pequeñas (hasta 8 UIT), hechas con órdenes de compra o de servicio, no pasan por el SEACE y no aparecen aquí.
+            pequeñas (hasta 8 UIT) no necesitan contrato: se hacen con órdenes de compra o de servicio, en la sección
+            siguiente.
             Unimos los compradores del SEACE con esta entidad por su nombre y por los códigos de sus obras (CUI).
             {fuenteContratos.hasta ? ` Contratos firmados hasta el ${fmtFecha(fuenteContratos.hasta)}.` : ""}{" "}
             <Link href="/metodologia/#contratos">Cómo lo hacemos</Link>
+          </p>
+        </section>
+      ) : null}
+
+      {fuenteOrdenes ? (
+        <section className="seccion tarjeta" id="ordenes">
+          <h2>¿Qué compra en el día a día?</h2>
+          <p className="sub">
+            Las órdenes de compra y de servicio que registró en {fuenteOrdenes.ano}, según el SEACE: compras pequeñas que no
+            necesitan concurso, servicios de personas, luz y agua, catálogos de Perú Compras y los pagos de sus contratos.
+            Aquí está lo que las partidas genéricas del presupuesto («servicios diversos», «otros bienes») no dicen.
+          </p>
+          {ordenes?.n ? (
+            <>
+              <CifrasOrdenes r={ordenes} />
+              <PanelOrdenes sec={info.sec_ejec} />
+            </>
+          ) : (
+            <div className="vacio">
+              No encontramos órdenes de esta entidad en el SEACE en {fuenteOrdenes.ano}. Puede que las registre con otro
+              nombre o RUC, o que no use el módulo de órdenes del SEACE.
+            </div>
+          )}
+          <p className="aviso-contratos">
+            Cada entidad registra sus órdenes en el SEACE bajo su responsabilidad; el OECE las publica cada mes.
+            {fuenteOrdenes.hasta ? ` Órdenes emitidas hasta el ${fmtFecha(fuenteOrdenes.hasta)}.` : ""}{" "}
+            <Link href="/metodologia/#ordenes">Cómo lo hacemos</Link>
           </p>
         </section>
       ) : null}

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { load, loadOptional, MESES, corteDatos, latestYear, fmtFecha, fmtPct, urlDatos, type Meta, type ResumenAnual } from "@/lib/data";
+import { load, loadOptional, MESES, corteDatos, latestYear, fmtFecha, fmtPct, fmtSoles, urlDatos, type Meta, type ResumenAnual } from "@/lib/data";
+import type { FuenteOrdenes } from "@/lib/ordenes";
 
 type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number;
   monto: number; monto_vinculado: number; compradores: number; compradores_vinculados: number;
@@ -15,6 +16,7 @@ export default function MetodologiaPage() {
   const actual = latestYear(resumen);
   const publicaciones = meta.publicaciones ?? [];
   const fc = loadOptional<FuenteContratos>("contratos/fuente.json");
+  const fo = loadOptional<FuenteOrdenes>("ordenes/fuente.json");
 
   return (
     <div className="pagina">
@@ -206,10 +208,40 @@ export default function MetodologiaPage() {
         </p>
         <p style={{ fontSize: 14, marginTop: 8 }}>
           <strong>Lo contratado no es lo pagado:</strong> el Estado no publica cada pago a cada proveedor. Las compras
-          de hasta 8 UIT se hacen con órdenes de compra o de servicio y no pasan por un procedimiento del SEACE. Un
+          de hasta 8 UIT se hacen con órdenes de compra o de servicio y no pasan por un procedimiento del SEACE (están
+          en la sección siguiente). Un
           comprador con un nombre muy distinto al del MEF puede quedar sin unir o, rara vez, unirse a una unidad
           parecida: en cada contrato se ve quién lo firmó.
           {fc?.hasta ? ` Contratos firmados hasta el ${fmtFecha(fc.hasta)}.` : ""}
+        </p>
+      </section>
+
+      <section className="tarjeta seccion" id="ordenes">
+        <h2>Las compras del día a día: órdenes de compra y de servicio</h2>
+        <p style={{ fontSize: 14 }}>
+          Además de sus contratos, cada entidad registra en el SEACE, bajo su responsabilidad, todas sus{" "}
+          <strong>órdenes de compra y de servicio</strong>: las compras pequeñas (hasta 8 UIT) que no necesitan concurso,
+          los servicios que le prestan personas (locadores), la luz y el agua, las compras en los catálogos de Perú Compras
+          y los pagos de sus contratos. El OECE las publica cada mes desde 2018 en su{" "}
+          <a style={enlace} href="https://www.gob.pe/14272-acceder-al-portal-de-datos-abiertos-del-oece" target="_blank"
+             rel="noopener">Portal de Datos Abiertos</a> y las revisamos cada semana. De cada orden mostramos qué se compró
+          (como lo escribió la entidad), el proveedor y su RUC, el monto, la fecha, cómo se compró y su estado.
+          {fo ? <> En {fo.ano} van {fo.ordenes.toLocaleString("es-PE")} órdenes por {fmtSoles(fo.monto)}; unimos a su unidad
+            ejecutora el {fmtPct(fo.monto_vinculado / fo.monto)} del monto, con el RUC de cada entidad y los mismos
+            criterios que los contratos.</> : null}
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          Son lo que las partidas genéricas del presupuesto no dicen: la «locación de servicios realizados por persona
+          natural» (la mayor partida de bienes y servicios del país) son miles de órdenes a personas con nombre y RUC por
+          servicios descritos; los «servicios diversos» u «otros bienes», una lista de compras concretas.
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          <strong>Tipo de gasto probable.</strong> Una orden no trae el código del presupuesto que la paga (ni la meta ni la
+          partida). Lo deducimos de su descripción con reglas públicas (<code>pipeline/etiquetas/ordenes_gasto.csv</code>:
+          «combustible», «alquiler de camioneta», «servicio de una persona»…), y la mostramos junto a las partidas de ese
+          tipo en cada actividad. Las órdenes que citan el código de una obra (CUI) aparecen en esa obra. Es una
+          estimación: el SEACE no dice qué actividad paga cada orden. En el sitio mostramos las órdenes más grandes de
+          cada entidad y de cada tipo; todas están en los datos abiertos.
         </p>
       </section>
 

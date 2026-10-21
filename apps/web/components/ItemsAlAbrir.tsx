@@ -6,6 +6,7 @@ import { fmtSoles, fmtNombre, urlDatos } from "@/lib/types";
 import { MontoPar } from "@/components/MontoPar";
 import { BotonExplicar, PanelExplicacion } from "@/components/Explicacion";
 import { ContratosDelProyecto, ContratosDeTipo } from "@/components/Contratos";
+import { OrdenesDelProyecto, OrdenesDeTipo } from "@/components/Ordenes";
 
 type Item = { nombre: string; tipo: "proyecto" | "actividad"; pim: number | null; devengado: number | null; sd?: boolean;
                /** projects: their CUI, which ties them to their contracts */ cui?: string };
@@ -38,9 +39,10 @@ const pct = (v: number | null) => (v == null ? "—" : v > 0 && v < 0.01 ? "meno
 /** An entity's largest activities and projects in one función, fetched from its data file the first
  *  time the <details> row opens (kept out of the page: 2,900 pages × 12 rows). They hang from the
  *  función as a tree, and what the list leaves out is counted, so the parts add up to the whole.
- *  contratos: the site has SEACE contracts, so each detail can show the ones behind its spending. */
-export function ItemsAlAbrir({ sec, codigo, nombre, total, esperado, contratos = false }: {
-  sec: string; codigo: string; nombre: string; total?: number | null; esperado?: number | null; contratos?: boolean;
+ *  contratos / ordenes: the unit has SEACE contracts / purchase orders, so each detail can show the
+ *  ones behind its spending. */
+export function ItemsAlAbrir({ sec, codigo, nombre, total, esperado, contratos = false, ordenes = false }: {
+  sec: string; codigo: string; nombre: string; total?: number | null; esperado?: number | null; contratos?: boolean; ordenes?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [datos, setDatos] = useState<{ items: Item[]; resto: Resto | null } | null>(null);
@@ -81,7 +83,7 @@ export function ItemsAlAbrir({ sec, codigo, nombre, total, esperado, contratos =
                 {total && i.pim ? <span className="item-cuota">{pct(parte(i.pim, total))} de «{nombre}»</span> : null}
                 <MontoPar pim={i.pim} devengado={i.devengado} esperado={esperado} compacto />
                 <DetalleItem sec={sec} codigo={codigo} k={k} nombre={i.nombre?.trim() ? fmtNombre(i.nombre) : "esta línea"}
-                             sinDescripcion={!!i.sd} cui={contratos ? i.cui ?? null : null} contratos={contratos} pim={i.pim} />
+                             sinDescripcion={!!i.sd} cui={i.cui ?? null} contratos={contratos} ordenes={ordenes} pim={i.pim} />
               </li>
             ))}
             {datos?.resto ? (
@@ -98,8 +100,9 @@ export function ItemsAlAbrir({ sec, codigo, nombre, total, esperado, contratos =
   );
 }
 
-function DetalleItem({ sec, codigo, k, nombre, sinDescripcion, cui, contratos, pim }: {
-  sec: string; codigo: string; k: number; nombre: string; sinDescripcion: boolean; cui: string | null; contratos: boolean; pim: number | null;
+function DetalleItem({ sec, codigo, k, nombre, sinDescripcion, cui, contratos, ordenes, pim }: {
+  sec: string; codigo: string; k: number; nombre: string; sinDescripcion: boolean; cui: string | null; contratos: boolean;
+  ordenes: boolean; pim: number | null;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [datos, setDatos] = useState<{ d: Detalle | null; c: Clasificador | null } | null>(null);
@@ -125,7 +128,7 @@ function DetalleItem({ sec, codigo, k, nombre, sinDescripcion, cui, contratos, p
       {abierto ? (
         !datos ? <p className="explica cargando">Cargando…</p>
           : datos.d && datos.c ? <PanelDetalle d={datos.d} c={datos.c} nombre={nombre} sinDescripcion={sinDescripcion} sec={sec} cui={cui}
-                                                contratos={contratos} pim={pim} cerrar={cerrar} />
+                                                contratos={contratos} ordenes={ordenes} pim={pim} cerrar={cerrar} />
             : <p className="explica">No hay más detalle para esta línea.</p>
       ) : null}
     </>
@@ -154,9 +157,9 @@ function Parte({ nombre, nota, pim, dev, total, children }: {
   );
 }
 
-function PanelDetalle({ d, c, nombre, sinDescripcion, sec, cui, contratos, pim, cerrar }: {
+function PanelDetalle({ d, c, nombre, sinDescripcion, sec, cui, contratos, ordenes, pim, cerrar }: {
   d: Detalle; c: Clasificador; nombre: string; sinDescripcion: boolean; sec: string; cui: string | null; contratos: boolean;
-  pim: number | null; cerrar: () => void;
+  ordenes: boolean; pim: number | null; cerrar: () => void;
 }) {
   const [explicado, setExplicado] = useState<string | null>(null);
   const [verResto, setVerResto] = useState(false);
@@ -186,6 +189,7 @@ function PanelDetalle({ d, c, nombre, sinDescripcion, sec, cui, contratos, pim, 
                : contexto}>
         {explicado === cod ? <PanelExplicacion dimension="generica" id={cod} soloDefinicion /> : null}
         {contratos && !cui ? <ContratosDeTipo sec={sec} clas={cod} /> : null}
+        {ordenes && !cui ? <OrdenesDeTipo sec={sec} clas={cod} /> : null}
       </Parte>
     );
   };
@@ -236,8 +240,8 @@ function PanelDetalle({ d, c, nombre, sinDescripcion, sec, cui, contratos, pim, 
         {total && enGenericos / total >= 0.2 ? (
           <p className="explica-nota">
             El {pct(enGenericos / total)} de este presupuesto está en partidas genéricas («otros», «diversos»): el
-            clasificador del MEF no dice en qué se usó. Las compras y contratos de la entidad, abajo y en «A quién le
-            contrata», ayudan a saberlo.
+            clasificador del MEF no dice en qué se usó. Las órdenes y contratos de la entidad de cada tipo, debajo de
+            cada partida, muestran qué se compró.
           </p>
         ) : null}
       </section>
@@ -263,7 +267,12 @@ function PanelDetalle({ d, c, nombre, sinDescripcion, sec, cui, contratos, pim, 
           </p>
         </section>
       ) : null}
-      {contratos && cui ? <div className="detalle-ancho"><ContratosDelProyecto sec={sec} cui={cui} anual={pim} /></div> : null}
+      {(contratos || ordenes) && cui ? (
+        <div className="detalle-ancho">
+          {contratos ? <ContratosDelProyecto sec={sec} cui={cui} anual={pim} /> : null}
+          {ordenes ? <OrdenesDelProyecto sec={sec} cui={cui} /> : null}
+        </div>
+      ) : null}
       <div className="detalle-ancho detalle-pie">
         <p className="explica-pie">Montos del presupuesto vigente y lo gastado (devengado), según los datos abiertos del MEF.</p>
         <button type="button" className="cerrar-panel" onClick={cerrar}>

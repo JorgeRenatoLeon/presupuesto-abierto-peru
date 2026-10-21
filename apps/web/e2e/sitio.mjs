@@ -46,7 +46,7 @@ await paso("municipality", async () => {
   check(await page.getByRole("navigation", { name: "Ubicación" }).getByText(/Urubamba/).first().isVisible(), "entity: breadcrumb shows the province");
   check(await page.getByText(/Puesto \d+ de \d+/).isVisible(), "entity: rank among the province's municipalities");
   const ruta = page.getByRole("navigation", { name: "De dónde a dónde va su presupuesto" });
-  check(await ruta.getByRole("link").count() === 4, "entity: the money map shows budget -> areas -> activities and works -> suppliers");
+  check(await ruta.getByRole("link").count() >= 4, "entity: the money map shows budget -> areas -> activities and works -> suppliers");
   check(await ruta.getByRole("link", { name: /Contrata a/ }).getAttribute("href") === "#contratos", "entity: each step of the map links to its section");
   await page.locator("details summary", { hasText: "Transporte" }).first().click();
   await page.getByText("En qué lo usa").first().waitFor();
@@ -133,6 +133,34 @@ await paso("what contracts buy, by expense type", async () => {
   await page.locator("#tipo-de-gasto details[open] .ct-de-gasto button.ct-gasto-fila").first().waitFor({ timeout: 15000 });
   check(true, "tipo de gasto: «Bienes y servicios» shows the unit's contracts of that type");
   await sinScroll("entidad/300790#tipo-de-gasto (contracts open)");
+});
+
+await paso("purchase orders", async () => {
+  await page.goto(`${BASE}/entidad/301289/#ordenes`);  // Surco
+  const sec = page.locator("#ordenes");
+  check(await sec.locator("h2").isVisible() && await sec.locator(".kpi").count() === 4,
+        "orders: «¿Qué compra en el día a día?» with its figures");
+  check(await page.getByRole("navigation", { name: "De dónde a dónde va su presupuesto" }).getByRole("link", { name: /Compra con órdenes/ }).count() === 1,
+        "orders: the money map has a step for them");
+  const filas = sec.locator(".contratos .contrato.orden");
+  await filas.first().waitFor({ timeout: 15000 });
+  check(await filas.count() >= 5 && await sec.locator(".ct-gastos .ct-gasto-fila").count() >= 2,
+        `orders: how it buys, what, and its largest orders (${await filas.count()} rows)`);
+  const grupo = sec.locator(".ct-gastos").nth(1).locator("button.ct-gasto-fila").first();
+  const nombre = (await grupo.locator(".ct-top-nombre").innerText()).trim();
+  await grupo.click();
+  check(await sec.getByLabel("Tipo de gasto de la orden").evaluate((s) => s.selectedOptions[0]?.textContent ?? "") === nombre,
+        `orders: «${nombre.slice(0, 30)}» filters the list`);
+  await sec.getByLabel("Buscar en las órdenes").fill("zzzz sin coincidencias");
+  check(await sec.getByText("Ninguna orden coincide").isVisible(), "orders: a search with no match says so");
+  await page.goto(`${BASE}/entidad/301289/#en-que`);
+  await page.locator("#en-que details summary", { hasText: "Ambiente" }).first().click();
+  await page.getByRole("button", { name: "¿En qué exactamente?" }).first().click();
+  const deTipo = page.locator(".detalle-item .ct-tipo button", { hasText: /órdenes? de este tipo/ }).first();
+  await deTipo.waitFor({ timeout: 15000 });
+  await deTipo.click();
+  check(await page.locator(".detalle-item .contrato.orden").count() >= 1, "orders: an expense type of an activity opens the orders of that type");
+  await sinScroll("entidad/301289#ordenes");
 });
 
 await paso("suppliers", async () => {

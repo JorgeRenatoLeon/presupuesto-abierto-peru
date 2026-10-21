@@ -26,6 +26,7 @@ import duckdb
 
 import contratos
 import inversiones
+import ordenes
 from compare import ES_PROYECTO, SIN_DESCRIPCION
 from nombres import con_lugares, texto, lugares as _lugares
 from config import SERVING
@@ -86,7 +87,8 @@ def exportar() -> None:
 
     contratos_ent, contratos_obra = contratos.exportar(con, out) if tiene_obras else ({}, {})
     enteras = inversiones.exportar(con, out) if tiene_obras else {}
-    _entidades(con, out, alertas, tiene_obras, contratos_ent, contratos_obra, enteras)
+    ordenes_ent = ordenes.exportar(con, out) if tiene_obras else {}
+    _entidades(con, out, alertas, tiene_obras, contratos_ent, contratos_obra, enteras, ordenes_ent)
     deps = _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, any_value(DEPARTAMENTO_META_NOMBRE) AS nombre
                          FROM gasto_wide WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS}
                          GROUP BY 1 ORDER BY 1""", [ano])
@@ -102,7 +104,7 @@ def exportar() -> None:
 # --- entities -----------------------------------------------------------------------
 
 def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: dict | None = None,
-               contratos_obra: dict | None = None, enteras: dict | None = None) -> None:
+               contratos_obra: dict | None = None, enteras: dict | None = None, ordenes_ent: dict | None = None) -> None:
     """entidades.json (search index) + one JSON per entity with series, breakdowns, projects, alerts
     and, when the contracts are in the lake, who it contracts with (summary; per project: [n, amount])."""
     contratos_ent, contratos_obra, enteras = contratos_ent or {}, contratos_obra or {}, enteras or {}
@@ -218,6 +220,8 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: 
         }
         if sec in contratos_ent:
             payload["contratos"] = contratos_ent[sec]
+        if sec in (ordenes_ent or {}):  # purchase and service orders this year (ordenes.py)
+            payload["ordenes"] = ordenes_ent[sec]
         _write(ent_dir / f"{sec}.json", payload)
     print(f"  json: entidad/*.json ({len(index)} files)")
     _detalle_items(con, out)
