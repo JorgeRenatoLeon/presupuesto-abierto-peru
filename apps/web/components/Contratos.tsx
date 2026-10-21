@@ -319,10 +319,15 @@ function precioDe(lineas: Lineas | null): "alto" | "revisar" | null {
 
 /** "Qué se compró": the contract's lines, with quantity, unit price and, for items the State buys
  *  often, what it usually pays for the same item. */
-function LineasCompradas({ lineas, compacto }: { lineas: Lineas; compacto: boolean }) {
+function LineasCompradas({ lineas, compacto, objeto }: { lineas: Lineas; compacto: boolean; objeto: string }) {
   const [n, filas] = lineas;
   const visibles = filas.filter(([desc]) => desc);
   if (!visibles.length) return null;
+  // a single line that only repeats the contract's title (works, services) says nothing new
+  const [desc0, cant0, , , mediana0] = visibles[0];
+  const comparable = (t: string | null) => plano(t ?? "").replace(/[^a-z0-9]+/g, " ").trim().slice(0, 80);
+  if (n === 1 && mediana0 == null && (cant0 ?? 1) <= 1
+      && (comparable(objeto).includes(comparable(desc0).slice(0, 60)) || comparable(desc0).includes(comparable(objeto).slice(0, 60)))) return null;
   const mostradas = visibles.slice(0, compacto ? 2 : 3);
   return (
     <div className="ct-lineas">
@@ -408,7 +413,7 @@ export function Contrato({ v, nombres, compacto = false }: { v: Vista; nombres: 
           ) : null}
         </span>
       </div>
-      {v.lineas ? <LineasCompradas lineas={v.lineas} compacto={compacto} /> : null}
+      {v.lineas ? <LineasCompradas lineas={v.lineas} compacto={compacto} objeto={v.objeto ?? ""} /> : null}
       {gasto ? <p className="ct-gasto"><span className="mp-etq">Tipo de gasto</span> {gasto}</p> : null}
       {!compacto ? (
         <p className="ct-como">

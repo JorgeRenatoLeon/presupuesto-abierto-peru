@@ -16,6 +16,7 @@ Runs after aggregate -> compare -> alerts and writes, under data/serving/json/:
 Small files fetched only when needed keep pages light on mobile data.
 """
 import json
+import re
 import os
 from datetime import datetime, timezone
 from email.utils import format_datetime
@@ -33,8 +34,8 @@ from lake import register_views
 DEPARTAMENTOS = "BETWEEN '01' AND '25'"  # '0' = no location, '98' = abroad
 TOP_OBRAS_ENTIDAD = 40
 TOP_ITEMS_FUNCION = 5  # an entity's largest activities/projects shown under each of its funciones
-TOP_METAS = 4          # per activity/project: its main targets (metas)...
-TOP_ESPECIFICAS = 6    # ...and expense types; the rest is summed as "otros"
+TOP_METAS = 4          # per activity/project: its main targets (metas), the rest counted and summed;
+                       # its expense types go whole (the page shows the largest and opens the rest)
 
 
 def _records(df):
@@ -151,6 +152,20 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: 
                row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) AS k
         FROM _lineas WHERE item IS NOT NULL GROUP BY sec, funcion, item, tipo
         QUALIFY row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) <= {TOP_ITEMS_FUNCION}""")
+    # what the listed ones leave out, so the parts always add up to the whole: per función, the
+    # count and amounts of its other activities/projects; per unit, how many of each it has
+    resto = {}
+    for sec, f, n, pim, dev in con.execute(f"""
+            SELECT sec, funcion, count(*), sum(pim), sum(devengado) FROM (
+                SELECT sec, funcion, sum(p) AS pim, sum(d) AS devengado,
+                       row_number() OVER (PARTITION BY sec, funcion ORDER BY sum(p) DESC, item, tipo) AS k
+                FROM _lineas WHERE item IS NOT NULL GROUP BY sec, funcion, item, tipo)
+            WHERE k > {TOP_ITEMS_FUNCION} GROUP BY 1, 2""").fetchall():
+        resto.setdefault(sec, {})[f] = [n, round(pim or 0), round(dev or 0)]
+    cuantos = {sec: [a, p, round(pa or 0), round(pp or 0)] for sec, a, p, pa, pp in con.execute("""
+        SELECT sec, count(*) FILTER (WHERE tipo = 'actividad'), count(*) FILTER (WHERE tipo = 'proyecto'),
+               sum(pim) FILTER (WHERE tipo = 'actividad'), sum(pim) FILTER (WHERE tipo = 'proyecto')
+        FROM (SELECT sec, item, tipo, sum(p) AS pim FROM _lineas WHERE item IS NOT NULL GROUP BY ALL) GROUP BY 1""").fetchall()}
     items = con.execute("""SELECT sec AS sec_ejec, funcion, item AS nombre, tipo, pim, devengado,
                                   CASE WHEN sd THEN true END AS sd, CASE WHEN tipo = 'proyecto' THEN cui END AS cui
                            FROM _items ORDER BY sec, funcion, k""").fetchdf()
@@ -192,6 +207,10 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: 
             "series": _records(s.drop(columns=["sec_ejec"])),
             "funciones": _records(f.drop(columns=["sec_ejec"]).groupby("ano").head(12)),
             "items": i_groups.get(sec, {}),
+            # per función, the activities/projects not listed: [how many, budget, spent]
+            "items_resto": resto.get(sec, {}),
+            # its activities and projects this year: [how many activities, projects, their budgets]
+            "n_items": cuantos.get(sec, [0, 0, 0, 0]),
             "genericas": _records(g.drop(columns=["sec_ejec"]).groupby("ano").head(10)),
             "obras": obras_ent,
             "n_obras": 0 if o is None else len(o),
@@ -230,19 +249,18 @@ def _detalle_items(con, out) -> None:
     for sec, f, k, nombre, pim, dev in con.execute(f"""
             SELECT i.sec, i.funcion, i.k, any_value(l.meta_nombre), sum(l.p), sum(l.d) {unidos}
             GROUP BY i.sec, i.funcion, i.k, l.meta HAVING sum(l.p) <> 0 OR sum(l.d) <> 0
-            QUALIFY row_number() OVER (PARTITION BY i.sec, i.funcion, i.k ORDER BY sum(l.p) DESC, l.meta) <= {TOP_METAS}
-            ORDER BY 1, 2, 3, 5 DESC""").fetchall():
-        hueco(sec, f, k)["m"].append([con_lugares(nombre, _LUGARES), n(pim), n(dev)])
+            ORDER BY 1, 2, 3, 5 DESC, l.meta""").fetchall():
+        h = hueco(sec, f, k)
+        if len(h["m"]) < TOP_METAS:
+            h["m"].append([con_lugares(nombre, _LUGARES), n(pim), n(dev)])
+        else:  # the other metas: [how many, budget, spent]
+            mo = h.setdefault("mo", [0, 0, 0])
+            mo[0] += 1; mo[1] += n(pim); mo[2] += n(dev)
     for sec, f, k, clas, pim, dev in con.execute(f"""
             SELECT i.sec, i.funcion, i.k, l.clas, sum(l.p), sum(l.d) {unidos}
             GROUP BY i.sec, i.funcion, i.k, l.clas HAVING sum(l.p) <> 0 OR sum(l.d) <> 0
             ORDER BY 1, 2, 3, 5 DESC, 4""").fetchall():
-        h = hueco(sec, f, k)
-        if len(h["e"]) < TOP_ESPECIFICAS:
-            h["e"].append([clas, n(pim), n(dev)])
-        else:  # the rest, summed: "otros gastos"
-            o = h.setdefault("o", [0, 0])
-            o[0] += n(pim); o[1] += n(dev)
+        hueco(sec, f, k)["e"].append([clas, n(pim), n(dev)])
     for sec, f, k, rubro, pim, dev in con.execute(f"""
             SELECT i.sec, i.funcion, i.k, l.rubro, sum(l.p), sum(l.d) {unidos}
             GROUP BY i.sec, i.funcion, i.k, l.rubro HAVING sum(l.p) <> 0 OR sum(l.d) <> 0
@@ -262,7 +280,14 @@ def _detalle_items(con, out) -> None:
         contexto = next((x for x in (esp, subdet, sub) if x and x.strip().upper() != (nom or "").strip().upper()), None)
         nombres[c] = [texto(nom), texto(contexto) if contexto else None]
     rubros = {r: texto(nm) for r, nm in con.execute("SELECT RUBRO, any_value(RUBRO_NOMBRE) FROM gasto_wide GROUP BY 1").fetchall()}
-    _write(out / "clasificador.json", {"especificas": nombres, "rubros": rubros})
+    # the expense types' families ("2.3" Bienes y servicios), to group the long tail of an activity
+    genericas = {g: texto(nm) for g, nm in con.execute(
+        "SELECT TIPO_TRANSACCION || '.' || GENERICA, any_value(GENERICA_NOMBRE) FROM gasto_wide GROUP BY 1").fetchall()}
+    # catch-all expense types (MEF's ".99"/".98" "otros…", "servicios diversos"): their name says little,
+    # so the page says so and points to the purchases that can tell what they paid for
+    genericos = sorted(c for c, (nom, _) in nombres.items()
+                       if c.rsplit(".", 1)[-1] in ("98", "99") and re.search(r"\b(otr[oa]s?|diversos?|diversas?)\b", nom or "", re.I))
+    _write(out / "clasificador.json", {"especificas": nombres, "rubros": rubros, "genericas": genericas, "genericos": genericos})
     print(f"  json: detalle/*.json ({len(det)} entities), clasificador.json ({len(nombres)} expense types)")
 
 

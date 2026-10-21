@@ -16,6 +16,8 @@ import { MasObras } from "@/components/MasObras";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { Bandas, type Banda } from "@/components/Bandas";
 import { ResumenContratos, ListaContratos } from "@/components/Contratos";
+import { RutaDinero, pasosEntidad } from "@/components/RutaDinero";
+import { VistasGasto } from "@/components/VistasGasto";
 import type { ContratosResumen, NombresGasto } from "@/lib/contratos";
 
 const ENT_DIR = join(DATA_DIR, "entidad");
@@ -57,6 +59,8 @@ type Payload = {
   alertas?: Alerta[];
   /** contracts signed in SEACE in the period (pipeline contratos.py); absent: none linked */
   contratos?: ContratosResumen;
+  /** [activities, projects, budget of the activities, budget of the projects] this year */
+  n_items?: [number, number, number, number];
 };
 type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number };
 
@@ -76,7 +80,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
     return <div className="pagina"><div className="tarjeta vacio">Aún no hay datos de entidades procesados.</div></div>;
   }
   const raw = readFileSync(archivo, "utf-8");
-  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos } =
+  const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos, n_items } =
     JSON.parse(raw) as Payload;
   const fuenteContratos = loadOptional<FuenteContratos>("contratos/fuente.json");
   const todosGastos = fuenteContratos ? loadOptional<NombresGasto>("contratos/gastos.json") : null;
@@ -135,18 +139,23 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
         </div>
       </section>
 
+      <RutaDinero pasos={pasosEntidad({
+        pim, avance, ano,
+        funciones: [...funcAno].sort((a, b) => (b.pim ?? 0) - (a.pim ?? 0)).map((f) => ({ nombre: f.funcion, pim: f.pim ?? 0 })),
+        items: n_items ?? [0, n_obras, 0, 0],
+        contratos: contratos?.n ? { n: contratos.n, monto: contratos.monto, proveedores: contratos.proveedores ?? null, periodo } : null,
+      })} />
+
       <IndiceSecciones secciones={[
-        { id: "resumen", titulo: "Resumen" },
-        { id: "en-que", titulo: "En qué gasta" },
-        ...(n_obras ? [{ id: "obras", titulo: "Obras" }] : []),
-        ...(fuenteContratos ? [{ id: "contratos", titulo: "A quién contrata" }] : []),
-        { id: "mes-a-mes", titulo: "Mes a mes" },
-        ...(esMunicipal && ranking.length > 1 ? [{ id: "comparacion", titulo: "Frente a otras" }] : []),
+        { id: "resumen", titulo: "Cuánto tiene" },
         ...(alertasEntidad.length ? [{ id: "alertas", titulo: `Alertas (${alertasEntidad.length})` }] : []),
-        { id: "tipo-de-gasto", titulo: "Tipo de gasto" },
+        { id: "en-que", titulo: "En qué lo gasta" },
+        { id: "obras", titulo: "Obras" },
+        ...(fuenteContratos ? [{ id: "contratos", titulo: "A quién contrata" }] : []),
       ]} />
 
-      <section className="seccion" id="resumen">
+      <section className="seccion tarjeta" id="resumen">
+        <h2>¿Cuánto tiene y cuánto gastó?</h2>
         <div className="kpis">
           <KpiCard etiqueta="Presupuesto vigente (PIM)" valor={fmtSoles(pim)} nota="Lo que puede gastar este año" />
           <KpiCard etiqueta={`Gastado ${corte}`} valor={fmtSoles(devYtd)} nota={`${fmtPct(avance)} del presupuesto`} />
@@ -154,15 +163,49 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           <KpiCard etiqueta="Presupuesto inicial (PIA)" valor={fmtSoles(pia)} nota="Aprobado al inicio del año" />
         </div>
         <div style={{ marginTop: 14 }}><Lectura tono={lectura.tono}>{lectura.texto}</Lectura></div>
+        <h3 className="subtitulo" id="mes-a-mes">Mes a mes</h3>
+        <p className="sub">Lo gastado (devengado) en cada mes de {ano}.</p>
+        <GraficoMensual puntos={serieAno.map((s) => ({ mes: s.mes, valor: s.devengado }))} />
+        {esMunicipal && ranking.length > 1 ? (
+          <>
+            <h3 className="subtitulo" id="comparacion">Frente a las otras municipalidades de {fmtLugar(prov!.nombre)}</h3>
+            <p className="sub">
+              Puesto <strong>{puesto} de {ranking.length}</strong> por avance de ejecución {corte} (qué parte de su
+              presupuesto ya gastó). Promedio de la provincia: {fmtPct(avanceProv)}.
+            </p>
+            <ol className="ranking">
+              {ranking.map((m) => (
+                <li key={m.sec_ejec} className={m.sec_ejec === info.sec_ejec ? "propio" : ""}>
+                  <Link href={`/entidad/${m.sec_ejec}/`}>{fmtLugar(m.distrito ?? m.nombre)}</Link>
+                  <span className="barra"><span style={{ width: `${Math.min(100, ((m.devengado ?? 0) / (m.pim ?? 1)) * 100)}%` }} /></span>
+                  <span className="cifra">{fmtPct((m.devengado ?? 0) / (m.pim ?? 1))}</span>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : null}
       </section>
 
+      {alertasEntidad.length ? (
+        <section className="seccion tarjeta" id="alertas">
+          <h2>Alertas ({alertasEntidad.length})</h2>
+          <p className="sub">Señales en sus datos que vale la pena preguntar: no son acusaciones.</p>
+          <div style={{ display: "grid", gap: 10 }}>
+            {alertasEntidad.slice(0, 5).map((a, i) => <AlertaCard key={i} alerta={a} enEntidad />)}
+          </div>
+        </section>
+      ) : null}
+
       <section className="seccion tarjeta" id="en-que">
-        <h2>¿A qué lo destina?</h2>
+        <h2>¿En qué lo gasta?</h2>
         <p className="sub">
-          Su presupuesto por función del Estado. Abre cada una para ver sus actividades y proyectos, y en cada uno
-          «¿En qué exactamente?»: metas, qué se compra o se paga y de dónde sale el dinero.
+          Sus {fmtSoles(pim)} de {ano}, vistos de dos formas. En cada área, abre sus actividades y obras y, en cada una,
+          «¿En qué exactamente?»: metas, todo lo que se compra o se paga y de dónde sale el dinero.
         </p>
-        <DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} esperado={esperado} contratos={!!fuenteContratos} />
+        <VistasGasto
+          porFuncion={<DesgloseFunciones funciones={funcAno} sec={info.sec_ejec} esperado={esperado} contratos={!!fuenteContratos} />}
+          porTipo={<DesgloseFunciones funciones={genAno} dimension="generica" esperado={esperado} sec={info.sec_ejec}
+                                      contratos={!!fuenteContratos} />} />
       </section>
 
       {n_obras ? (
@@ -170,7 +213,8 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           <h2>Obras y proyectos de inversión ({n_obras})</h2>
           <p className="sub">
             {detenidas.length ? `${detenidas.length} sin ningún gasto ${corte}. ` : ""}
-            Los de mayor presupuesto; cada uno enlaza a su ficha oficial en el MEF.
+            Los de mayor presupuesto este año. Cada obra dura varios años: abajo de cada una, lo que cuesta entera, quién
+            la hace y su ficha oficial en el MEF.
           </p>
           <ListaObras obras={obras.slice(0, OBRAS_EN_PAGINA)} sec={fuenteContratos ? info.sec_ejec : undefined} />
           <MasObras sec={info.sec_ejec} desde={OBRAS_EN_PAGINA} total={obras.length} />
@@ -186,8 +230,8 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
         <section className="seccion tarjeta" id="contratos">
           <h2>¿A quién le contrata?</h2>
           <p className="sub">
-            Los contratos que firmó en {periodo}, según el SEACE, el registro oficial de compras del Estado: con quién,
-            por cuánto, cómo se eligió al proveedor y el contrato firmado, para descargar.
+            Una parte de su gasto pasa por contratos. Estos son los que firmó en {periodo}, según el SEACE, el registro
+            oficial de compras del Estado: con quién, por cuánto, cómo se eligió al proveedor y el contrato firmado.
           </p>
           {contratos?.n ? (
             <>
@@ -209,47 +253,6 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           </p>
         </section>
       ) : null}
-
-      <section className="seccion tarjeta" id="mes-a-mes">
-        <h2>Gasto mes a mes</h2>
-        <p className="sub">Lo gastado (devengado) en cada mes de {ano}.</p>
-        <GraficoMensual puntos={serieAno.map((s) => ({ mes: s.mes, valor: s.devengado }))} />
-      </section>
-
-      {esMunicipal && ranking.length > 1 ? (
-        <section className="seccion tarjeta" id="comparacion">
-          <h2>Frente a las otras municipalidades de {fmtLugar(prov!.nombre)}</h2>
-          <p className="sub">
-            Puesto <strong>{puesto} de {ranking.length}</strong> por avance de ejecución {corte} (qué parte de su
-            presupuesto ya gastó). Promedio de la provincia: {fmtPct(avanceProv)}.
-          </p>
-          <ol className="ranking">
-            {ranking.map((m) => (
-              <li key={m.sec_ejec} className={m.sec_ejec === info.sec_ejec ? "propio" : ""}>
-                <Link href={`/entidad/${m.sec_ejec}/`}>{fmtLugar(m.distrito ?? m.nombre)}</Link>
-                <span className="barra"><span style={{ width: `${Math.min(100, ((m.devengado ?? 0) / (m.pim ?? 1)) * 100)}%` }} /></span>
-                <span className="cifra">{fmtPct((m.devengado ?? 0) / (m.pim ?? 1))}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      ) : null}
-
-      {alertasEntidad.length ? (
-        <section className="seccion" id="alertas">
-          <h2 style={{ marginBottom: 10 }}>Alertas de esta entidad ({alertasEntidad.length})</h2>
-          <div style={{ display: "grid", gap: 10 }}>
-            {alertasEntidad.slice(0, 5).map((a, i) => <AlertaCard key={i} alerta={a} enEntidad />)}
-          </div>
-        </section>
-      ) : null}
-
-      <section className="seccion tarjeta" id="tipo-de-gasto">
-        <h2>¿En qué tipo de gasto?</h2>
-        <p className="sub">Sueldos, compras, obras… Abre cada tipo para ver qué incluye.</p>
-        <DesgloseFunciones funciones={genAno} dimension="generica" esperado={esperado} sec={info.sec_ejec}
-                           contratos={!!fuenteContratos} />
-      </section>
     </div>
   );
 }

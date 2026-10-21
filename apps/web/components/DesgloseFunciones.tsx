@@ -9,6 +9,7 @@ import { ItemsAlAbrir } from "@/components/ItemsAlAbrir";
 import { Franja, tinta } from "@/components/Franja";
 import { MontoPar, LeyendaBarra } from "@/components/MontoPar";
 import { ContratosDeGasto } from "@/components/Contratos";
+import { CerrarPanel } from "@/components/CerrarPanel";
 
 export type FuncionEntidad = { codigo: string; funcion: string; pim?: number | null; devengado: number };
 
@@ -49,10 +50,12 @@ export function DesgloseFunciones({ funciones, sec, dimension = "funcion", esper
                 </span>
               </summary>
               <div className="desglose-panel">
-                {conItems ? <ItemsAlAbrir sec={sec!} codigo={f.codigo} esperado={esperado} contratos={contratos} /> : null}
+                {conItems ? <ItemsAlAbrir sec={sec!} codigo={f.codigo} nombre={fmtNombre(f.funcion)} total={f.pim ?? null}
+                                          esperado={esperado} contratos={contratos} /> : null}
                 {sec && contratos && dimension === "generica" ? <ContratosDeGasto sec={sec} prefijo={f.codigo} /> : null}
                 <Explicable dimension={dimension} id={f.codigo} nombre={fmtNombre(f.funcion)} soloDefinicion
                             texto={`¿Qué es «${fmtNombre(f.funcion)}»? Definición oficial`} />
+                <CerrarPanel texto={`Cerrar «${fmtNombre(f.funcion)}»`} />
               </div>
             </details>
           </li>

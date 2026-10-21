@@ -633,3 +633,90 @@ p a { overflow-wrap: anywhere; }
 .ct-linea-precio { flex-basis: 100%; font-size: 12px; color: var(--texto-suave); }
 .ct-linea-precio.alto { color: var(--naranja); font-weight: 700; }
 .ct-linea-precio.revisar { color: var(--texto-fuerte); }
+
+/* ---------- What is part of what: the money map, nested panels, parts of a whole ---------- */
+.pagina [id] { scroll-margin-top: 118px; }
+.seccion h3.subtitulo { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--amarillo); margin: 24px 0 4px; }
+
+/* The route of the money: budget -> areas -> activities and works -> suppliers. A vertical route
+   on phones (a rule joins the step squares), one row of four from 900px (a rule runs through them). */
+.ruta { margin: 2px 0 14px; }
+.ruta ol { list-style: none; display: grid; }
+.ruta li { position: relative; min-width: 0; }
+.ruta a { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; }
+.ruta li:not(:last-child)::after { content: ""; position: absolute; left: 16px; top: 44px; bottom: -10px; border-left: 1px solid var(--regla); }
+.ruta-texto { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.ruta-verbo { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-suave); }
+.ruta b { font-family: var(--f-display); font-weight: 400; font-size: clamp(22px, 6vw, 27px); line-height: 1.1; color: var(--amarillo); }
+.ruta small { font-size: 13px; color: var(--texto); max-width: 34ch; }
+.ruta-barra { display: flex; gap: 2px; height: 6px; margin: 5px 0 3px; max-width: 300px; }
+.ruta-barra > span { min-width: 2px; }
+@media (min-width: 900px) {
+  .ruta ol { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .ruta a { flex-direction: column; gap: 10px; padding: 12px 16px 12px 0; height: 100%; }
+  .ruta li:not(:last-child)::after { left: 46px; right: 0; top: 29px; bottom: auto; border-left: 0; border-top: 1px solid var(--regla); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .ruta a:hover .ruta-verbo { color: var(--celeste); }
+  .ruta a:hover b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+}
+
+/* Two views of one budget */
+.tabs.vistas { margin: 2px 0 8px; }
+.vistas-nota { font-size: 13.5px; color: var(--texto-suave); margin: 0 0 12px; max-width: 70ch; }
+
+/* An opened área is one contained panel: its row, then what hangs from it, then its end */
+.desglose details[open] { background: var(--panel); margin: 0 -12px; padding: 0 12px 6px; }
+.desglose details[open] > summary { border-bottom: 1px solid var(--regla); }
+.desglose-panel { padding: 6px 0 12px; }
+.panel-titulo { text-wrap: balance; }
+.cerrar-panel { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 7px 12px; background: none;
+  border: 1px solid var(--regla); color: var(--texto-fuerte); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: transform 160ms var(--ease-out); }
+.cerrar-panel:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) { .cerrar-panel:hover { border-color: var(--texto-suave); } }
+
+/* Activities and works hang from their área as a tree */
+.items.arbol { margin: 0 0 8px 5px; border-left: 1px solid var(--regla); }
+.items.arbol > li { position: relative; padding: 12px 0 12px 16px; border-bottom: 0; }
+.items.arbol > li + li { border-top: 1px solid var(--regla); }
+.items.arbol > li::before { content: ""; position: absolute; left: 0; top: 23px; width: 10px; border-top: 1px solid var(--regla); }
+.item-cuota { font-size: 12.5px; font-weight: 700; color: var(--texto-suave); }
+.items-resto { font-size: 13.5px; color: var(--texto-suave); }
+.items-resto b { color: var(--texto-fuerte); }
+.enlace-explicar.abre { display: inline-flex; align-items: center; gap: 4px; justify-self: start; }
+.enlace-explicar.abre .icono-linea { transition: transform 200ms var(--ease-out); }
+.enlace-explicar.abre[aria-expanded="true"] .icono-linea { transform: rotate(180deg); }
+
+/* "¿En qué exactamente?": an inset sheet inside the panel; parts of the activity's whole */
+.detalle-item { gap: 16px; margin: 6px 0 4px; padding: 14px 12px; background: var(--negro); }
+.detalle-titulo { font-weight: 700; font-size: 14px; color: var(--texto-fuerte); text-wrap: balance; }
+@media (min-width: 900px) {
+  .detalle-item { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 28px; align-items: start; }
+  .detalle-titulo, .detalle-item > .aviso-sd, .detalle-ancho { grid-column: 1 / -1; }
+  .detalle-gastos { grid-column: 1; grid-row: span 2; }
+  .detalle-metas, .detalle-fuentes { grid-column: 2; }
+}
+.partes, .detalle-item .partes { list-style: none; display: grid; gap: 0; }
+.parte, .detalle-item .parte { display: grid; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--regla); }
+.detalle-item .parte:last-child { border-bottom: 0; }
+.parte-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.parte-nombre { display: block; font-weight: 700; font-size: 14px; color: var(--texto-fuerte); min-width: 0; overflow-wrap: break-word; }
+.parte-monto { font-weight: 800; font-size: 14px; color: var(--texto-fuerte); white-space: nowrap; }
+.parte-barra { display: block; height: 4px; background: var(--regla); }
+.parte-barra > span { display: block; height: 100%; background: var(--amarillo); }
+.parte-pie { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; font-size: 12.5px; color: var(--texto-suave); }
+.parte-pie > span:last-child { margin-left: auto; white-space: nowrap; }
+.generico { color: var(--texto); }
+.generico::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; background: var(--fucsia); }
+.parte-abre { display: grid; gap: 3px; width: 100%; padding: 0; background: none; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.parte-nombre .boton-explicar { margin-left: 6px; }
+.parte-abre .icono-linea { margin-left: 4px; vertical-align: -2px; transition: transform 200ms var(--ease-out); }
+.parte-abre[aria-expanded="true"] .icono-linea { transform: rotate(180deg); }
+.parte-accion { color: var(--celeste); font-weight: 700; }
+@media (hover: hover) and (pointer: fine) { .parte-abre:hover .parte-nombre { color: var(--amarillo); } }
+.partes-resto { margin: 8px 0 0 4px; padding-left: 12px; border-left: 1px solid var(--regla); }
+.partes-resto h6 { font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-suave); margin: 10px 0 0; }
+.detalle-pie { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; }
+.detalle-pie .explica-pie { margin: 0; }
+.detalle-pie .cerrar-panel { margin-top: 0; }

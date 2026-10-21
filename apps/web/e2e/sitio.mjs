@@ -45,6 +45,9 @@ await paso("home", async () => {
 await paso("municipality", async () => {
   check(await page.getByRole("navigation", { name: "Ubicación" }).getByText(/Urubamba/).first().isVisible(), "entity: breadcrumb shows the province");
   check(await page.getByText(/Puesto \d+ de \d+/).isVisible(), "entity: rank among the province's municipalities");
+  const ruta = page.getByRole("navigation", { name: "De dónde a dónde va su presupuesto" });
+  check(await ruta.getByRole("link").count() === 4, "entity: the money map shows budget -> areas -> activities and works -> suppliers");
+  check(await ruta.getByRole("link", { name: /Contrata a/ }).getAttribute("href") === "#contratos", "entity: each step of the map links to its section");
   await page.locator("details summary", { hasText: "Transporte" }).first().click();
   await page.getByText("En qué lo usa").first().waitFor();
   check(true, "entity: opening Transporte loads its activities and projects");
@@ -60,6 +63,7 @@ await paso("municipality", async () => {
   check(await detalle.locator("li").count() > 1 && await detalle.getByText("Qué se compra o se paga").isVisible(),
         "entity: an activity opens its metas, expense types and sources");
   check(await detalle.getByText("De dónde sale el dinero").isVisible(), "entity: the detail says where the money comes from");
+  check(await detalle.locator(".parte .parte-barra").count() > 1, "entity: each expense type shows its share of the activity");
   const proyecto = page.locator("details[open] .items li", { has: page.locator(".etiqueta-tipo.proyecto") }).first();
   check(await proyecto.count() === 1, "entity: Transporte lists its projects");
   if (!(await proyecto.locator(".detalle-item").count())) await proyecto.getByRole("button", { name: "¿En qué exactamente?" }).click();
@@ -69,6 +73,8 @@ await paso("municipality", async () => {
   check(await proyecto.locator(".obra-entera").getByText("Costo total").isVisible(),
         "entity: a project's detail shows the whole project (total cost, spent since it began), not just this year");
   await sinScroll("entidad/300790 (detail open)");
+  await page.locator("details[open] .desglose-panel > .cerrar-panel", { hasText: "Cerrar «Transporte»" }).click();
+  check(await page.locator("details[open] .desglose-panel").count() === 0, "entity: «Cerrar «Transporte»» closes the área's panel");
   const nav = page.getByRole("navigation", { name: "Secciones de esta página" });
   await nav.getByRole("link", { name: "Obras" }).click();
   await page.waitForFunction(() => location.hash === "#obras");
@@ -150,6 +156,23 @@ await paso("suppliers", async () => {
   await page.getByText("Proveedor no encontrado").waitFor({ timeout: 15000 });
   check(!!r?.ok(), "supplier: an unknown RUC says so");
   await sinScroll("proveedores");
+});
+
+await paso("every expense type, none hidden", async () => {
+  await page.goto(`${BASE}/entidad/301289/#en-que`);  // Surco: its parks carry 50+ expense types
+  await page.locator("#en-que details summary", { hasText: "Ambiente" }).first().click();
+  await page.getByRole("button", { name: "¿En qué exactamente?" }).first().click();
+  const resto = page.locator(".detalle-item .parte-abre").first();
+  await resto.waitFor();
+  const n = Number((await resto.locator(".parte-nombre").innerText()).match(/Otros ([\d.,]+)/)?.[1]?.replace(/\D/g, "") ?? 0);
+  await resto.click();
+  check(n > 6 && await page.locator(".partes-resto .parte").count() === n, `detail: «Otros ${n} tipos de gasto» opens all of them, by family`);
+  check(await page.locator(".partes-resto h6").count() >= 1, "detail: the rest is grouped by family (bienes y servicios, personal…)");
+  check(await page.locator(".detalle-item .generico").count() >= 1, "detail: catch-all expense types are flagged as such");
+  await page.getByRole("tab", { name: "Por tipo de gasto" }).click();
+  check(await page.locator("#tipo-de-gasto details").count() > 1 && await page.locator("#por-area").isHidden(),
+        "entity: «Por tipo de gasto» shows the same budget by expense type");
+  await sinScroll("entidad/301289 (all expense types open)");
 });
 
 await paso("budget without description", async () => {
