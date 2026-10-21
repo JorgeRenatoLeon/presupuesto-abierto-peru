@@ -1,11 +1,12 @@
 name: Refresh budget data
 
-# Daily: check MEF for new publications (a few HEAD requests when nothing changed),
-# ingest them into the lake (Hugging Face dataset), rebuild the site and deploy it to
-# GitHub Pages. Since October 2026 MEF only publishes the *-Diario files (8-10 GB, re-stamped
-# daily), so a dataset-year is downloaded at most every 7 days (previous year: 30), see
-# pipeline/config.py CADENCIA_DIAS. The SEACE contracts (OECE, OCDS) are refreshed weekly in the same
-# step (pipeline/contratos.py); if their source is down, the site keeps the last ones on Hugging Face.
+# Daily: check MEF for new publications, ingest the current year's (MEF re-stamps its 8-10 GB
+# *-Diario file every day), rebuild the site and deploy it to GitHub Pages: the site is never more
+# than a day behind MEF. One publication a week is kept for good as a snapshot (the budget's
+# history, pipeline/config.py SNAPSHOT_DIAS); the daily ones only refresh the latest file, so the
+# Hugging Face dataset grows weekly. The previous year is downloaded monthly (CADENCIA_DIAS). SEACE
+# contracts and purchase orders (OECE) and investment projects (MEF) refresh weekly in the same step;
+# if a source is down, the site keeps the last copy on Hugging Face.
 #
 # Setup (once): HF_DATASET (repo variable or secret, e.g. "usuario/presupuesto-abierto-peru"),
 # repo secret HF_TOKEN (Hugging Face write token), Settings > Pages > Source: GitHub Actions.
@@ -41,9 +42,9 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    # A normal ingest takes ~30-45 min (one 8-10 GB file at ~8 MB/s); the cap bounds what a misbehaving
-    # MEF server can burn. Budget (public repo: free; if private, GitHub Pro via the Student Pack includes
-    # 3,000 min/month): ~1 min/day of checks + ~45 min per weekly ingest + CI ≈ 350 min/month. See README.
+    # A daily ingest takes ~30-45 min (one 8-10 GB file at ~8 MB/s); the cap bounds what a misbehaving
+    # MEF server can burn. Public repo: GitHub-hosted runners are free (~1,300 min/month). If the repo
+    # ever becomes private, set CADENCIA_DIAS back to 7 (GitHub Pro includes 3,000 min/month). See README.
     timeout-minutes: 120
     outputs:
       deploy: ${{ steps.plan.outputs.deploy }}
@@ -104,10 +105,10 @@ jobs:
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # A small commit per MEF publication: a public log of what was ingested, and repo
+      # A small commit per kept snapshot (weekly): a public log of what was ingested, and repo
       # activity that keeps GitHub from disabling this schedule after 60 idle days.
       - name: Record MEF publications in the repo
-        if: steps.update.outputs.changed == 'true'
+        if: steps.update.outputs.snapshot == 'true'
         continue-on-error: true
         run: |
           mkdir -p status
@@ -135,8 +136,8 @@ jobs:
           NEXT_PUBLIC_TELEGRAM_CANAL: ${{ vars.TELEGRAM_CANAL_URL }}   # optional: link shown on /metodologia
         run: npm ci && npm run build
 
-      # The built site in a real browser, with this run's data, before anyone sees it: 76 checks
-      # (municipality search, explanations, contracts and suppliers, province pages, follow list, alerts, 375 px layout).
+      # The built site in a real browser, with this run's data, before anyone sees it: ~115 checks
+      # (municipality search, explanations, contracts, orders, prices, map, follow list, alerts, 375 px layout).
       # A failure stops the deploy and the previous version stays online. About 1 minute.
       - name: Browser checks
         if: steps.plan.outputs.deploy == 'true'
