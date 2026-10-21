@@ -15,7 +15,7 @@ import { ListaObras } from "@/components/Obras";
 import { MasObras } from "@/components/MasObras";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { Bandas, type Banda } from "@/components/Bandas";
-import { ResumenContratos, ListaContratos } from "@/components/Contratos";
+import { ResumenContratos, ListaContratos, ComprasEnCurso } from "@/components/Contratos";
 import { RutaDinero, pasosEntidad } from "@/components/RutaDinero";
 import { VistasGasto } from "@/components/VistasGasto";
 import { CifrasOrdenes, PanelOrdenes } from "@/components/Ordenes";
@@ -222,7 +222,8 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           <p className="sub">
             {detenidas.length ? `${detenidas.length} sin ningún gasto ${corte}. ` : ""}
             Los de mayor presupuesto este año. Cada obra dura varios años: abajo de cada una, lo que cuesta entera, quién
-            la hace y su ficha oficial en el MEF.
+            la hace y su ficha oficial en el MEF.{" "}
+            <Link href={`/mapa/?${ub ? `dep=${ub.slice(0, 2)}&` : ""}sec=${info.sec_ejec}`} className="enlace-texto">Verlas en el mapa</Link>
           </p>
           <ListaObras obras={obras.slice(0, OBRAS_EN_PAGINA)} sec={fuenteContratos ? info.sec_ejec : undefined} />
           <MasObras sec={info.sec_ejec} desde={OBRAS_EN_PAGINA} total={obras.length} />
@@ -244,13 +245,17 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           {contratos?.n ? (
             <>
               <ResumenContratos r={contratos} nombres={nombresGasto} />
+              {contratos.procesos ? <ComprasEnCurso sec={info.sec_ejec} r={contratos.procesos} /> : null}
               <ListaContratos sec={info.sec_ejec} />
             </>
           ) : (
-            <div className="vacio">
-              No encontramos contratos de esta entidad en el SEACE en {periodo}. Puede que solo haga compras pequeñas
-              (que no pasan por el SEACE) o que su nombre ahí sea muy distinto al del MEF.
-            </div>
+            <>
+              <div className="vacio">
+                No encontramos contratos de esta entidad en el SEACE en {periodo}. Puede que solo haga compras pequeñas
+                (que no pasan por el SEACE) o que su nombre ahí sea muy distinto al del MEF.
+              </div>
+              {contratos?.procesos ? <ComprasEnCurso sec={info.sec_ejec} r={contratos.procesos} /> : null}
+            </>
           )}
           <p className="aviso-contratos">
             <strong>Lo contratado no es lo pagado:</strong> el Estado no publica cada pago a cada proveedor. Las compras

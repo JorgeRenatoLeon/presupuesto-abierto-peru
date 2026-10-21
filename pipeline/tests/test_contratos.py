@@ -123,9 +123,14 @@ def _contrato(i, comprador, nombre, fecha="2026-04-01", cui=None, monto=100.0, *
                 postores=kw.pop("postores", 3), **kw)
 
 
-def _escribir(con, tmp_path, monkeypatch, items=()):
-    lago, lago_items = tmp_path / "lago", tmp_path / "lago_items"
-    lago.mkdir(); lago_items.mkdir()
+def _escribir(con, tmp_path, monkeypatch, items=(), procesos=()):
+    lago, lago_items, lago_procesos = tmp_path / "lago", tmp_path / "lago_items", tmp_path / "lago_procesos"
+    lago.mkdir(); lago_items.mkdir(); lago_procesos.mkdir()
+    if procesos:
+        import pandas as pd
+        con.register("pr", pd.DataFrame([{c: p.get(c) for c in C.COLUMNAS_PROCESOS} for p in procesos], columns=C.COLUMNAS_PROCESOS))
+        con.execute(f"COPY pr TO '{lago_procesos / '2026.parquet'}' (FORMAT parquet)")
+    monkeypatch.setattr(C, "CARPETA_PROCESOS", lago_procesos)
     con.execute(f"""COPY (SELECT * REPLACE (CAST(ano AS INTEGER) AS ano, CAST(monto AS DOUBLE) AS monto,
                         CAST(monto_final AS DOUBLE) AS monto_final, CAST(postores AS INTEGER) AS postores
                         ) FROM contratos) TO '{lago / "2026.parquet"}' (FORMAT parquet)""")
@@ -244,3 +249,59 @@ def test_unit_prices_compared_across_the_state(tmp_path, monkeypatch):
     lineas = {c[3]: c[13][1][0] for c in d["c"]}
     assert lineas[900.0][4] == lineas[9000.0][4] and 29 < lineas[900.0][4] < 33, "the usual unit price"
     assert lineas[900.0][5] == 12, "how many purchases it comes from"
+
+
+def test_product_pages_price_history_who_sells_who_buys(tmp_path):
+    """An item bought often gets its page: the usual unit price, by month, by supplier and buyer;
+    a price off by more than 10x (a unit typed wrong) stays out of the lowest and highest."""
+    con = duckdb.connect()
+    filas = [("o%d" % i, "c1", "1", "1510150500233280", "DIESEL B5 S-50", "Combustible", None, "GALON", 100.0,
+              p * 100.0, "goods", 2026, f"2026-0{1 + i % 9}-10", "B%d" % (i % 3), "MUNI %d" % (i % 3),
+              "2010000000%d" % (i % 2), "GRIFO %d" % (i % 2), "doc%d" % i) for i, p in enumerate([16, 17, 18, 17, 16, 19, 1700])]
+    con.execute("""CREATE TABLE _base (ocid VARCHAR, contrato_id VARCHAR, pos VARCHAR, cubso VARCHAR, cubso_desc VARCHAR,
+                   unspsc_desc VARCHAR, unspsc VARCHAR, unidad VARCHAR, cantidad DOUBLE, total DOUBLE, categoria VARCHAR,
+                   ano INTEGER, fecha VARCHAR, comprador_id VARCHAR, comprador VARCHAR, proveedor_ruc VARCHAR,
+                   proveedor VARCHAR, doc_contrato VARCHAR)""")
+    con.executemany("INSERT INTO _base VALUES (" + ", ".join(["?"] * 18) + ")", filas)
+    con.execute("""CREATE TABLE _it AS SELECT ocid, contrato_id, pos, cubso, cubso_desc, unspsc, unspsc_desc,
+                   NULL::VARCHAR AS descripcion, cantidad, unidad, total FROM _base""")
+    con.execute("CREATE TABLE _todos AS SELECT DISTINCT ocid, contrato_id, categoria, ano, fecha, comprador_id, comprador, proveedor_ruc, proveedor, doc_contrato FROM _base")
+    con.execute("CREATE TABLE _enl AS SELECT 'B0' AS comprador_id, 'E0' AS sec_ejec")
+    con.execute("CREATE TABLE dim_entidad AS SELECT 'E0' AS sec_ejec, 'MUNICIPALIDAD CERO' AS nombre")
+    C._precios(con, 2025)
+    assert C._productos(con, tmp_path, None, 2025) == 1
+    d = json.loads((tmp_path / "producto" / "1510150500233280.json").read_text())
+    assert d["unidad"] == "galon" and d["r"]["mediana"] == 17 and d["r"]["max"] == 19 and d["r"]["revisar"] == 1
+    assert {v[0] for v in d["v"]} == {"20100000000", "20100000001"} and d["e"][0][0] in ("E0", None)
+    assert d["c"][0][0] == max(f[12] for f in filas), "latest purchase first"
+    assert len(d["x"]) == 7 and d["x"][0][0] <= d["x"][-1][0], "the chart's purchases, in time order"
+    assert json.loads((tmp_path / "productos" / "indice.json").read_text())["p"][0][:3] == ["1510150500233280", "DIESEL B5 S-50", "galon"]
+
+
+def test_procedures_under_way_and_deserted_ones(tmp_path, monkeypatch):
+    """What a unit is buying now (called, awarded and not signed), even before any contract, and how
+    many of its procedures were deserted."""
+    import datetime as dt
+    hoy = dt.date.today().isoformat()
+    proc = lambda i, comprador, nombre, estado, **kw: {**dict(ocid=f"p{i}", ano=int(hoy[:4]), comprador_id=comprador,
+        comprador=nombre, comprador_dep="CUSCO", publicado=hoy, estado=estado, objeto=f"OBJETO {i}",
+        metodo="Licitación Pública", categoria="works", valor=1000.0 * i), **kw}
+    con = _con_contratos([_contrato(1, "b-kimbiri", "MUNICIPALIDAD DISTRITAL DE KIMBIRI", cui="2500001")])
+    _escribir(con, tmp_path, monkeypatch, procesos=[
+        proc(1, "b-kimbiri", "MUNICIPALIDAD DISTRITAL DE KIMBIRI", "CONVOCADO", cierre=hoy + "T17:00",
+             docs='[["Bases Integradas", "https://prod1.seace.gob.pe/x"]]', postores=4),
+        proc(2, "b-kimbiri", "MUNICIPALIDAD DISTRITAL DE KIMBIRI", "CONSENTIDO", ganador="CONSTRUCTORA X SAC",
+             ganador_ruc="20111111111", monto_adjudicado=1900.0),
+        proc(3, "b-kimbiri", "MUNICIPALIDAD DISTRITAL DE KIMBIRI", "DESIERTO"),
+        proc(4, "b-sr", "MUNICIPALIDAD DISTRITAL DE SANTA ROSA - MELGAR", "CONVOCADO", comprador_dep="PUNO"),
+        dict(ocid="o1", ano=int(hoy[:4]), comprador_id="b-kimbiri", estado="CONVOCADO"),  # signed since: a contract now
+    ])
+    out = tmp_path / "json"
+    resumen, _ = C.exportar(con, out)
+    assert resumen["60"]["procesos"] == {"total": 3, "convocados": 1, "abiertos": 1, "por_firmar": 1, "valor_convocado": 1000.0,
+                                         "desiertos": 1, "nulos": 0, "cancelados": 0}
+    a = json.loads((out / "contratos" / "60.json").read_text())["a"]
+    assert [x[6] for x in a] == ["CONVOCADO", "CONSENTIDO"] and a[0][9] == [["Bases Integradas", "https://prod1.seace.gob.pe/x"]]
+    assert a[1][10] == "CONSTRUCTORA X SAC" and a[1][12] == 1900.0
+    d = json.loads((out / "contratos" / "40.json").read_text())
+    assert d["c"] == [] and len(d["a"]) == 1, "a buyer with no contract yet still shows what it is buying"

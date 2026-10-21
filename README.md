@@ -139,8 +139,17 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
   detail lists every expense type, the largest first and the rest grouped by family.
 - `/proveedores`, `/proveedor/?id=<RUC>` — **suppliers**: every company, consortium or person that signed with the State in the period
   (~50,000, one data file each, one page for all): which units contracted it, what it sells by expense type, its contracts and signals.
-- `/seguimiento` — **"Siguiendo"**: entities, regions and temas the visitor follows (☆ Seguir), kept in the browser
-  (no accounts), with alerts that are new since the last visit.
+- `/productos`, `/producto/?id=<CUBSO>` — **"Precios del Estado"**: each catalogue item bought at least five times by two or more units
+  (~1,400): the unit price of every purchase over time with the month's median and the usual range, who sells it and at what price,
+  who buys it, its latest purchases with the signed contract. Contract lines link to their item's page.
+- `/mapa` — **the map of projects**: this year's projects that MEF locates (Banco de Inversiones coordinates), sized by total cost,
+  orange when they have no spending this year; filter by department, entity (`?sec=`), signal or name/CUI. Leaflet + OpenStreetMap tiles, darkened in CSS.
+- Entity pages also show **what the unit is buying now**: SEACE procedures called or awarded but not yet signed (reference value,
+  deadline for offers, participants, the bidding documents), and how many were deserted, annulled or cancelled
+  (`lake/procesos/<año>.parquet`, from the same OCDS files as the contracts).
+- `/seguimiento` — **"Siguiendo"**: entities, regions, temas, suppliers and products the visitor follows (☆ Seguir), kept in the
+  browser (no accounts), with what is new since the last visit: alerts, contracts (entities, suppliers), purchases and a change
+  in the usual price (products).
 - `/alertas` — R1 entity PIM changed ≥20% (≥S/5M) between publications · R2 slow execution · R3 PIM far from PIA · R4 category changed ≥5% (≥S/100M) between publications · R5 approved budget ≥10% (≥S/100M) different from last year · R6 project of ≥S/5M with no spending by mid-year · R7 ≥35% of last year's spending made in December. Thresholds live in `pipeline/alerts.py`. The page loads one rule's or one department's list on demand (`?regla=…&dep=…` deep links).
 - **Notifications**: RSS feeds under `/data/feeds/` (high-priority alerts, changes by tema, projects with no progress, one per department) and the optional Telegram digest.
 - **Temas** (`pipeline/etiquetas/`): e.g. *obras por contrata*, *pagos a empresas y proveedores privados (aproximado)*, *laudos arbitrales*, *locadores*. The classifier says what money pays for, not who receives it, so these are documented approximations with a confidence level.

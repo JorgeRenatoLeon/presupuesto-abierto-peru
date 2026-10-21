@@ -127,6 +127,8 @@ export type TemaSeguible = { id: string; nombre: string; pia: number | null; pim
 
 /** Files under public/data, fetched by the browser (GitHub Pages serves the site under a base path). */
 export const urlDatos = (ruta: string) => `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/data/${ruta}`;
+/** A site path with the base path GitHub Pages serves it under (for links built outside <Link>). */
+export const withBase = (ruta: string) => `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${ruta}`;
 /** Official record of an investment project (MEF, Sistema de Seguimiento de Inversiones). */
 export const fichaInversion = (cui: string) => `https://ofi5.mef.gob.pe/ssi/Ssi/Index?codigo=${cui}&tipo=2`;
 /** Where citizens act on what they find (verified 2026-10-15). */

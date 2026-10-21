@@ -18,6 +18,10 @@ export type ContratosResumen = {
   de_otros?: number; monto_otros?: number | null;
   desde: string | null; hasta: string | null;
   por_tipo?: { o: number | null; b: number | null; s: number | null };
+  /** its procedures with no contract in the period: called and awarded-not-signed in the last 12
+   *  months, deserted (no valid bid), annulled, cancelled */
+  procesos?: { total: number; convocados: number; abiertos?: number; por_firmar: number; valor_convocado: number | null;
+               desiertos: number; nulos: number; cancelados: number };
   /** largest suppliers: [RUC or SEACE code, name, contracts, amount] */
   top: [string, string, number, number | null][];
   /** what the contracts buy, by the budget's expense group (2.3.2.4: maintenance): [group, contracts, amount] */
@@ -27,7 +31,9 @@ export type ContratosResumen = {
 
 /** What was bought, line by line: [lines in all, [[line, quantity, unit, amount, usual unit price of
  *  the same item across the State, purchases it comes from], …]] (lines priced far above usual first) */
-export type Lineas = [number, [string | null, number | null, string | null, number | null, number | null, number | null][]];
+/** [lines in all, [[line, quantity, unit, soles, usual unit price, purchases it comes from, catalogue
+ *  code when the item has its own price page], ...]] */
+export type Lineas = [number, [string | null, number | null, string | null, number | null, number | null, number | null, string?][]];
 
 /** [date, object, supplier, amount, final amount, method, category, bidders, CUIs, signed contract,
  *  events "type:document,…", buyer, expense type, lines] — indexes into the file's lists */
@@ -43,6 +49,22 @@ export type ArchivoContratos = {
   /** buyers: [name, RUC, how linked: "nombre" | "cui" | null = another entity, for a project of this one] */
   b: [string, string, "nombre" | "cui" | null][];
   c: FilaContrato[];
+  /** procedures under way, the latest first */
+  a?: FilaProceso[];
+};
+/** [published, offers close (date and time), object, method, category, reference value, SEACE state,
+ *  participants registered, CUIs, documents [[title, url]], winner, winner's RUC, amount awarded] */
+export type FilaProceso = [string | null, string | null, string, number, "o" | "b" | "s" | null, number | null, string | null,
+  number | null, string | null, [string, string][] | null, string | null, string | null, number | null];
+
+/** SEACE's state of a procedure, in words, with the badge it wears. */
+export const ESTADO_PROCESO: Record<string, { texto: string; tono: string; explica: string }> = {
+  CONVOCADO: { texto: "En convocatoria", tono: "nueva", explica: "Convocado: los proveedores pueden registrarse y presentar ofertas." },
+  ADJUDICADO: { texto: "Adjudicado", tono: "neutro", explica: "Se eligió al ganador; aún puede apelarse y falta firmar el contrato." },
+  CONSENTIDO: { texto: "Por firmar", tono: "neutro", explica: "El ganador quedó firme (nadie apeló o se resolvió): falta firmar el contrato." },
+  APELADO: { texto: "Apelado", tono: "media", explica: "Un participante apeló el resultado." },
+  SUSPENDIDO: { texto: "Suspendido", tono: "media", explica: "El procedimiento está suspendido." },
+  RETROTRAIDO_POR_RESOLUCION: { texto: "Retrotraído", tono: "media", explica: "Una resolución lo devolvió a una etapa anterior." },
 };
 
 /** proveedor/<id>.json: everything a supplier signed with the State in the period */

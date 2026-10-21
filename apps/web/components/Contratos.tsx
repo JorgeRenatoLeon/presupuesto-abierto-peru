@@ -5,12 +5,14 @@ import Link from "next/link";
 import { ChevronDown, FileText } from "lucide-react";
 import { fmtSoles, fmtPct, fmtNombre, fichaInversion, urlDatos } from "@/lib/types";
 import {
-  CATEGORIA, EVENTOS, cargarDatos, coincideGasto, comparaPrecio, esRuc, etiquetaGasto, eventosDe, grupoGasto, metodoInfo,
+  CATEGORIA, ESTADO_PROCESO, EVENTOS, cargarDatos, coincideGasto, comparaPrecio, esRuc, etiquetaGasto, eventosDe, grupoGasto, metodoInfo,
   mismoGasto, plano, urlDocumento,
-  type ArchivoContratos, type ArchivoProveedor, type ContratosResumen, type FilaContrato, type Lineas, type NombresGasto, type Via,
+  type ArchivoContratos, type ArchivoProveedor, type ContratosResumen, type FilaContrato, type FilaProceso, type Lineas,
+  type NombresGasto, type Via,
 } from "@/lib/contratos";
 import { KpiCard } from "@/components/ui";
 import { ObraCompleta } from "@/components/ObraCompleta";
+import { urlProducto } from "@/lib/productos";
 
 const PAGINA = 15;
 const MESES_CORTOS = ["", "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -83,6 +85,7 @@ export function ResumenContratos({ r, nombres }: { r: ContratosResumen; nombres?
   if (r.extra) senales.push({ tono: "media", texto: `${fmtSoles(r.extra)} más de lo firmado, por adicionales en ${plural(r.con_adicionales ?? 0, "contrato", "contratos")}.` });
   if (r.precio_alto) senales.push({ tono: "media", texto: `${plural(r.precio_alto, "contrato pagó", "contratos pagaron")} por algún producto entre 2 y 10 veces lo que el Estado suele pagar por él.` });
   if (r.de_otros) senales.push({ tono: "info", texto: `${plural(r.de_otros, "contrato lo firmó", "contratos los firmó")} otra entidad para obras de esta (${fmtSoles(r.monto_otros)}).` });
+  if (r.procesos?.desiertos) senales.push({ tono: "info", texto: `${plural(r.procesos.desiertos, "procedimiento quedó desierto", "procedimientos quedaron desiertos")}: nadie presentó una oferta válida${r.procesos.desiertos >= 5 ? " (muchos desiertos pueden indicar bases difíciles de cumplir o precios de referencia bajos)" : ""}.` });
   const grupos = (r.por_gasto ?? []).filter(([g]) => nombres?.[g]);
   const maxGrupo = Math.max(...grupos.map(([, , m]) => m ?? 0), 1);
   return (
@@ -333,12 +336,14 @@ function LineasCompradas({ lineas, compacto, objeto }: { lineas: Lineas; compact
     <div className="ct-lineas">
       <span className="mp-etq">Qué se compró</span>
       <ul>
-        {mostradas.map(([desc, cant, unidad, total, mediana, compras], k) => {
+        {mostradas.map(([desc, cant, unidad, total, mediana, compras, producto], k) => {
           const unitario = cant && cant > 1 && total ? total / cant : null;
           const nivel = comparaPrecio(unitario, mediana);
           return (
             <li key={k}>
-              <span className="ct-linea-desc">{desc}</span>
+              {producto
+                ? <Link className="ct-linea-desc ct-enlace-proveedor" href={urlProducto(producto)}>{desc}</Link>
+                : <span className="ct-linea-desc">{desc}</span>}
               <span className="ct-linea-cifra">
                 {[cant != null ? `${numero(cant)} ${unidades(unidad, cant)}`.trim() : null,
                   unitario ? `${fmtUnitario(unitario)} c/u` : null,
@@ -602,6 +607,93 @@ export function ContratosDeGasto({ sec, prefijo }: { sec: string; prefijo: strin
       ) : null}
       {d && !grupos.length && (prefijo === "2.3" || prefijo === "2.6") ? (
         <p className="explica-nota">No encontramos contratos del SEACE de este tipo de gasto en esta entidad.</p>
+      ) : null}
+    </div>
+  );
+}
+
+/** "21 oct 2026, 17:00" */
+const fechaHora = (iso: string) => `${fechaCorta(iso.slice(0, 10))}${iso.length > 10 ? `, ${iso.slice(11, 16)}` : ""}`;
+
+/** One procedure under way: what is being bought, its state, until when offers are taken, the
+ *  bidding documents and, once awarded, to whom. */
+function Proceso({ f, metodos }: { f: FilaProceso; metodos: string[] }) {
+  const [publicado, cierre, objeto, m, cat, valor, estado, postores, cui, docs, ganador, ganadorRuc, adjudicado] = f;
+  const abierto = estado === "CONVOCADO" && !!cierre && cierre >= new Date().toISOString().slice(0, 16);
+  const vencido = estado === "CONVOCADO" && !!cierre && !abierto;
+  const e = vencido ? { texto: "Plazo vencido, sin resultado", tono: "neutro", explica: "Pasó la fecha de ofertas y el SEACE aún no registra el resultado." }
+    : estado ? ESTADO_PROCESO[estado] : null;
+  const cuis = (cui ?? "").split(",").filter(Boolean);
+  return (
+    <li className="contrato proceso">
+      <div className="ct-cab">
+        {publicado ? <time dateTime={publicado}>{fechaCorta(publicado)}</time> : null}
+        {e ? <span className={`badge ${e.tono}`} title={e.explica}>{e.texto}</span> : null}
+        {cat ? <span className="etiqueta-tipo">{CATEGORIA[cat]}</span> : null}
+        <span className="ct-estado">{metodos[m] || ""}</span>
+      </div>
+      <p className="ct-objeto">{objeto || "Sin descripción en el SEACE"}</p>
+      <div className="ct-cifras">
+        <span className="ct-quien">
+          {ganador ? (
+            <>
+              <span className="mp-etq">Ganador</span>
+              {ganadorRuc && /^\d{11}$/.test(ganadorRuc) ? <Link href={urlProveedor(ganadorRuc)} className="ct-enlace-proveedor"><b>{ganador}</b></Link> : <b>{ganador}</b>}
+              {ganadorRuc ? <span className="ct-ruc">RUC {ganadorRuc}</span> : null}
+            </>
+          ) : (
+            <>
+              <span className="mp-etq">{abierto ? "Recibe ofertas hasta" : cierre ? "Ofertas hasta" : "Plazo"}</span>
+              <b>{cierre ? fechaHora(cierre) : "No indicado"}</b>
+              {postores != null ? <span className="ct-ruc">{plural(postores, "participante registrado", "participantes registrados")}</span> : null}
+            </>
+          )}
+        </span>
+        <span className="ct-cuanto">
+          <span className="mp-etq">{adjudicado ? "Adjudicado por" : "Valor referencial"}</span>
+          <b>{fmtSoles(adjudicado ?? valor)}</b>
+          {adjudicado && valor ? <small>Valor referencial {fmtSoles(valor)}</small> : null}
+        </span>
+      </div>
+      {docs?.length || cuis.length ? (
+        <div className="ct-docs">
+          {(docs ?? []).map(([titulo, url], i) => (
+            <a key={i} href={url} target="_blank" rel="noopener"><FileText size={14} aria-hidden /> {titulo}</a>
+          ))}
+          {cuis.map((x) => <a key={x} href={fichaInversion(x)} target="_blank" rel="noopener">Obra CUI {x} ↗</a>)}
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+/** "Lo que está comprando ahora": procedures called or awarded in the last twelve months that have no
+ *  signed contract yet, from the unit's contracts file. */
+export function ComprasEnCurso({ sec, r }: { sec: string; r: NonNullable<ContratosResumen["procesos"]> }) {
+  const [d, setD] = useState<ArchivoContratos | null | undefined>(undefined);
+  const [ver, setVer] = useState(5);
+  useEffect(() => { cargarContratos(sec).then(setD); }, [sec]);
+  const filas = d?.a ?? [];
+  if (!r.convocados && !r.por_firmar) return null;
+  return (
+    <div className="en-curso">
+      <h3 className="ct-h3">Lo que está comprando ahora</h3>
+      <p className="ct-nota-gasto">
+        {[r.convocados ? `${plural(r.convocados, "procedimiento convocado", "procedimientos convocados")}${r.valor_convocado ? ` por ${fmtSoles(r.valor_convocado)} (valor referencial)` : ""}${r.abiertos ? `, ${plural(r.abiertos, "aún recibe", "aún reciben")} ofertas` : ""}` : null,
+          r.por_firmar ? `${plural(r.por_firmar, "adjudicado sin contrato firmado", "adjudicados sin contrato firmado")}` : null]
+          .filter(Boolean).join(" y ")}
+        {" "}en los últimos doce meses, según el SEACE. Las bases se descargan del SEACE.
+      </p>
+      {d === undefined ? <p className="explica cargando">Cargando…</p> : null}
+      {filas.length ? (
+        <ol className="contratos">
+          {filas.slice(0, ver).map((f, i) => <Proceso key={i} f={f} metodos={d!.m} />)}
+        </ol>
+      ) : null}
+      {filas.length > ver ? (
+        <button type="button" className="tab" style={{ marginTop: 10 }} onClick={() => setVer((v) => v + 10)}>
+          Ver {Math.min(10, filas.length - ver)} más
+        </button>
       ) : null}
     </div>
   );

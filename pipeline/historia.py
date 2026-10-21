@@ -60,7 +60,8 @@ def _rutas(fuente: str, ano: int, remotos: set[str]) -> list[str]:
         pref = (f"{fuente}/{ano}.parquet", f"snapshots/{fuente}/{ano}/", f"cambios/{fuente}/{ano}/")
         return sorted(r for r in remotos if r == pref[0] or r.startswith(pref[1:]))
     if fuente == "contratos":
-        return sorted(r for r in remotos if r in (f"contratos/{ano}.parquet", f"contratos_items/{ano}.parquet"))
+        return sorted(r for r in remotos if r in (f"contratos/{ano}.parquet", f"contratos_items/{ano}.parquet",
+                                                  f"procesos/{ano}.parquet"))
     return sorted(r for r in remotos if r.startswith(f"ordenes/{ano}/"))
 
 

@@ -724,3 +724,49 @@ p a { overflow-wrap: anywhere; }
 /* Purchase and service orders */
 .ct-estado { font-size: 12px; color: var(--texto-suave); }
 .contrato.orden .ct-cuanto b { font-size: 19px; }
+
+/* Product prices: each purchase, the month's median, the usual range */
+.grafico-precios { margin: 4px 0 8px; }
+.chart-svg .banda-usual, .leyenda-html .banda-usual { fill: var(--panel-2); }
+.chart-svg .linea-mediana, .leyenda-html .linea-mediana { fill: none; stroke: var(--texto-fuerte); stroke-width: 2; }
+.chart-svg .punto, .leyenda-html .punto { fill: var(--amarillo); stroke: var(--negro); stroke-width: 1; }
+.chart-svg .punto.fuera { fill: var(--negro); stroke: var(--naranja); stroke-width: 2; }
+.chart-svg .punto-zona { fill: transparent; cursor: help; }
+.leyenda-html svg { vertical-align: -1px; margin-right: 6px; }
+.precio-frente { font-weight: 700; }
+.precio-frente.sube { color: var(--naranja); }
+.precio-frente.alto { color: var(--naranja); }
+.ct-cuanto small.alto { color: var(--naranja); font-weight: 700; }
+
+/* "Siguiendo": what is new since the last visit */
+.novedades { margin-top: 10px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--regla); font-size: 14px; display: grid; gap: 6px; }
+.novedades ul { list-style: none; display: grid; gap: 4px; font-size: 13.5px; }
+.novedades .sube { color: var(--naranja); font-weight: 700; }
+.novedad-fecha { font-weight: 700; color: var(--texto-fuerte); }
+.novedad-quien { color: var(--texto-suave); }
+
+/* Procedures under way */
+.en-curso { margin-top: 6px; }
+.contrato.proceso .ct-quien b { font-size: 15px; }
+
+/* Map of projects */
+.mapa-controles { margin-bottom: 4px; }
+@media (min-width: 768px) { .mapa-controles { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); } }
+.mapa-caja { height: min(70vh, 620px); min-height: 360px; margin-top: 10px; border: 1px solid var(--regla); background: var(--negro); }
+.mapa-caja .leaflet-container, .mapa-caja.leaflet-container { background: var(--negro); font-family: var(--f-texto); }
+.mapa-obras .leaflet-popup-content-wrapper, .mapa-obras .leaflet-popup-tip { background: var(--panel); color: var(--texto); border-radius: 0; box-shadow: none; border: 1px solid var(--regla); }
+.mapa-obras .leaflet-popup-content { margin: 12px 14px; font-size: 13px; line-height: 1.45; }
+.mapa-ficha { display: grid; gap: 4px; }
+.mapa-ficha strong { color: var(--texto-fuerte); font-size: 14px; }
+.mapa-ficha a { color: var(--celeste); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.mapa-ficha .parado { color: var(--naranja); font-weight: 700; }
+.mapa-obras .leaflet-bar a { background: var(--panel); color: var(--texto-fuerte); border-color: var(--regla); border-radius: 0; }
+.mapa-obras .leaflet-control-attribution { background: rgba(14, 14, 16, 0.8); color: var(--texto-suave); }
+.mapa-obras .leaflet-control-attribution a { color: var(--celeste); }
+/* OpenStreetMap's tiles, inverted into the poster's dark ground */
+.mapa-caja .teselas-oscuras { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.4); }
+/* 1024-1279px: the top nav needs the room; the wordmark keeps its S/ block, Siguiendo its star */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .brand-texto, .siguiendo-texto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .siguiendo-enlace { padding: 8px; }
+}

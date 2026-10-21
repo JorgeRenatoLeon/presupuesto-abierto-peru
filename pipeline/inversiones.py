@@ -179,4 +179,47 @@ def exportar(con, out) -> dict:
     for sec, obras in por_sec.items():
         (carpeta / f"{sec}.json").write_text(json.dumps(obras, ensure_ascii=False, separators=(",", ":"), default=str))
     print(f"  json: obras/*.json ({len(por_sec)} units, {len(resumen):,} projects with their whole cost)")
+    _mapa(con, out, detalle, seg)
     return resumen
+
+
+SENALES_MAPA = {"sin_avance": 1, "avance_bajo": 2, "recortada": 3}
+
+
+def _mapa(con, out, detalle, seg: str) -> None:
+    """json/mapa/<dept>.json: this year's projects that MEF locates, one row each, for the map:
+    [lat, lon, CUI, unit, name, total cost, share spent since it began, physical progress, signal
+    (1 no spending this year, 2 very low, 3 budget cut), this year's budget, this year's spending,
+    a problem reported]; the units' names once per file; mapa/indice.json: the departments."""
+    carpeta = out / "mapa"
+    for viejo in carpeta.glob("*.json"):
+        viejo.unlink()
+    carpeta.mkdir(parents=True, exist_ok=True)
+    filas = con.execute(f"""
+        WITH o AS (SELECT cui, arg_max(sec_ejec, pim) AS sec_ejec, arg_max(entidad, pim) AS entidad, arg_max(nombre, pim) AS nombre,
+                          arg_max(dept, pim) AS dept, arg_max(dept_nombre, pim) AS dept_nombre, arg_max(senal, pim) AS senal,
+                          sum(pim) AS pim, sum(devengado) AS devengado
+                   FROM obras GROUP BY cui)
+        SELECT o.dept, o.dept_nombre, d.latitud::DOUBLE, d.longitud::DOUBLE, o.cui, o.sec_ejec, o.entidad, o.nombre,
+               d.costo_actualizado::DOUBLE,
+               coalesce(s.devengado_acumulado, d.dev_acum_ant + coalesce(d.dev_actual, 0))::DOUBLE,
+               coalesce(d.avance_fisico, s.avance_fisico)::DOUBLE, o.senal, o.pim, o.devengado, s.problema
+        FROM o JOIN '{detalle}' d USING (cui) LEFT JOIN {seg} s USING (cui)
+        WHERE d.latitud BETWEEN -19 AND 0 AND d.longitud BETWEEN -82 AND -68
+        ORDER BY o.dept, o.pim DESC NULLS LAST""").fetchall()
+    por_dep: dict[str, dict] = {}
+    for (dep, dep_nombre, lat, lon, cui, sec, entidad, nombre, costo, acum, fisico, senal, pim, dev, problema) in filas:
+        if not dep or not dep.isdigit():
+            continue
+        f = por_dep.setdefault(dep, {"nombre": dep_nombre, "e": {}, "p": []})
+        f["e"].setdefault(sec, entidad)
+        f["p"].append([round(lat, 5), round(lon, 5), cui, sec, (nombre or "")[:110], round(costo) if costo else None,
+                       round(acum / costo, 3) if costo and acum is not None else None,
+                       round(fisico, 1) if fisico is not None else None, SENALES_MAPA.get(senal or "", 0),
+                       round(pim or 0), round(dev or 0), 1 if problema_real(problema) else 0])
+    indice = []
+    for dep, f in sorted(por_dep.items()):
+        (carpeta / f"{dep}.json").write_text(json.dumps({"e": f["e"], "p": f["p"]}, ensure_ascii=False, separators=(",", ":")))
+        indice.append([dep, f["nombre"], len(f["p"]), sum(1 for x in f["p"] if x[8] == 1)])
+    (carpeta / "indice.json").write_text(json.dumps(indice, ensure_ascii=False, separators=(",", ":")))
+    print(f"  json: mapa/*.json ({sum(x[2] for x in indice):,} projects located in {len(indice)} departments)")

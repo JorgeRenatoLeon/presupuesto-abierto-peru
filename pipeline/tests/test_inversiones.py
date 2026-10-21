@@ -20,7 +20,10 @@ def test_exports_each_project_whole(tmp_path, monkeypatch):
     lago = tmp_path / "inversiones"
     lago.mkdir()
     con = duckdb.connect()
-    con.execute("CREATE TABLE obras AS SELECT * FROM (VALUES ('E1', '2595346'), ('E1', '9999999')) t(sec_ejec, cui)")
+    con.execute("""CREATE TABLE obras AS SELECT * FROM (VALUES
+        ('E1', '2595346', 'ADQUISICION DE CAMARAS', 'MUNICIPALIDAD DE SURCO', '15', 'LIMA', NULL, 3149878.0, 3149877.45),
+        ('E1', '9999999', 'OTRA OBRA', 'MUNICIPALIDAD DE SURCO', '15', 'LIMA', 'sin_avance', 100.0, 0.0))
+        t(sec_ejec, cui, nombre, entidad, dept, dept_nombre, senal, pim, devengado)""")
     con.execute(f"""COPY (SELECT '2595346' AS cui, 'CAMARAS' AS nombre, 'E1' AS sec_ejec, 'ACTIVO' AS estado, 'APROBADO' AS situacion,
         'PROYECTO' AS tipo, 'POR CONTRATA' AS modalidad, 14115165.72 AS monto_viable, 23185976.2 AS costo_actualizado,
         0.0 AS monto_laudo, 20036098.75 AS dev_acum_ant, 3149877.45 AS dev_actual, 3149878.0 AS pim_actual, 0.0 AS saldo,
@@ -44,3 +47,7 @@ def test_exports_each_project_whole(tmp_path, monkeypatch):
     assert obra["acumulado"] == 23185976.2 and obra["ubicacion"] == [-12.145, -77.005]
     assert obra["reporte"] == ["2026-10-15", "CONTRATO 030-2024 POR S/ 10,500,000. ADICIONAL APROBADO.", None, None], \
         "the latest report; 'ninguno' is no problem, and no problem needs no action"
+    mapa = json.loads((out / "mapa" / "15.json").read_text())
+    assert mapa["e"] == {"E1": "MUNICIPALIDAD DE SURCO"} and len(mapa["p"]) == 1, "only projects MEF locates"
+    assert mapa["p"][0][:3] == [-12.145, -77.005, "2595346"] and mapa["p"][0][6] == 1.0 and mapa["p"][0][8] == 0
+    assert json.loads((out / "mapa" / "indice.json").read_text()) == [["15", "LIMA", 1, 0]]

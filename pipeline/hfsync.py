@@ -71,7 +71,7 @@ def pull() -> None:
     desde = max(lake.years(m, "gasto"), default=0) - (ANOS_SITIO - 1)
     # purchase orders (ordenes.py): the current year's months, which the site summarizes
     c = [f for f in sorted(remotos) if f in ("contratos/fuente.json", "inversiones/fuente.json", "ordenes/fuente.json")
-         or ((m_ := re.fullmatch(r"contratos(_items)?/(\d{4})\.parquet", f)) and int(m_.group(2)) >= desde)
+         or ((m_ := re.fullmatch(r"(contratos|contratos_items|procesos)/(\d{4})\.parquet", f)) and int(m_.group(2)) >= desde)
          or re.fullmatch(r"inversiones/\w+\.parquet", f)
          or ((m_ := re.fullmatch(r"ordenes/(\d{4})/\d{2}\.parquet", f)) and int(m_.group(1)) > desde)]
     for f in c:
@@ -184,6 +184,8 @@ configs:
   data_files: "inversiones/detalle.parquet"
 - config_name: ordenes
   data_files: "ordenes/*/*.parquet"
+- config_name: procesos
+  data_files: "procesos/*.parquet"
 ---
 
 # Presupuesto Abierto Perú — datos
@@ -206,6 +208,7 @@ presupuestal y los meses como columnas.
 | `contratos/<año>.parquet` | Contratos firmados en el SEACE (proveedor y RUC, monto, monto final, procedimiento, postores, CUI de la obra, documentos), registros actualizados ese año. Fuente: OECE, datos de contrataciones abiertas (OCDS) vía [Open Contracting Partnership](https://data.open-contracting.org/en/publication/135), CC BY 4.0 |
 | `inversiones/detalle.parquet`, `inversiones/seguimiento.parquet` | Cada proyecto de inversión completo (Banco de Inversiones del MEF): costo actualizado y viable, devengado acumulado, avance físico, modalidad, ubicación, y el último reporte de la entidad (Formato 12B: situación, problemas, acciones) |
 | `contratos_items/<año>.parquet` | Qué se compró en cada contrato, línea por línea: código del catálogo (CUBSO y UNSPSC), descripción, cantidad, unidad y monto. Se une a `contratos` por `ocid` y `contrato_id` |
+| `procesos/<año>.parquet` | Procedimientos del SEACE aún sin contrato firmado: convocados (con sus bases y plazos), adjudicados por firmar, desiertos, nulos o cancelados; valor referencial, participantes, ganador. Misma fuente que `contratos` |
 | `ordenes/<año>/<mes>.parquet` | Órdenes de compra y de servicio que cada entidad registra en el SEACE (compras de hasta 8 UIT, servicios públicos, catálogo electrónico y órdenes que ejecutan contratos): entidad y RUC, descripción, proveedor y RUC, monto, estado, fechas. Un archivo por mes de registro. Fuente: OECE, [Portal de Datos Abiertos](https://www.gob.pe/14272-acceder-al-portal-de-datos-abiertos-del-oece) |
 
 ```sql

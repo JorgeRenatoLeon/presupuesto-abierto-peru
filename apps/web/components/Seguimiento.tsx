@@ -6,8 +6,11 @@ import Link from "next/link";
 import type { Alerta, ComparacionResumen, Localidad, Obra, TemaSeguible } from "@/lib/types";
 import { fmtSoles, fmtPct, fmtDelta, fmtVariacion, fmtLugar, fmtFecha, urlDatos } from "@/lib/types";
 import {
-  leerSeguidos, guardarSeguidos, mismo, claveAlerta, leerAlertasVistas, guardarAlertasVistas, type Seguido,
+  leerSeguidos, guardarSeguidos, mismo, claveAlerta, leerAlertasVistas, guardarAlertasVistas, marcarVisto, type Seguido,
 } from "@/lib/seguimiento";
+import type { ArchivoContratos, ArchivoProveedor } from "@/lib/contratos";
+import { fmtPrecio, urlProducto, type ArchivoProducto } from "@/lib/productos";
+import { urlProveedor } from "@/components/Contratos";
 import { AlertaCard } from "@/components/AlertaCard";
 import { BarraProgreso } from "@/components/ui";
 
@@ -16,7 +19,14 @@ type EntidadPayload = {
   obras: Obra[]; n_obras: number; alertas: Alerta[];
 };
 type Temas = Record<string, TemaSeguible[]>;
-type Datos = { entidad?: EntidadPayload; departamento?: Localidad; tema?: TemaSeguible; error?: boolean };
+type Datos = {
+  entidad?: EntidadPayload; departamento?: Localidad; tema?: TemaSeguible; proveedor?: ArchivoProveedor; producto?: ArchivoProducto;
+  /** a followed entity's contracts, to tell the new ones */
+  contratos?: ArchivoContratos | null;
+  error?: boolean;
+};
+/** Contracts or purchases dated after what this item showed last time: [date, what, who, soles][] */
+type Novedad = [string, string, string, number | null];
 
 const clave = (s: Seguido) => `${s.tipo}:${s.dimension ?? ""}:${s.id}`;
 const cache = new Map<string, Promise<unknown>>();
@@ -42,7 +52,12 @@ export function Seguimiento() {
     for (const s of seguidos) {
       const k = clave(s);
       const guardar = (d: Datos) => setDatos((prev) => ({ ...prev, [k]: d }));
-      if (s.tipo === "entidad") traer<EntidadPayload>(`entidad/${s.id}.json`).then((entidad) => guardar({ entidad }), () => guardar({ error: true }));
+      if (s.tipo === "entidad") {
+        Promise.all([traer<EntidadPayload>(`entidad/${s.id}.json`), traer<ArchivoContratos>(`contratos/${s.id}.json`).catch(() => null)])
+          .then(([entidad, contratos]) => guardar({ entidad, contratos }), () => guardar({ error: true }));
+      }
+      if (s.tipo === "proveedor") traer<ArchivoProveedor>(`proveedor/${s.id}.json`).then((proveedor) => guardar({ proveedor }), () => guardar({ error: true }));
+      if (s.tipo === "producto") traer<ArchivoProducto>(`producto/${s.id}.json`).then((producto) => guardar({ producto }), () => guardar({ error: true }));
       if (s.tipo === "departamento") traer<Localidad>(`localidad/${s.id}.json`).then((departamento) => guardar({ departamento }), () => guardar({ error: true }));
       if (s.tipo === "tema") traer<Temas>("seguimiento/temas.json").then(
         (t) => guardar((t[s.dimension ?? "funcion"] ?? []).find((n) => n.id === s.id) ? { tema: t[s.dimension ?? "funcion"].find((n) => n.id === s.id) } : { error: true }),
@@ -58,8 +73,14 @@ export function Seguimiento() {
 
   // once everything is on screen, remember it: next visit only the new ones get "Nueva"
   useEffect(() => {
-    if (cargados) guardarAlertasVistas(new Set([...(vistas ?? []), ...actuales]));
-  }, [cargados, actuales, vistas]);
+    if (!cargados) return;
+    guardarAlertasVistas(new Set([...(vistas ?? []), ...actuales]));
+    for (const x of seguidos ?? []) {
+      const d = datos[clave(x)];
+      const hasta = ultimaFecha(d);
+      if (hasta) marcarVisto(x, { hasta, precio: d?.producto?.r.mediana });
+    }
+  }, [cargados, actuales, vistas, seguidos, datos]);
 
   const dejar = (s: Seguido) => {
     const resto = leerSeguidos().filter((x) => !mismo(x, s));
@@ -98,6 +119,7 @@ export function Seguimiento() {
             {!d ? <div className="vacio">Cargando…</div> : d.error ? <div className="vacio">No encontramos datos actuales de esto.</div> : (
               <>
                 <Resumen d={d} s={s} />
+                <Novedades lista={novedades(d, s)} s={s} d={d} />
                 {alertasDe(d).length ? (
                   <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
                     {alertasDe(d).slice(0, 5).map((a, i) => (
@@ -114,7 +136,83 @@ export function Seguimiento() {
   );
 }
 
+/** The latest contract or purchase date an item shows: what "visto" remembers. */
+function ultimaFecha(d: Datos | undefined): string | null {
+  if (!d) return null;
+  if (d.proveedor) return d.proveedor.r.hasta ?? null;
+  if (d.producto) return d.producto.r.hasta ?? null;
+  if (d.contratos) return d.contratos.c.reduce((m, c) => (c[0] > m ? c[0] : m), "") || null;
+  return null;
+}
+
+function novedades(d: Datos, s: Seguido): Novedad[] | null {
+  const desde = s.visto?.hasta;
+  if (!desde) return null;  // first visit since following: everything is the baseline
+  if (d.proveedor) {
+    return d.proveedor.c.filter((c) => c[0] > desde).map((c) => [c[0], c[1], d.proveedor!.e[c[2]]?.[1] ?? "", c[3]]);
+  }
+  if (d.producto) {
+    return d.producto.c.filter((c) => c[0] > desde).map((c) => [c[0], `${fmtPrecio(c[6])} por ${d.producto!.unidad}`, c[2], c[7]]);
+  }
+  if (d.contratos) {
+    const p = d.contratos.p;
+    return d.contratos.c.filter((c) => c[0] > desde).map((c) => [c[0], c[1], c[2] != null ? p[c[2]]?.[1] ?? "" : "", c[3]]);
+  }
+  return null;
+}
+
+/** "3 contratos nuevos desde tu última visita", and for a product whether its usual price moved. */
+function Novedades({ lista, s, d }: { lista: Novedad[] | null; s: Seguido; d: Datos }) {
+  const antes = s.visto?.precio;
+  const ahora = d.producto?.r.mediana;
+  const cambio = antes && ahora ? ahora / antes - 1 : null;
+  if (!lista && cambio == null) return null;
+  const que = s.tipo === "producto" ? ["compra nueva", "compras nuevas"] : ["contrato nuevo", "contratos nuevos"];
+  return (
+    <div className="novedades">
+      {cambio != null && Math.abs(cambio) >= 0.05 ? (
+        <p className={cambio > 0 ? "sube" : ""}>
+          Su precio usual {cambio > 0 ? "subió" : "bajó"} {fmtPct(Math.abs(cambio))}: de {fmtPrecio(antes)} a {fmtPrecio(ahora)}.
+        </p>
+      ) : null}
+      {lista ? (
+        <p><strong>{lista.length ? `${lista.length} ${lista.length === 1 ? que[0] : que[1]} desde tu última visita`
+          : `Sin ${que[1]} desde tu última visita.`}</strong></p>
+      ) : null}
+      {lista?.length ? (
+        <ul>
+          {lista.slice(0, 5).map(([f, que_, quien, monto], i) => (
+            <li key={i}>
+              <span className="novedad-fecha">{fmtFecha(f)}</span> {que_}
+              {quien ? <> · <span className="novedad-quien">{quien}</span></> : null}
+              {monto ? <> · {fmtSoles(monto)}</> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 function Resumen({ d, s }: { d: Datos; s: Seguido }) {
+  if (d.proveedor) {
+    const r = d.proveedor.r;
+    return (
+      <>
+        <p className="sub">Proveedor · {r.n.toLocaleString("es-PE")} contratos con {r.entidades.toLocaleString("es-PE")} entidades · {fmtSoles(r.monto)}</p>
+        <Link className="tab" href={urlProveedor(s.id)} style={{ display: "inline-block", marginTop: 4 }}>Ver el proveedor <ArrowRight className="icono-linea" aria-hidden /></Link>
+      </>
+    );
+  }
+  if (d.producto) {
+    const r = d.producto.r;
+    return (
+      <>
+        <p className="sub">Producto · precio usual {fmtPrecio(r.mediana)} por {d.producto.unidad} · {r.n.toLocaleString("es-PE")} compras</p>
+        <Link className="tab" href={urlProducto(s.id)} style={{ display: "inline-block", marginTop: 4 }}>Ver el producto <ArrowRight className="icono-linea" aria-hidden /></Link>
+      </>
+    );
+  }
   if (d.entidad) {
     const i = d.entidad.info;
     const avance = i.pim ? (i.devengado ?? 0) / i.pim : null;

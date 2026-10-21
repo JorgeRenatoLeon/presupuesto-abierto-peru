@@ -14,7 +14,8 @@ const principales: { href: string; etiqueta: string; icono: LucideIcon }[] = [
   { href: "/explorar/", etiqueta: "Explorar", icono: Search },
 ];
 // Ingresos and Guía live in the footer and on the pages that need them
-const secundarios = [{ href: "/proveedores/", etiqueta: "Proveedores" }, { href: "/glosario/", etiqueta: "Glosario" }];
+// (Precios and Glosario: footer, and linked from the pages that use them)
+const secundarios = [{ href: "/mapa/", etiqueta: "Mapa" }, { href: "/proveedores/", etiqueta: "Proveedores" }];
 
 function activo(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";

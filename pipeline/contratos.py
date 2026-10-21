@@ -38,6 +38,7 @@ FUENTE = "https://data.open-contracting.org/en/publication/135/download?name={an
 DOC = "https://prod4.seace.gob.pe:9000/api/con/documentos/descargar/"  # + document id: signed contract, amendments
 CARPETA = LAKE / "contratos"
 CARPETA_ITEMS = LAKE / "contratos_items"
+CARPETA_PROCESOS = LAKE / "procesos"  # procedures with no signed contract yet: open, awarded, deserted...
 BIENES_GASTO = Path(__file__).resolve().parent / "etiquetas" / "bienes_gasto.csv"
 CADENCIA_DIAS = 7       # the mirror changes monthly; checking weekly is plenty
 UMBRAL_NOMBRE = 90      # rapidfuzz score to accept a buyer <-> executing unit match
@@ -50,6 +51,12 @@ COLUMNAS = ["ocid", "contrato_id", "contrato", "fecha", "ano", "comprador_id", "
 
 COLUMNAS_ITEMS = ["ocid", "contrato_id", "pos", "cubso", "cubso_desc", "unspsc", "unspsc_desc", "descripcion",
                   "cantidad", "unidad", "total"]
+
+COLUMNAS_PROCESOS = ["ocid", "ano", "comprador_id", "comprador_ruc", "comprador", "comprador_dep", "comprador_prov",
+                     "comprador_loc", "titulo", "objeto", "metodo", "categoria", "valor", "publicado", "cierre", "estado",
+                     "postores", "cui", "docs", "ganador", "ganador_ruc", "monto_adjudicado", "adjudicado"]
+# the bidding documents a reader wants first, by SEACE title
+_DOCS_PROCESO = ("bases integradas", "bases administrativas", "resumen ejecutivo", "otorgamiento", "absoluci")
 
 # what happened to a contract after signing, from the titles of its SEACE documents
 EVENTOS = [("nulidad", r"nulidad"), ("intervencion", r"intervenci[oó]n"), ("resolucion", r"resoluci[oó]n"),
@@ -103,20 +110,62 @@ def _item(it: dict, tv: dict, i: int) -> dict:
             "total": _monto_pen(it.get("totalValue") or {}, tv)}
 
 
-def filas(path: Path):
+def _proceso(r: dict, buyer: dict, ruc: str | None, dire: dict) -> dict:
+    """A procedure with no signed contract yet: what is being bought, by when, for how much, its state
+    (SEACE's, as its items carry it: CONVOCADO, ADJUDICADO, CONSENTIDO, DESIERTO, NULO...), the
+    bidding documents and, once awarded, to whom."""
+    t = r.get("tender") or {}
+    estados: dict[str, int] = {}
+    for it in t.get("items") or []:
+        if it.get("statusDetails"):
+            estados[it["statusDetails"]] = estados.get(it["statusDetails"], 0) + 1
+    docs = [d for d in t.get("documents") or [] if d.get("url")]
+    docs.sort(key=lambda d: next((i for i, k in enumerate(_DOCS_PROCESO) if k in (d.get("title") or "").lower()), 99))
+    premios = r.get("awards") or []
+    ganadores = [s for a in premios for s in a.get("suppliers") or []]
+    publicado = (t.get("datePublished") or "")[:10] or None
+    cui = str(((r.get("planning") or {}).get("budget") or {}).get("projectID") or "")
+    adj = [_monto_pen(a.get("value") or {}, t.get("value") or {}) for a in premios]
+    estado = max(estados, key=estados.get) if estados else None
+    # SEACE sometimes leaves the items "CONVOCADO" while publishing the report that declares it deserted
+    if not premios and any(re.search(r"declarator\w* de(l)? desiert", d.get("title") or "", re.I) for d in t.get("documents") or []):
+        estado = "DESIERTO"
+    return {
+        "ocid": r.get("ocid"), "ano": int(publicado[:4]) if publicado else None,
+        "comprador_id": buyer.get("id"), "comprador_ruc": ruc, "comprador": buyer.get("name"),
+        "comprador_dep": dire.get("department"), "comprador_prov": dire.get("region"), "comprador_loc": dire.get("locality"),
+        "titulo": t.get("title"), "objeto": (t.get("description") or t.get("title") or "").strip(),
+        "metodo": t.get("procurementMethodDetails"), "categoria": t.get("mainProcurementCategory"),
+        "valor": _monto_pen(t.get("value") or {}, t.get("value") or {}) or None, "publicado": publicado,
+        "cierre": ((t.get("tenderPeriod") or {}).get("endDate") or "")[:16] or None,
+        "estado": estado, "postores": t.get("numberOfTenderers"),
+        "cui": ",".join(re.findall(r"\d{7}", cui)) or None,
+        "docs": json.dumps([[d.get("title") or "Documento", d["url"]] for d in docs[:4]], ensure_ascii=False) if docs else None,
+        "ganador": " / ".join(s.get("name") or "" for s in ganadores) or None,
+        "ganador_ruc": (ganadores[0].get("id") or "").replace("PE-RUC-", "") if ganadores else None,
+        "monto_adjudicado": sum(a for a in adj if a) or None,
+        "adjudicado": min(((a.get("date") or "")[:10] for a in premios if a.get("date")), default=None),
+    }
+
+
+def filas(path: Path, procesos: list | None = None):
     """One row per signed contract of an OCDS JSONL file (compiled releases), with its lines of
-    what was bought under "_items" (the contract's own, else its award's, else the tender's)."""
+    what was bought under "_items" (the contract's own, else its award's, else the tender's).
+    Procedures with no contract yet go to `procesos`, when given."""
     with gzip.open(path, "rt", encoding="utf-8") as f:
         for linea in f:
             r = json.loads(linea)
             r = r.get("compiledRelease", r)
             contratos = r.get("contracts") or []
-            if not contratos:
+            if not contratos and procesos is None:
                 continue
             buyer = r.get("buyer") or {}
             parte = next((p for p in r.get("parties") or [] if p.get("id") == buyer.get("id")), {})
             ruc = next((i.get("id") for i in parte.get("additionalIdentifiers") or [] if i.get("scheme") == "PE-RUC"), None)
             dire = parte.get("address") or {}
+            if not contratos:
+                procesos.append(_proceso(r, buyer, ruc, dire))
+                continue
             t = r.get("tender") or {}
             premios = {a.get("id"): a for a in r.get("awards") or []}
             for c in contratos:
@@ -160,33 +209,39 @@ def actualizar(anos: list[int], forzar: bool = False) -> list[Path]:
     import pandas as pd
     CARPETA.mkdir(parents=True, exist_ok=True)
     CARPETA_ITEMS.mkdir(parents=True, exist_ok=True)
+    CARPETA_PROCESOS.mkdir(parents=True, exist_ok=True)
     meta = _metadatos()
     escritos = []
     for ano in anos:
         info = meta.get(str(ano)) or {}
         dias = (time.time() - info.get("descargado_ts", 0)) / 86400
         destino, destino_items = CARPETA / f"{ano}.parquet", CARPETA_ITEMS / f"{ano}.parquet"
-        if not forzar and destino.exists() and destino_items.exists() and dias < CADENCIA_DIAS:
+        destino_procesos = CARPETA_PROCESOS / f"{ano}.parquet"
+        if not forzar and destino.exists() and destino_items.exists() and destino_procesos.exists() and dias < CADENCIA_DIAS:
             print(f"  contratos {ano}: al día (descargado hace {dias:.1f} días)")
             continue
         print(f"  contratos {ano}: descargando {FUENTE.format(ano=ano)}", flush=True)
         origen = descargar(ano)
-        contratos = list(filas(origen))
+        en_proceso: list[dict] = []
+        contratos = list(filas(origen, en_proceso))
         df = pd.DataFrame(contratos, columns=COLUMNAS)
+        procesos = pd.DataFrame(en_proceso, columns=COLUMNAS_PROCESOS)
         items = pd.DataFrame([dict(it, ocid=c["ocid"], contrato_id=c["contrato_id"]) for c in contratos for it in c["_items"]],
                              columns=COLUMNAS_ITEMS)
         con = duckdb.connect()
         con.register("df", df)
         con.register("items", items)
+        con.register("procesos", procesos)
+        con.execute(f"COPY (SELECT * FROM procesos ORDER BY comprador_id, publicado) TO '{destino_procesos}' (FORMAT parquet, COMPRESSION zstd)")
         con.execute(f"COPY (SELECT * FROM df ORDER BY comprador_id, fecha) TO '{destino}' (FORMAT parquet, COMPRESSION zstd)")
         con.execute(f"COPY (SELECT * FROM items ORDER BY ocid, contrato_id) TO '{destino_items}' (FORMAT parquet, COMPRESSION zstd)")
         meta[str(ano)] = {"descargado": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-                          "descargado_ts": time.time(), "contratos": len(df), "items": len(items),
+                          "descargado_ts": time.time(), "contratos": len(df), "items": len(items), "procesos": len(procesos),
                           "fuente": FUENTE.format(ano=ano)}
         print(f"  contratos {ano}: {len(df):,} contratos, {len(items):,} líneas -> {destino.name} "
               f"({(destino.stat().st_size + destino_items.stat().st_size) / 1e6:.1f} MB)")
         origen.unlink(missing_ok=True)
-        escritos += [destino, destino_items]
+        escritos += [destino, destino_items, destino_procesos]
     if escritos:
         (CARPETA / "fuente.json").write_text(json.dumps(meta, indent=1))
         escritos.append(CARPETA / "fuente.json")
@@ -387,6 +442,9 @@ LARGO_OBJETO = 300
 ITEMS_POR_CONTRATO = 3         # lines of what was bought shown per contract; the rest are counted
 TOP_CONTRATOS_PROVEEDOR = 300  # per supplier page, by amount
 INDICE_PROVEEDORES = 12000     # suppliers searchable by name, by amount; any other one by its RUC
+PRODUCTO_MIN_COMPRAS = 5       # a catalogue item gets its page with this many priced purchases (same unit)...
+PRODUCTO_MIN_COMPRADORES = 2   # ...by this many buyers
+TOP_COMPRAS_PRODUCTO = 120     # purchases listed on a product's page, the most recent first
 CLAS = ("TIPO_TRANSACCION || '.' || GENERICA || '.' || SUBGENERICA || '.' || SUBGENERICA_DET || '.' "
         "|| ESPECIFICA || '.' || ESPECIFICA_DET")
 
@@ -498,14 +556,26 @@ PRECIO_MIN_COMPRAS, PRECIO_MIN_COMPRADORES = 8, 4
 
 
 def _precios(con, desde: int) -> None:
-    """_precios (cubso, unidad, mediana, n): the usual unit price of each comparable item."""
-    con.execute(f"""CREATE OR REPLACE TEMP TABLE _lpu AS
-        SELECT i.ocid, i.contrato_id, i.pos, i.cubso, lower(i.unidad) AS unidad, i.total / i.cantidad AS pu, c.comprador_id
+    """_precios (cubso, unidad, mediana, n): the usual unit price of each comparable item. _pp: every
+    priced line of goods (quantity of 2 or more, a real unit), the base of the product pages; _prod:
+    the items that get one (enough purchases by enough buyers, in their most used unit)."""
+    con.execute("""CREATE OR REPLACE TEMP TABLE _pp AS
+        SELECT i.ocid, i.contrato_id, i.pos, i.cubso, i.cubso_desc, i.unspsc_desc, i.descripcion, lower(i.unidad) AS unidad,
+               i.cantidad, i.total, i.total / i.cantidad AS pu, c.comprador_id, c.comprador, c.proveedor_ruc, c.proveedor,
+               c.fecha, c.ano, c.doc_contrato
         FROM _it i JOIN _todos c USING (ocid, contrato_id)
-        WHERE c.categoria = 'goods' AND c.ano >= {desde} AND i.cubso IS NOT NULL AND i.cantidad >= 2 AND i.total > 0
+        WHERE c.categoria = 'goods' AND i.cubso IS NOT NULL AND i.cantidad >= 2 AND i.total > 0
           AND NOT starts_with(coalesce(i.unspsc, ''), '95')
           AND NOT regexp_matches(lower(coalesce(i.unidad, '')), 'servicio|global|lote')
           AND NOT regexp_matches(upper(coalesce(i.cubso_desc, '')), 'VALE|TARJETA|CUP[OÓ]N|BONO|TICKET')""")
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _prod AS
+        SELECT cubso, unidad FROM (
+            SELECT cubso, unidad, count(*) AS n, count(DISTINCT comprador_id) AS b,
+                   row_number() OVER (PARTITION BY cubso ORDER BY count(*) DESC, unidad) AS k
+            FROM _pp WHERE ano >= {desde} GROUP BY 1, 2)
+        WHERE k = 1 AND n >= {PRODUCTO_MIN_COMPRAS} AND b >= {PRODUCTO_MIN_COMPRADORES}""")
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _lpu AS
+        SELECT ocid, contrato_id, pos, cubso, unidad, pu, comprador_id FROM _pp WHERE ano >= {desde}""")
     con.execute(f"""CREATE OR REPLACE TEMP TABLE _precios AS
         SELECT cubso, unidad, median(pu) AS mediana, count(*) AS n FROM _lpu GROUP BY 1, 2
         HAVING count(*) >= {PRECIO_MIN_COMPRAS} AND count(DISTINCT comprador_id) >= {PRECIO_MIN_COMPRADORES}
@@ -522,19 +592,20 @@ def _items_por_contrato(con, tabla: str, lugares) -> dict[tuple, list]:
     it comes from], ...]]: the lines of what each contract of `tabla` bought, as the entity wrote
     them (else the catalogue's name); lines priced far above the usual first, then the largest."""
     out: dict[tuple, list] = {}
-    for ocid, cid, desc, cat_desc, cant, unidad, total, mediana, n_precio, n in con.execute(f"""
+    for ocid, cid, desc, cat_desc, cant, unidad, total, mediana, n_precio, producto, n in con.execute(f"""
             SELECT i.ocid, i.contrato_id, i.descripcion, i.cubso_desc, i.cantidad, i.unidad, i.total,
                    CASE WHEN l.pu IS NOT NULL THEN p.mediana END, CASE WHEN l.pu IS NOT NULL THEN p.n END,
-                   count(*) OVER (PARTITION BY i.ocid, i.contrato_id) AS n
+                   d.cubso, count(*) OVER (PARTITION BY i.ocid, i.contrato_id) AS n
             FROM _it i JOIN (SELECT DISTINCT ocid, contrato_id FROM {tabla}) k USING (ocid, contrato_id)
             LEFT JOIN _lpu l ON l.ocid = i.ocid AND l.contrato_id = i.contrato_id AND l.pos = i.pos
             LEFT JOIN _precios p ON p.cubso = l.cubso AND p.unidad = l.unidad
+            LEFT JOIN (SELECT DISTINCT cubso FROM _prod) d ON d.cubso = i.cubso
             QUALIFY row_number() OVER (PARTITION BY i.ocid, i.contrato_id
                                        ORDER BY coalesce(l.pu / p.mediana >= 2, false) DESC, i.total DESC NULLS LAST, i.pos)
                     <= {ITEMS_POR_CONTRATO}""").fetchall():
         lst = out.setdefault((ocid, cid), [])
         lst.append([texto_objeto(desc or cat_desc, lugares, 160) or None, cant, unidad, total,
-                    round(mediana, 2) if mediana else None, n_precio])
+                    round(mediana, 2) if mediana else None, n_precio, *([producto] if producto else [])])
         if len(lst) == 1:
             lst.insert(0, n)  # first element: how many lines in all
     return {k: [v[0], v[1:]] for k, v in out.items()}
@@ -578,7 +649,8 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
     [contracts, amount]}) for the entity files; empty when the lake has no contracts."""
     archivos = sorted(CARPETA.glob("*.parquet"))
     carpeta, carpeta_prov = out / "contratos", out / "proveedor"
-    for viejo in [*carpeta.glob("*.json"), *carpeta_prov.glob("*.json"), *(out / "proveedores").glob("*.json")]:
+    for viejo in [*carpeta.glob("*.json"), *carpeta_prov.glob("*.json"), *(out / "proveedores").glob("*.json"),
+                  *(out / "producto").glob("*.json"), *(out / "productos").glob("*.json")]:
         viejo.unlink()  # derived output: a unit or supplier that lost its contracts must not keep a stale file
     if not archivos:
         return {}, {}
@@ -601,7 +673,12 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
                        unidad VARCHAR, total DOUBLE)""")
     _gastos(con)
     _precios(con, ano - 1)
-    enlace = enlazar(con, "_todos")
+    _cargar_procesos(con, ano)
+    # buyers that so far only ran procedures are linked too: what they are buying now shows on their page
+    con.execute("""CREATE OR REPLACE TEMP VIEW _cb AS
+        SELECT comprador_id, comprador, comprador_dep, comprador_loc, comprador_prov, fecha, cui FROM _todos
+        UNION ALL SELECT comprador_id, comprador, comprador_dep, comprador_loc, comprador_prov, publicado, cui FROM _procesos""")
+    enlace = enlazar(con, "_cb")
     con.execute("CREATE OR REPLACE TEMP TABLE _enl (comprador_id VARCHAR, sec_ejec VARCHAR, como VARCHAR)")
     con.executemany("INSERT INTO _enl VALUES (?, ?, ?)", [[c, s, h] for c, (s, h) in enlace.items()])
     # a unit's contracts: those its own buyers signed, plus those any buyer signed for one of its
@@ -651,6 +728,9 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         SELECT sec_ejec, array_to_string(string_split(gasto, '.')[1:4], '.') AS grupo, count(*), sum(monto) FROM _cs
         WHERE gasto IS NOT NULL GROUP BY 1, 2 ORDER BY 1, 4 DESC NULLS LAST""").fetchall():
         resumen[sec]["por_gasto"].append([grupo, n, monto])
+    proc_resumen, proc_filas = _procesos_por_unidad(con, hoy)
+    for sec, r in proc_resumen.items():
+        resumen.setdefault(sec, {"n": 0, "monto": None, "top": [], "por_gasto": [], "desde": None, "hasta": None})["procesos"] = r
     por_obra = {(sec, cui): [n, monto] for sec, cui, n, monto in con.execute(
         "SELECT x.sec_ejec, x.cui, count(*), sum(c.monto) FROM _cx x JOIN _todos c USING (ocid, contrato_id) GROUP BY 1, 2").fetchall()}
 
@@ -674,7 +754,8 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         por_sec.setdefault(f[0], []).append(f)
     carpeta.mkdir(parents=True, exist_ok=True)
     usados: set[str] = set()
-    for sec, rows in por_sec.items():
+    for sec in sorted(set(por_sec) | set(proc_filas)):
+        rows = por_sec.get(sec, [])
         if sec not in resumen:  # only older contracts, for its projects: no summary for the period
             resumen[sec] = {"n": 0, "monto": None, "top": [], "por_gasto": [], "desde": None, "hasta": None}
         prov, metodos, comp = {}, {}, {}
@@ -688,11 +769,18 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
             c.append([str(fecha), texto_objeto(objeto, lugares), p, monto,
                       final if final is not None and monto and abs(final - monto) > 0.005 * monto else None,
                       m, _CATEGORIA.get(categoria), postores, cui, doc, eventos, b, gasto, lineas.get((ocid, cid))])
+        # procedures under way: [published, closes, object, method, category, reference value, state,
+        # participants, CUI, documents [[title, url]], winner, winner's RUC, amount awarded]
+        a = [[pub, cierre, texto_objeto(objeto, lugares), metodos.setdefault(metodo or "", len(metodos)),
+              _CATEGORIA.get(categoria), valor, estado, postores, cui, json.loads(docs) if docs else None, ganador, ganador_ruc,
+              adjudicado] for pub, cierre, objeto, metodo, categoria, valor, estado, postores, cui, docs, ganador, ganador_ruc,
+                                adjudicado in proc_filas.get(sec, [])]
         r = dict(resumen[sec], mostrados=sum(1 for x in c if x[0] >= f"{ano - 1}"), desde_ano=ano - 1)
         datos = {"r": r, "p": [list(k) for k in prov], "m": list(metodos),
-                 "b": [[con_lugares(n, lugares), ruc, como] for n, ruc, como in comp], "c": c}
+                 "b": [[con_lugares(n, lugares), ruc, como] for n, ruc, como in comp], "c": c, "a": a}
         (carpeta / f"{sec}.json").write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), default=str))
     n_prov = _proveedores(con, out, lugares, ano, usados)
+    n_prod = _productos(con, out, lugares, ano - 1)
     usados |= {g for r in resumen.values() for g, *_ in r.get("por_gasto", [])}
     (carpeta / "gastos.json").write_text(json.dumps(_nombres_gasto(con, usados), ensure_ascii=False, separators=(",", ":")))
     meta = _metadatos()
@@ -708,10 +796,10 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         "con_tipo_de_gasto": con.execute("SELECT count(*) FROM _c JOIN _gasto g USING (ocid, contrato_id) WHERE g.gasto IS NOT NULL").fetchone()[0],
         "precios_comparables": con.execute("SELECT count(*) FROM _precios").fetchone()[0],
         "precio_alto": con.execute("SELECT count(*) FROM _c JOIN _ratio USING (ocid, contrato_id) WHERE ratio BETWEEN 2 AND 10").fetchone()[0],
-        "proveedores": n_prov,
+        "proveedores": n_prov, "productos": n_prod,
     }, ensure_ascii=False))
     print(f"  json: contratos/*.json ({len(por_sec)} units, {sum(len(v) for v in por_sec.values()):,} contracts shown), "
-          f"proveedor/*.json ({n_prov:,} suppliers)")
+          f"proveedor/*.json ({n_prov:,} suppliers), producto/*.json ({n_prod:,} items)")
     return {sec: dict(r, top=r["top"][:5]) for sec, r in resumen.items()}, por_obra
 
 
@@ -746,6 +834,131 @@ def _proveedores(con, out: Path, lugares, ano: int, usados: set[str]) -> int:
     (out / "proveedores" / "indice.json").write_text(json.dumps(
         {"total": len(indice), "desde_ano": ano - 1, "p": indice[:INDICE_PROVEEDORES]},
         ensure_ascii=False, separators=(",", ":")))
+    return len(indice)
+
+
+EN_CURSO = ("CONVOCADO", "ADJUDICADO", "CONSENTIDO", "APELADO", "SUSPENDIDO", "RETROTRAIDO_POR_RESOLUCION")
+TOP_PROCESOS = 40              # procedures under way per unit on the site
+
+
+def _cargar_procesos(con, ano: int) -> None:
+    """_procesos: the site's years' procedures with no signed contract, each once (its latest record)."""
+    archivos = sorted(CARPETA_PROCESOS.glob("*.parquet"))
+    if not archivos:
+        con.execute(f"CREATE OR REPLACE TEMP TABLE _procesos ({', '.join(f'{c} VARCHAR' for c in COLUMNAS_PROCESOS)})")
+        con.execute("ALTER TABLE _procesos ALTER valor TYPE DOUBLE; ALTER TABLE _procesos ALTER monto_adjudicado TYPE DOUBLE")
+        return
+    lista = ", ".join(f"'{a}'" for a in archivos)
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _procesos AS
+        SELECT * EXCLUDE (filename) FROM (
+            SELECT DISTINCT ON (ocid) * FROM read_parquet([{lista}], union_by_name = true, filename = true)
+            ORDER BY ocid, filename DESC)
+        WHERE try_cast(ano AS INTEGER) BETWEEN {ano - 1} AND {ano}
+          AND ocid NOT IN (SELECT ocid FROM _todos)""")  # signed since: it is a contract now
+
+
+def _procesos_por_unidad(con, hoy: str) -> tuple[dict, dict]:
+    """Per unit: counts of its procedures with no contract in the period (under way, awarded and not
+    signed, deserted, annulled, cancelled) and the rows of those under way, the latest first."""
+    hace_un_ano = str(int(hoy[:4]) - 1) + hoy[4:]
+    con.execute("CREATE OR REPLACE TEMP TABLE _pe AS SELECT e.sec_ejec, p.* FROM _procesos p JOIN _enl e USING (comprador_id)")
+    en_curso = ", ".join(f"'{e}'" for e in EN_CURSO)
+    resumen = {}
+    for sec, total, convocados, abiertos, por_firmar, valor, desiertos, nulos, cancelados in con.execute(f"""
+            SELECT sec_ejec, count(*),
+                   count(*) FILTER (estado = 'CONVOCADO' AND publicado >= '{hace_un_ano}'),
+                   count(*) FILTER (estado = 'CONVOCADO' AND cierre >= '{hoy}'),
+                   count(*) FILTER (estado IN ('ADJUDICADO', 'CONSENTIDO', 'APELADO') AND publicado >= '{hace_un_ano}'),
+                   sum(valor) FILTER (estado = 'CONVOCADO' AND publicado >= '{hace_un_ano}'),
+                   count(*) FILTER (estado = 'DESIERTO'), count(*) FILTER (estado = 'NULO'), count(*) FILTER (estado = 'CANCELADO')
+            FROM _pe GROUP BY 1""").fetchall():
+        resumen[sec] = {"total": total, "convocados": convocados, "abiertos": abiertos, "por_firmar": por_firmar, "valor_convocado": valor,
+                        "desiertos": desiertos, "nulos": nulos, "cancelados": cancelados}
+    filas_: dict[str, list] = {}
+    for sec, *f in con.execute(f"""
+            SELECT sec_ejec, publicado, cierre, objeto, metodo, categoria, valor, estado, postores, cui, docs, ganador,
+                   ganador_ruc, monto_adjudicado FROM _pe
+            WHERE publicado >= '{hace_un_ano}' AND estado IN ({en_curso})
+            QUALIFY row_number() OVER (PARTITION BY sec_ejec ORDER BY publicado DESC, ocid) <= {TOP_PROCESOS}
+            ORDER BY sec_ejec, publicado DESC, ocid""").fetchall():
+        filas_.setdefault(sec, []).append(f)
+    return resumen, filas_
+
+
+PUNTOS_PRODUCTO = 400          # purchases drawn on a product's price chart, spread over the period
+
+
+def _productos(con, out: Path, lugares, desde: int) -> int:
+    """producto/<cubso>.json: each catalogue item the State buys often, in its most used unit, over
+    the site's period (from `desde`, like the contracts): what it pays per unit over time (a sample of
+    purchases spread over the period and the month's median), who sells it at what price, who buys
+    it, its latest purchases; productos/indice.json: every such item, for the search box."""
+    carpeta = out / "producto"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    ent = dict(con.execute("SELECT sec_ejec, any_value(nombre) FROM dim_entidad GROUP BY 1").fetchall())
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _pc AS
+        SELECT p.*, e.sec_ejec FROM _pp p JOIN _prod USING (cubso, unidad) LEFT JOIN _enl e USING (comprador_id)
+        WHERE p.ano >= {desde}""")
+    # lowest and highest price leave out the ones off by more than 10x: a quantity or unit typed
+    # wrong ("diesel at S/ 17,338 a gallon"), counted apart as "revisar"
+    resumen = {cubso: r for cubso, *r in con.execute("""
+        WITH m AS (SELECT cubso, median(pu) AS med FROM _pc GROUP BY 1)
+        SELECT cubso, coalesce(arg_max(cubso_desc, fecha), arg_max(descripcion, fecha), cubso), any_value(unspsc_desc),
+               any_value(unidad), count(*),
+               count(DISTINCT comprador_id), count(DISTINCT proveedor_ruc), any_value(med), quantile_cont(pu, 0.25),
+               quantile_cont(pu, 0.75), min(pu) FILTER (WHERE pu BETWEEN med / 10 AND med * 10),
+               max(pu) FILTER (WHERE pu BETWEEN med / 10 AND med * 10), sum(total), sum(cantidad), min(fecha), max(fecha),
+               count(*) FILTER (WHERE pu NOT BETWEEN med / 10 AND med * 10)
+        FROM _pc JOIN m USING (cubso) GROUP BY 1""").fetchall()}
+    comparables = {c for (c,) in con.execute("SELECT DISTINCT cubso FROM _precios").fetchall()}
+    serie, vend, comp, compras = {}, {}, {}, {}
+    for cubso, mes, med, n, lo, hi in con.execute("""
+            SELECT cubso, left(fecha, 7), median(pu), count(*), min(pu), max(pu) FROM _pc GROUP BY 1, 2 ORDER BY 1, 2""").fetchall():
+        serie.setdefault(cubso, []).append([mes, round(med, 2), n, round(lo, 2), round(hi, 2)])
+    for cubso, ruc, nombre, n, med, total in con.execute("""
+            SELECT cubso, proveedor_ruc, arg_max(proveedor, fecha), count(*), median(pu), sum(total) FROM _pc
+            WHERE coalesce(proveedor_ruc, '') <> '' GROUP BY 1, 2
+            QUALIFY row_number() OVER (PARTITION BY cubso ORDER BY count(*) DESC, sum(total) DESC, proveedor_ruc) <= 15
+            ORDER BY 1, 4 DESC, 6 DESC""").fetchall():
+        vend.setdefault(cubso, []).append([ruc, nombre, n, round(med, 2), round(total)])
+    for cubso, sec, nombre, n, med, total in con.execute("""
+            SELECT cubso, sec_ejec, arg_max(comprador, fecha), count(*), median(pu), sum(total) FROM _pc
+            GROUP BY 1, 2, comprador_id
+            QUALIFY row_number() OVER (PARTITION BY cubso ORDER BY count(*) DESC, sum(total) DESC, comprador_id) <= 15
+            ORDER BY 1, 4 DESC, 6 DESC""").fetchall():
+        comp.setdefault(cubso, []).append([sec, con_lugares(ent.get(sec) or nombre or "", lugares), n, round(med, 2), round(total)])
+    for cubso, fecha, sec, comprador, ruc, proveedor, cant, pu, total, doc, desc in con.execute(f"""
+            SELECT cubso, fecha, sec_ejec, comprador, proveedor_ruc, proveedor, cantidad, pu, total, doc_contrato, descripcion
+            FROM _pc QUALIFY row_number() OVER (PARTITION BY cubso ORDER BY fecha DESC, total DESC, ocid, pos) <= {TOP_COMPRAS_PRODUCTO}
+            ORDER BY cubso, fecha DESC, total DESC""").fetchall():
+        compras.setdefault(cubso, []).append([str(fecha), sec, con_lugares(ent.get(sec) or comprador or "", lugares), ruc, proveedor,
+                                              cant, round(pu, 4), round(total, 2), doc,
+                                              texto_objeto(desc, lugares, 120) if desc else None])
+    puntos: dict[str, list] = {}
+    for cubso, fecha, pu in con.execute(f"""
+            SELECT cubso, fecha, pu FROM (
+                SELECT cubso, fecha, pu, row_number() OVER (PARTITION BY cubso ORDER BY fecha, ocid, pos) AS k,
+                       count(*) OVER (PARTITION BY cubso) AS n FROM _pc)
+            WHERE n <= {PUNTOS_PRODUCTO} OR k % ceil(n / {PUNTOS_PRODUCTO}.0)::INTEGER = 0
+            ORDER BY cubso, fecha""").fetchall():
+        puntos.setdefault(cubso, []).append([str(fecha), round(pu, 4)])
+    indice = []
+    for cubso, (nombre, unspsc, unidad, n, b, v, med, q1, q3, lo, hi, total, cant, primera, ultima, raros) in resumen.items():
+        if not re.fullmatch(r"\d{8,16}", cubso or ""):
+            continue
+        datos = {"id": cubso, "nombre": nombre, "familia": unspsc, "unidad": unidad,
+                 "r": {"n": n, "compradores": b, "proveedores": v, "mediana": round(med, 4), "q1": round(q1, 4),
+                       "q3": round(q3, 4), "min": round(lo, 4), "max": round(hi, 4), "total": round(total),
+                       "cantidad": cant, "desde": str(primera), "hasta": str(ultima), "comparable": cubso in comparables,
+                       "revisar": raros},
+                 "s": serie.get(cubso, []), "x": puntos.get(cubso, []), "v": vend.get(cubso, []), "e": comp.get(cubso, []),
+                 "c": compras.get(cubso, [])}
+        (carpeta / f"{cubso}.json").write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":"), default=str))
+        indice.append([cubso, nombre, unidad, round(med, 2), n, round(total)])
+    indice.sort(key=lambda x: (-x[4], x[0]))
+    (out / "productos").mkdir(parents=True, exist_ok=True)
+    (out / "productos" / "indice.json").write_text(json.dumps({"total": len(indice), "p": indice},
+                                                              ensure_ascii=False, separators=(",", ":")))
     return len(indice)
 
 

@@ -92,16 +92,16 @@ await paso("contracts", async () => {
   check(await sec.locator(".kpi").count() === 4 && await sec.getByText("Un solo participante", { exact: true }).first().isVisible(),
         "contracts: amount, suppliers, single bidder and no-competition figures");
   check(await sec.locator(".ct-top li").count() >= 1, "contracts: its largest suppliers are listed");
-  const filas = sec.locator(".contratos .contrato");
+  const filas = sec.locator("#contratos-lista .contratos .contrato");
   await filas.first().waitFor({ timeout: 15000 });
   check(await filas.count() >= 1, `contracts: the list loads (${await filas.count()} rows)`);
   const pdf = await sec.locator(".ct-docs a", { hasText: "Contrato firmado" }).first().getAttribute("href");
   check(/^https:\/\/prod4\.seace\.gob\.pe:9000\/api\/con\/documentos\/descargar\/\d+$/.test(pdf ?? ""),
         "contracts: the signed contract links to its PDF in SEACE");
-  const proveedor = await sec.locator(".contratos .ct-quien b").first().innerText();
+  const proveedor = await sec.locator("#contratos-lista .contratos .ct-quien b").first().innerText();
   const buscar = sec.getByLabel("Buscar en los contratos");
   await buscar.fill(proveedor);
-  check(await filas.count() >= 1 && (await sec.locator(".contratos .ct-quien b").allInnerTexts()).every((t) => t === proveedor),
+  check(await filas.count() >= 1 && (await sec.locator("#contratos-lista .contratos .ct-quien b").allInnerTexts()).every((t) => t === proveedor),
         `contracts: searching «${proveedor.slice(0, 30)}» keeps only that supplier`);
   await buscar.fill("zzzz sin coincidencias");
   check(await sec.getByText("Ningún contrato coincide").isVisible(), "contracts: a search with no match says so");
@@ -119,7 +119,7 @@ await paso("contracts", async () => {
 await paso("what contracts buy, by expense type", async () => {
   await page.goto(`${BASE}/entidad/300790/#contratos`);
   const sec = page.locator("#contratos");
-  await sec.locator(".contratos .contrato").first().waitFor({ timeout: 15000 });
+  await sec.locator("#contratos-lista .contratos .contrato").first().waitFor({ timeout: 15000 });
   check(await sec.locator(".ct-lineas").count() > 0, "contracts: rows say what was bought, line by line");
   check(await sec.locator(".ct-gasto").count() > 0, "contracts: rows carry the budget's expense type");
   const grupo = sec.locator("button.ct-gasto-fila").first();
@@ -133,6 +133,19 @@ await paso("what contracts buy, by expense type", async () => {
   await page.locator("#tipo-de-gasto details[open] .ct-de-gasto button.ct-gasto-fila").first().waitFor({ timeout: 15000 });
   check(true, "tipo de gasto: «Bienes y servicios» shows the unit's contracts of that type");
   await sinScroll("entidad/300790#tipo-de-gasto (contracts open)");
+});
+
+await paso("purchases under way", async () => {
+  const datos = await (await page.request.get(`${BASE}/data/contratos/301289.json`)).json();
+  const p = datos.r.procesos ?? {};
+  await page.goto(`${BASE}/entidad/301289/#contratos`);
+  if (p.convocados || p.por_firmar) {
+    await page.locator("#contratos .en-curso .contrato.proceso").first().waitFor({ timeout: 15000 });
+    check(await page.locator("#contratos .en-curso .contrato.proceso").count() >= 1,
+          `contracts: what it is buying now (${p.convocados ?? 0} called, ${p.por_firmar ?? 0} awarded and not signed)`);
+    check(await page.locator("#contratos .en-curso .ct-docs a").count() >= 1, "contracts: a procedure under way links its bidding documents");
+  } else check(true, "contracts: nothing under way at Surco this week");
+  if (p.desiertos) check(await page.getByText(/quedó desierto|quedaron desiertos/).count() >= 1, "contracts: deserted procedures are counted");
 });
 
 await paso("purchase orders", async () => {
@@ -254,12 +267,50 @@ await paso("comparator", async () => {
   await sinScroll("comparar/funcion");
 });
 
+await paso("product prices", async () => {
+  await page.goto(`${BASE}/productos/`);
+  check(await page.locator(".ranking-prov li").count() > 5, "precios: the most bought products are ranked");
+  await page.getByLabel(/Busca un producto/).fill("diesel");
+  await page.locator(".busca-resultados a").first().waitFor({ timeout: 15000 });
+  check(await page.locator(".busca-resultados a").count() >= 1, "precios: search finds «diesel»");
+  await page.locator(".busca-resultados a").first().click();
+  await page.waitForURL(/producto\/\?id=/);
+  await page.locator(".hero h1").waitFor({ timeout: 15000 });
+  check(await page.locator(".grafico-precios svg circle.punto").count() > 3, "producto: each purchase on the price chart");
+  check(await page.locator("#vendedores .ct-top li").count() >= 1 && await page.locator("#compradores .ct-top li").count() >= 1,
+        "producto: who sells it and who buys it, at what price");
+  await page.getByRole("button", { name: "Seguir", exact: true }).click();
+  check(await page.getByRole("button", { name: "Siguiendo", exact: true }).count() === 1, "producto: can be followed");
+  await sinScroll("producto");
+  await page.goto(`${BASE}/entidad/301289/#contratos`);
+  await page.locator("#contratos-lista .contrato").first().waitFor({ timeout: 15000 });
+  await page.getByLabel("Buscar en los contratos").fill("concreto premezclado");
+  const linea = page.locator("#contratos-lista .ct-lineas a.ct-linea-desc").first();
+  await linea.waitFor({ timeout: 15000 });
+  check(/producto\/\?id=\d+/.test(await linea.getAttribute("href") ?? ""), "contracts: a bought item links to its price page");
+});
+
+await paso("map of projects", async () => {
+  await page.goto(`${BASE}/entidad/301289/#obras`);
+  const enlace = page.locator("#obras a", { hasText: "Verlas en el mapa" });
+  check(/mapa\/\?dep=15&sec=301289/.test(await enlace.getAttribute("href") ?? ""), "obras: the projects link to the map");
+  await enlace.click();
+  await page.waitForURL(/mapa\/\?/);
+  await page.locator(".mapa-caja canvas").first().waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => /[1-9][\d.,]* obras? en el mapa/.test(document.querySelector(".mapa-obras .ct-cuenta")?.textContent ?? ""), null, { timeout: 20000 });
+  check(true, `mapa: an entity's projects on the map (${(await page.locator(".mapa-obras .ct-cuenta").innerText()).slice(0, 80)})`);
+  await page.getByLabel("Qué obras").selectOption("sin_gasto");
+  check(/en el mapa/.test(await page.locator(".mapa-obras .ct-cuenta").innerText()), "mapa: filters projects with no spending this year");
+  await sinScroll("mapa");
+});
+
 await paso("watchlist", async () => {
   await page.goto(`${BASE}/seguimiento/`);
   await listo();
   const titulos = await page.locator("section.tarjeta h2").allInnerTexts();
   check(titulos.some((t) => t.toLowerCase() === "cusco") && titulos.length >= 4, `siguiendo: shows followed items (${titulos.join(" / ")})`);
   check(!(await page.locator("text=No encontramos datos").count()), "siguiendo: every followed item resolved its data file");
+  check(await page.getByRole("link", { name: /Ver el producto/ }).count() === 1, "siguiendo: a followed product shows its usual price");
   await page.reload();
   await listo();
   check(await page.locator("text=Nada nuevo desde tu última visita").count() === 1, "siguiendo: 2nd visit says nothing new");

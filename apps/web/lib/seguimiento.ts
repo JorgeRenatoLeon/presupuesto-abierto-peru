@@ -1,11 +1,14 @@
 /** Watchlist kept in this browser (localStorage): no accounts, nothing leaves the device.
  *  Every access is wrapped: storage can be blocked (private mode, disabled site data). */
 export type Seguido = {
-  tipo: "entidad" | "departamento" | "tema";
+  tipo: "entidad" | "departamento" | "tema" | "proveedor" | "producto";
   id: string;
   nombre: string;
   /** for temas: funcion | etiqueta | departamento (pipeline compare.py dimensions) */
   dimension?: string;
+  /** what "Siguiendo" showed last time, to tell what is new: the latest contract or purchase date
+   *  seen and, for a product, its usual price then */
+  visto?: { hasta?: string; precio?: number };
 };
 
 const CLAVE = "pap:seguidos:v1";
@@ -70,4 +73,9 @@ export function guardarAlertasVistas(claves: Iterable<string>): void {
   } catch {
     /* ignore */
   }
+}
+
+/** Remember what "Siguiendo" just showed for an item (see Seguido.visto). */
+export function marcarVisto(s: Seguido, visto: NonNullable<Seguido["visto"]>): void {
+  guardarSeguidos(leerSeguidos().map((x) => (mismo(x, s) ? { ...x, visto } : x)));
 }

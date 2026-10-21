@@ -194,6 +194,21 @@ export default function MetodologiaPage() {
           impedimentos, está en la Ficha Única del Proveedor del OECE.
         </p>
         <p style={{ fontSize: 14, marginTop: 8 }}>
+          <strong>Precios del Estado.</strong> Cada producto que las entidades compran con frecuencia (al menos cinco compras
+          de dos entidades, en la unidad que más se usa) tiene su página: cuánto se paga por unidad en cada compra y el
+          precio mediano de cada mes, quién lo vende y a qué precio, quién lo compra y sus últimas compras con el contrato.
+          Los precios por unidad salen de las líneas de los contratos de bienes (de a dos o más unidades); los que se alejan
+          más de 10 veces de lo usual se cuentan aparte, porque suelen ser errores al registrar la cantidad o la unidad.
+          Búscalos en <Link href="/productos/" style={enlace}>Precios del Estado</Link>.
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
+          <strong>Lo que está comprando ahora.</strong> Los procedimientos del SEACE que aún no tienen contrato firmado: los
+          convocados (con su valor referencial, la fecha límite de ofertas, los participantes registrados y sus bases para
+          descargar) y los adjudicados que faltan firmar, de los últimos doce meses. Contamos también los que quedaron
+          desiertos (nadie presentó una oferta válida), nulos o cancelados: muchos desiertos pueden indicar bases difíciles
+          de cumplir o un valor referencial bajo.
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
           Las señales: <strong>«un solo participante»</strong> cuando en un concurso participó un solo proveedor (el SEACE
           cuenta como participantes a los que se registraron en el procedimiento; no todos presentan oferta);{" "}
           <strong>«precio alto»</strong> cuando algún producto costó entre 2 y 10 veces lo que el Estado suele pagar por el
@@ -213,6 +228,17 @@ export default function MetodologiaPage() {
           comprador con un nombre muy distinto al del MEF puede quedar sin unir o, rara vez, unirse a una unidad
           parecida: en cada contrato se ve quién lo firmó.
           {fc?.hasta ? ` Contratos firmados hasta el ${fmtFecha(fc.hasta)}.` : ""}
+        </p>
+      </section>
+
+      <section className="tarjeta seccion" id="mapa">
+        <h2>El mapa de obras</h2>
+        <p style={{ fontSize: 14 }}>
+          Las obras y proyectos de inversión del presupuesto del año que el Banco de Inversiones del MEF ubica con
+          coordenadas, en el <Link href="/mapa/" style={enlace}>mapa</Link>: su costo total, cuánto se gastó desde que
+          empezó, su avance físico y si este año no tiene gasto. Un proyecto que figura en varias unidades se muestra en la
+          que tiene más presupuesto. Las coordenadas las registra cada entidad; algunas pueden ser aproximadas (el centro del
+          distrito, por ejemplo). Mapa base: © colaboradores de OpenStreetMap.
         </p>
       </section>
 

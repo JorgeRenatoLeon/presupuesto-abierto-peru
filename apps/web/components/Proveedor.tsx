@@ -7,6 +7,7 @@ import {
   cargarDatos, esRuc, plano, type ArchivoProveedor, type IndiceProveedores, type NombresGasto,
 } from "@/lib/contratos";
 import { KpiCard } from "@/components/ui";
+import { SeguirBoton } from "@/components/SeguirBoton";
 import { Contrato, SignificadoSenales, cargarGastos, plural, urlProveedor, vistaProveedor } from "@/components/Contratos";
 
 const PAGINA = 20;
@@ -75,6 +76,9 @@ export function FichaProveedor() {
           Lo que firmó con el Estado en {d.desde_ano} y {d.desde_ano + 1}, según el SEACE: con qué entidades, para qué y por
           cuánto, con cada contrato para descargar.
         </p>
+        <div style={{ marginTop: 10 }}>
+          <SeguirBoton item={{ tipo: "proveedor", id: d.id, nombre: d.nombre ?? d.id, visto: { hasta: r.hasta } }} />
+        </div>
       </section>
 
       <section className="seccion" id="resumen">

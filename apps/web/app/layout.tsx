@@ -49,6 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <a href="https://datosabiertos.mef.gob.pe/dataset/presupuesto-y-ejecucion-de-gasto" target="_blank" rel="noopener">MEF — Portal de Datos Abiertos</a>
           {" · "}<Link href="/metodologia/">Metodología y fuentes</Link>{" · "}<Link href="/glosario/">Glosario</Link>
           {" · "}<Link href="/ingresos/">Ingresos del Estado</Link>{" · "}<Link href="/guia/">Guía</Link>
+          <br />
+          <Link href="/mapa/">Mapa de obras</Link>{" · "}<Link href="/proveedores/">Proveedores del Estado</Link>
+          {" · "}<Link href="/productos/">Precios del Estado</Link>{" · "}<Link href="/seguimiento/">Siguiendo</Link>
         </footer>
         <BottomNav />
       </body>
