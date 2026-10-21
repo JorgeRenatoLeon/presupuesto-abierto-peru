@@ -63,7 +63,7 @@ export function ItemsAlAbrir({ sec, codigo, esperado, contratos = false }: {
                 </div>
                 <MontoPar pim={i.pim} devengado={i.devengado} esperado={esperado} compacto />
                 <DetalleItem sec={sec} codigo={codigo} k={k} sinDescripcion={!!i.sd} cui={contratos ? i.cui ?? null : null}
-                             contratos={contratos} />
+                             contratos={contratos} pim={i.pim} />
               </li>
             ))}
           </ol>
@@ -73,8 +73,8 @@ export function ItemsAlAbrir({ sec, codigo, esperado, contratos = false }: {
   );
 }
 
-function DetalleItem({ sec, codigo, k, sinDescripcion, cui, contratos }: {
-  sec: string; codigo: string; k: number; sinDescripcion: boolean; cui: string | null; contratos: boolean;
+function DetalleItem({ sec, codigo, k, sinDescripcion, cui, contratos, pim }: {
+  sec: string; codigo: string; k: number; sinDescripcion: boolean; cui: string | null; contratos: boolean; pim: number | null;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [datos, setDatos] = useState<{ d: Detalle | null; c: Clasificador | null } | null>(null);
@@ -92,15 +92,15 @@ function DetalleItem({ sec, codigo, k, sinDescripcion, cui, contratos }: {
       {abierto ? (
         !datos ? <p className="explica cargando">Cargando…</p>
           : datos.d && datos.c ? <PanelDetalle d={datos.d} c={datos.c} sinDescripcion={sinDescripcion} sec={sec} cui={cui}
-                                                contratos={contratos} />
+                                                contratos={contratos} pim={pim} />
             : <p className="explica">No hay más detalle para esta línea.</p>
       ) : null}
     </>
   );
 }
 
-function PanelDetalle({ d, c, sinDescripcion, sec, cui, contratos }: {
-  d: Detalle; c: Clasificador; sinDescripcion: boolean; sec: string; cui: string | null; contratos: boolean;
+function PanelDetalle({ d, c, sinDescripcion, sec, cui, contratos, pim }: {
+  d: Detalle; c: Clasificador; sinDescripcion: boolean; sec: string; cui: string | null; contratos: boolean; pim: number | null;
 }) {
   const [explicado, setExplicado] = useState<string | null>(null);
   const totalFuentes = d.f.reduce((a, [, p]) => a + p, 0) || 1;
@@ -152,7 +152,7 @@ function PanelDetalle({ d, c, sinDescripcion, sec, cui, contratos }: {
           ) : null}
         </ul>
       </section>
-      {contratos && cui ? <ContratosDelProyecto sec={sec} cui={cui} /> : null}
+      {contratos && cui ? <ContratosDelProyecto sec={sec} cui={cui} anual={pim} /> : null}
       {d.f.length ? (
         <section>
           <h5>De dónde sale el dinero</h5>

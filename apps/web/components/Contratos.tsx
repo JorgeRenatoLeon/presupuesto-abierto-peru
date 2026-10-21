@@ -5,11 +5,12 @@ import Link from "next/link";
 import { ChevronDown, FileText } from "lucide-react";
 import { fmtSoles, fmtPct, fmtNombre, fichaInversion, urlDatos } from "@/lib/types";
 import {
-  CATEGORIA, EVENTOS, cargarDatos, coincideGasto, esRuc, etiquetaGasto, eventosDe, grupoGasto, metodoInfo, mismoGasto, plano,
-  urlDocumento,
+  CATEGORIA, EVENTOS, cargarDatos, coincideGasto, comparaPrecio, esRuc, etiquetaGasto, eventosDe, grupoGasto, metodoInfo,
+  mismoGasto, plano, urlDocumento,
   type ArchivoContratos, type ArchivoProveedor, type ContratosResumen, type FilaContrato, type Lineas, type NombresGasto, type Via,
 } from "@/lib/contratos";
 import { KpiCard } from "@/components/ui";
+import { ObraCompleta } from "@/components/ObraCompleta";
 
 const PAGINA = 15;
 const MESES_CORTOS = ["", "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -80,6 +81,7 @@ export function ResumenContratos({ r, nombres }: { r: ContratosResumen; nombres?
   if (r.nulos) senales.push({ tono: "alta", texto: `${plural(r.nulos, "contrato declarado nulo", "contratos declarados nulos")}.` });
   if (r.intervenidos) senales.push({ tono: "alta", texto: `${plural(r.intervenidos, "obra intervenida", "obras intervenidas")}: la entidad tomó el control por problemas del contratista.` });
   if (r.extra) senales.push({ tono: "media", texto: `${fmtSoles(r.extra)} más de lo firmado, por adicionales en ${plural(r.con_adicionales ?? 0, "contrato", "contratos")}.` });
+  if (r.precio_alto) senales.push({ tono: "media", texto: `${plural(r.precio_alto, "contrato pagó", "contratos pagaron")} por algún producto entre 2 y 10 veces lo que el Estado suele pagar por él.` });
   if (r.de_otros) senales.push({ tono: "info", texto: `${plural(r.de_otros, "contrato lo firmó", "contratos los firmó")} otra entidad para obras de esta (${fmtSoles(r.monto_otros)}).` });
   const grupos = (r.por_gasto ?? []).filter(([g]) => nombres?.[g]);
   const maxGrupo = Math.max(...grupos.map(([, , m]) => m ?? 0), 1);
@@ -89,7 +91,7 @@ export function ResumenContratos({ r, nombres }: { r: ContratosResumen; nombres?
         <KpiCard etiqueta="Contratado" valor={fmtSoles(r.monto)} nota={`en ${plural(r.n, "contrato", "contratos")}`} />
         <KpiCard etiqueta="Proveedores" valor={(r.proveedores ?? 0).toLocaleString("es-PE")}
                  nota={mayor && r.monto ? `El principal se llevó ${fmtPct((mayor[3] ?? 0) / r.monto)}` : undefined} />
-        <KpiCard etiqueta="Un solo postor" valor={fmtPct(unPostor)}
+        <KpiCard etiqueta="Un solo participante" valor={fmtPct(unPostor)}
                  nota={r.competitivos ? `de ${plural(r.competitivos, "concurso", "concursos")} con competencia` : "Sin concursos con competencia"} />
         <KpiCard etiqueta="Sin competencia" valor={fmtPct(sinCompetencia)} nota="del monto, por contratación directa" />
       </div>
@@ -150,7 +152,7 @@ function filtrarContratos(gasto: string) {
   document.getElementById("contratos-lista")?.scrollIntoView({ block: "start" });
 }
 
-type Senal = "todas" | "un_postor" | "directo" | "adicional" | "problemas";
+type Senal = "todas" | "un_postor" | "directo" | "adicional" | "problemas" | "precio";
 
 function cumple(v: Vista, senal: Senal): boolean {
   const ev = v.eventos ?? "";
@@ -158,6 +160,7 @@ function cumple(v: Vista, senal: Senal): boolean {
   if (senal === "directo") return v.via === "directo";
   if (senal === "adicional") return ev.includes("adicional") || (v.final != null && v.monto != null && v.final > v.monto);
   if (senal === "problemas") return /resolucion|nulidad|intervencion/.test(ev);
+  if (senal === "precio") return precioDe(v.lineas) === "alto";
   return true;
 }
 
@@ -235,7 +238,8 @@ export function ListaContratos({ sec }: { sec: string }) {
             </select>
             <select className="buscador" value={senal} onChange={(e) => setSenal(e.target.value as Senal)} aria-label="Señal">
               <option value="todas">Todas las señales</option>
-              <option value="un_postor">Un solo postor</option>
+              <option value="un_postor">Un solo participante</option>
+              <option value="precio">Precio muy por encima de lo usual</option>
               <option value="directo">Sin competencia</option>
               <option value="adicional">Con adicionales</option>
               <option value="problemas">Resueltos, nulos o intervenidos</option>
@@ -272,7 +276,10 @@ export function ListaContratos({ sec }: { sec: string }) {
  *  are worked out, and the ways suppliers were chosen. */
 export function SignificadoSenales({ metodos }: { metodos: string[] }) {
   const senales: [string, string, string][] = [
-    ["media", "Un solo postor", "Se convocó un concurso, pero solo una empresa se presentó: no hubo con quién comparar precios."],
+    ["media", "Un solo participante", "Se convocó un concurso y solo un proveedor participó: no hubo con quién comparar precios. (El SEACE cuenta como participantes a los proveedores que se registraron en el procedimiento; no todos presentan oferta.)"],
+    ["media", "Precio alto", "Un producto del contrato costó entre 2 y 10 veces lo que el Estado suele pagar por el mismo producto (mismo código del catálogo y misma unidad, en al menos 8 compras de 4 entidades). Puede haber razones (marca, entrega, urgencia), pero vale la pena preguntar."],
+    ["neutro", "Revisar precio", "Más de 10 veces lo usual: suele ser un error al registrar la cantidad o la unidad en el SEACE, más que un precio. Revisa el contrato."],
+    ["media", "Subió", "El monto final supera en 25% o más al monto firmado."],
     ["media", "Sin competencia", metodoInfo("Contratación Directa").explica],
     ...(["adicional", "resolucion", "nulidad", "intervencion", "ampliacion"] as const)
       .map((t): [string, string, string] => [EVENTOS[t].tono, EVENTOS[t].texto, EVENTOS[t].explica]),
@@ -299,7 +306,19 @@ export function SignificadoSenales({ metodos }: { metodos: string[] }) {
   );
 }
 
-/** "Qué se compró": the largest lines of a contract, with quantity and unit price. */
+/** S/ with cents for small unit prices (a bag of cement), rounded like everything else above. */
+const fmtUnitario = (v: number) => (v < 1000 ? `S/ ${v.toLocaleString("es-PE", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}` : fmtSoles(v));
+const veces = (r: number) => `${r.toLocaleString("es-PE", { maximumFractionDigits: 1 })} veces`;
+
+/** The worst comparison among a contract's lines: what its badge says. */
+function precioDe(lineas: Lineas | null): "alto" | "revisar" | null {
+  const r = (lineas?.[1] ?? []).map(([, cant, , total, mediana]) =>
+    comparaPrecio(cant && total ? total / cant : null, mediana));
+  return r.includes("alto") ? "alto" : r.includes("revisar") ? "revisar" : null;
+}
+
+/** "Qué se compró": the contract's lines, with quantity, unit price and, for items the State buys
+ *  often, what it usually pays for the same item. */
 function LineasCompradas({ lineas, compacto }: { lineas: Lineas; compacto: boolean }) {
   const [n, filas] = lineas;
   const visibles = filas.filter(([desc]) => desc);
@@ -309,16 +328,27 @@ function LineasCompradas({ lineas, compacto }: { lineas: Lineas; compacto: boole
     <div className="ct-lineas">
       <span className="mp-etq">Qué se compró</span>
       <ul>
-        {mostradas.map(([desc, cant, unidad, total], k) => (
-          <li key={k}>
-            <span className="ct-linea-desc">{desc}</span>
-            <span className="ct-linea-cifra">
-              {[cant != null ? `${numero(cant)} ${unidades(unidad, cant)}`.trim() : null,
-                cant != null && cant > 1 && total ? `${fmtSoles(total / cant)} c/u` : null,
-                total != null ? fmtSoles(total) : null].filter(Boolean).join(" · ")}
-            </span>
-          </li>
-        ))}
+        {mostradas.map(([desc, cant, unidad, total, mediana, compras], k) => {
+          const unitario = cant && cant > 1 && total ? total / cant : null;
+          const nivel = comparaPrecio(unitario, mediana);
+          return (
+            <li key={k}>
+              <span className="ct-linea-desc">{desc}</span>
+              <span className="ct-linea-cifra">
+                {[cant != null ? `${numero(cant)} ${unidades(unidad, cant)}`.trim() : null,
+                  unitario ? `${fmtUnitario(unitario)} c/u` : null,
+                  total != null ? fmtSoles(total) : null].filter(Boolean).join(" · ")}
+              </span>
+              {unitario && mediana ? (
+                <span className={`ct-linea-precio ${nivel ?? ""}`}>
+                  {nivel === "alto" ? `${veces(unitario / mediana)} lo usual: ` : nivel === "revisar" ? "Muy lejos de lo usual: " : ""}
+                  el Estado suele pagar {fmtUnitario(mediana)} c/u por el mismo producto ({plural(compras ?? 0, "compra", "compras")})
+                  {nivel === "revisar" ? ". Puede ser un error al registrar la cantidad o la unidad: revisa el contrato." : ""}
+                </span>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
       {n > mostradas.length ? <small>y {plural(n - mostradas.length, "línea más", "líneas más")} en el contrato</small> : null}
     </div>
@@ -327,20 +357,28 @@ function LineasCompradas({ lineas, compacto }: { lineas: Lineas; compacto: boole
 
 export function Contrato({ v, nombres, compacto = false }: { v: Vista; nombres: NombresGasto | null; compacto?: boolean }) {
   const eventos = eventosDe(v.eventos);
-  const tipos = new Set(eventos.map((e) => e.tipo));
+  const cuantos: Record<string, number> = {};
+  for (const e of eventos) cuantos[e.tipo] = (cuantos[e.tipo] ?? 0) + 1;
   const cambio = v.final != null && v.monto ? (v.final - v.monto) / v.monto : null;
   const cuenta: Record<string, number> = {};
   const gasto = etiquetaGasto(v.gasto, nombres);
+  const precio = precioDe(v.lineas);
+  const cuis = (v.cui ?? "").split(",").filter(Boolean);
   return (
     <li className="contrato">
       <div className="ct-cab">
         <time dateTime={v.fecha}>{fechaCorta(v.fecha)}</time>
         {v.cat ? <span className="etiqueta-tipo">{CATEGORIA[v.cat]}</span> : null}
         {v.via === "directo" ? <span className="badge media">Sin competencia</span> : null}
-        {v.via === "competitivo" && v.postores === 1 ? <span className="badge media">Un solo postor</span> : null}
-        {(["nulidad", "resolucion", "intervencion", "adicional"] as const).filter((t) => tipos.has(t)).map((t) => (
-          <span key={t} className={`badge ${EVENTOS[t].tono}`}>{EVENTOS[t].texto}</span>
+        {v.via === "competitivo" && v.postores === 1 ? <span className="badge media">Un solo participante</span> : null}
+        {precio === "alto" ? <span className="badge media">Precio alto</span> : null}
+        {precio === "revisar" ? <span className="badge neutro">Revisar precio</span> : null}
+        {(["nulidad", "resolucion", "intervencion", "adicional", "ampliacion", "reduccion"] as const).filter((t) => cuantos[t]).map((t) => (
+          <span key={t} className={`badge ${EVENTOS[t].tono}`}>
+            {EVENTOS[t].texto}{cuantos[t] > 1 ? ` ×${cuantos[t]}` : ""}
+          </span>
         ))}
+        {cambio != null && cambio >= 0.25 ? <span className="badge media">Subió {fmtPct(cambio)}</span> : null}
       </div>
       <p className="ct-objeto">{v.objeto ? fmtNombre(v.objeto) : "Sin descripción en el SEACE"}</p>
       <div className="ct-cifras">
@@ -375,7 +413,7 @@ export function Contrato({ v, nombres, compacto = false }: { v: Vista; nombres: 
       {!compacto ? (
         <p className="ct-como">
           {v.metodo || "Procedimiento no indicado"}
-          {v.postores != null && v.via === "competitivo" ? ` · ${plural(v.postores, "postor", "postores")}` : ""}
+          {v.postores != null && v.via === "competitivo" ? ` · ${plural(v.postores, "participante", "participantes")}` : ""}
         </p>
       ) : null}
       <div className="ct-docs">
@@ -394,10 +432,15 @@ export function Contrato({ v, nombres, compacto = false }: { v: Vista; nombres: 
           );
         })}
         {eventos.length > 8 ? <span>y {eventos.length - 8} documentos más</span> : null}
-        {v.cui && !compacto ? v.cui.split(",").map((x) => (
+        {!compacto ? cuis.map((x) => (
           <a key={x} href={fichaInversion(x)} target="_blank" rel="noopener">Obra CUI {x} ↗</a>
         )) : null}
       </div>
+      {cuis.length > 1 ? (
+        <p className="ct-otro">
+          Este contrato abarca {cuis.length} proyectos (CUI {cuis.join(", ")}): su monto no es solo de uno de ellos.
+        </p>
+      ) : null}
       {v.nota ? <p className="ct-otro">{v.nota}</p> : null}
     </li>
   );
@@ -416,35 +459,47 @@ function useContratos(sec: string, activo: boolean) {
   return { d, nombres };
 }
 
-/** Who builds a project and for how much: the contracts that carry its CUI, of any year. */
-export function ContratosDeObra({ sec, cui, n, monto }: { sec: string; cui: string; n: number; monto: number | null }) {
+/** What a project's contracts add up to, signed and after amendments. */
+const sumas = (filas: FilaContrato[]) => ({
+  n: filas.length, firmado: filas.reduce((a, c) => a + (c[3] ?? 0), 0), final: filas.reduce((a, c) => a + (c[4] ?? c[3] ?? 0), 0),
+});
+
+/** Who builds a project and for how much: the project as a whole, then the contracts that carry its
+ *  CUI, of any year. */
+export function ContratosDeObra({ sec, cui, n, monto, anual }: {
+  sec: string; cui: string; n: number; monto: number | null; anual?: number | null;
+}) {
   const [abierto, setAbierto] = useState(false);
   const { d, nombres } = useContratos(sec, abierto);
   const filas = d ? d.c.filter((c) => (c[8] ?? "").split(",").includes(cui)) : [];
   return (
     <div className="ct-obra">
       <button type="button" className="ct-obra-boton" aria-expanded={abierto} onClick={() => setAbierto((a) => !a)}>
-        {plural(n, "contrato", "contratos")} · {fmtSoles(monto)} — ¿quién la hace?
+        {n ? <>{plural(n, "contrato", "contratos")} · {fmtSoles(monto)} — ¿quién la hace?</> : "La obra completa: costo, avance y último reporte"}
         <ChevronDown size={15} aria-hidden />
       </button>
-      {abierto && d === undefined ? <p className="explica cargando">Cargando…</p> : null}
-      {abierto && d === null ? <p className="vacio">No se pudieron cargar los contratos.</p> : null}
-      {abierto && d ? (
-        <ol className="contratos compacto">
-          {filas.map((c, i) => <Contrato key={i} v={vistaEntidad(c, d)} nombres={nombres} compacto />)}
-        </ol>
+      {abierto && n && d === undefined ? <p className="explica cargando">Cargando…</p> : null}
+      {abierto && !n ? <ObraCompleta sec={sec} cui={cui} anual={anual} /> : null}
+      {abierto && n && d ? (
+        <>
+          <ObraCompleta sec={sec} cui={cui} anual={anual} contratos={sumas(filas)} />
+          <ol className="contratos compacto">
+            {filas.map((c, i) => <Contrato key={i} v={vistaEntidad(c, d)} nombres={nombres} compacto />)}
+          </ol>
+        </>
       ) : null}
     </div>
   );
 }
 
-/** Inside a project's detail: its own contracts (by CUI). */
-export function ContratosDelProyecto({ sec, cui }: { sec: string; cui: string }) {
+/** Inside a project's detail: the project as a whole and its own contracts (by CUI). */
+export function ContratosDelProyecto({ sec, cui, anual }: { sec: string; cui: string; anual?: number | null }) {
   const { d, nombres } = useContratos(sec, true);
   if (d === undefined) return <p className="explica cargando">Cargando contratos…</p>;
   const filas = d ? d.c.filter((c) => (c[8] ?? "").split(",").includes(cui)) : [];
   return (
     <section className="ct-del-proyecto">
+      <ObraCompleta sec={sec} cui={cui} anual={anual} contratos={sumas(filas)} />
       <h5>Quién lo hace: contratos de este proyecto</h5>
       {filas.length ? (
         <ol className="contratos compacto">

@@ -198,7 +198,8 @@ def test_exports_each_unit_with_its_contracts_and_red_flags(tmp_path, monkeypatc
     assert gasto[200.0] == "2.6.8.1.3.1", "a project's expediente técnico"
     assert gasto[50.0] == "2.3.2.4.5.1", "no project: vehicle maintenance, by its largest line"
     assert gasto[40.0] == "2.3.2.4.2.1", "works with no catalogue code and no project: maintenance, of the building it names"
-    assert d["c"][3][13] == [2, [["Mantenimiento preventivo de camioneta", 2.0, "Servicio", 30.0], ["Llantas", 4.0, "Unidad", 20.0]]]
+    assert d["c"][3][13] == [2, [["Mantenimiento preventivo de camioneta", 2.0, "Servicio", 30.0, None, None],
+                                 ["Llantas", 4.0, "Unidad", 20.0, None, None]]], "no usual price to compare with: none shown"
     assert ["2.3.2.4", 2, 90.0] in r["por_gasto"], "what the unit's contracts buy, by expense group"
 
     prov = json.loads((out / "proveedor" / "20600000001.json").read_text())
@@ -217,3 +218,29 @@ def test_exports_each_unit_with_its_contracts_and_red_flags(tmp_path, monkeypatc
     assert not (out / "contratos" / "viejo.json").exists()
     fuente = json.loads((out / "contratos" / "fuente.json").read_text())
     assert fuente["anos"] == [2025, 2026] and fuente["compradores_vinculados"] == 1
+
+
+def test_unit_prices_compared_across_the_state(tmp_path, monkeypatch):
+    """The same catalogue item, bought by many units: a price 3x the usual is a signal; 30x is more
+    likely a quantity typed in the wrong unit, and is not counted as one."""
+    nombre = "MUNICIPALIDAD DISTRITAL DE KIMBIRI"
+    filas, items = [], []
+    for k in range(10):  # the usual price: about S/ 30 a bag, five buyers
+        filas.append(_contrato(100 + k, f"b-{k % 5}", f"COMPRADOR {k % 5}", categoria="goods", monto=300.0))
+        items.append((f"o{100 + k}", str(100 + k), "30111601", "CEMENTO PORTLAND", 10.0, "Bolsa", 280.0 + 4 * k))
+    for k, precio in ((200, 90.0), (201, 900.0)):
+        filas.append(_contrato(k, "b-kimbiri", nombre, categoria="goods", monto=precio * 10, cui="2500001"))
+        items.append((f"o{k}", str(k), "30111601", "CEMENTO PORTLAND", 10.0, "Bolsa", precio * 10))
+    con = _con_contratos(filas)
+    _escribir(con, tmp_path, monkeypatch, items=items)
+    out = tmp_path / "json"
+    out.mkdir()
+    # the CUBSO code is what prices are compared by: give the items one
+    lago_items = C.CARPETA_ITEMS / "2026.parquet"
+    duckdb.connect().execute(f"COPY (SELECT * REPLACE ('3011160100000001' AS cubso) FROM '{lago_items}') TO '{lago_items}' (FORMAT parquet)")
+    resumen, _ = C.exportar(con, out)
+    assert resumen["60"]["precio_alto"] == 1, "3x the usual price counts; 30x (likely a typo) does not"
+    d = json.loads((out / "contratos" / "60.json").read_text())
+    lineas = {c[3]: c[13][1][0] for c in d["c"]}
+    assert lineas[900.0][4] == lineas[9000.0][4] and 29 < lineas[900.0][4] < 33, "the usual unit price"
+    assert lineas[900.0][5] == 12, "how many purchases it comes from"

@@ -64,6 +64,7 @@ export function FichaProveedor() {
   if (r.nulos) senales.push({ tono: "alta", texto: `${plural(r.nulos, "contrato declarado nulo", "contratos declarados nulos")}.` });
   if (r.intervenidos) senales.push({ tono: "alta", texto: `${plural(r.intervenidos, "obra intervenida", "obras intervenidas")} por la entidad.` });
   if (r.extra) senales.push({ tono: "media", texto: `${fmtSoles(r.extra)} más de lo firmado, por adicionales en ${plural(r.con_adicionales, "contrato", "contratos")}.` });
+  if (r.precio_alto) senales.push({ tono: "media", texto: `En ${plural(r.precio_alto, "contrato", "contratos")} cobró por algún producto entre 2 y 10 veces lo que el Estado suele pagar por él.` });
   const maxG = Math.max(...d.g.map(([, , m]) => m ?? 0), 1);
   return (
     <>
@@ -81,7 +82,7 @@ export function FichaProveedor() {
           <KpiCard etiqueta="Contratado" valor={fmtSoles(r.monto)} nota={`en ${plural(r.n, "contrato", "contratos")}`} />
           <KpiCard etiqueta="Entidades" valor={r.entidades.toLocaleString("es-PE")}
                    nota={mayor && r.monto ? `La principal: ${fmtPct((mayor[3] ?? 0) / r.monto)} de lo contratado` : undefined} />
-          <KpiCard etiqueta="Un solo postor" valor={fmtPct(unPostor)}
+          <KpiCard etiqueta="Un solo participante" valor={fmtPct(unPostor)}
                    nota={r.competitivos ? `en ${plural(r.competitivos, "concurso ganado", "concursos ganados")}` : "Sin concursos con competencia"} />
           <KpiCard etiqueta="Sin competencia" valor={fmtPct(sinCompetencia)} nota="del monto, por contratación directa" />
         </div>

@@ -14,7 +14,8 @@ lake (data/lake, mirrored to a Hugging Face dataset)
   ├─ gasto|ingreso/<año>.parquet              latest publication
   ├─ snapshots/<dataset>/<año>/<pub>.parquet  every MEF publication (MEF overwrites its files: this is the history)
   ├─ cambios/<dataset>/<año>/<pub>.parquet    budget changes vs the previous publication
-  └─ contratos/<año>.parquet                  SEACE contracts (OECE, OCDS mirror by Open Contracting Partnership), weekly
+  ├─ contratos/<año>.parquet                  SEACE contracts (OECE, OCDS mirror by Open Contracting Partnership), weekly
+  └─ inversiones/*.parquet                    each investment project as a whole (MEF Banco de Inversiones, Formato 12B), weekly
       ▼
 serving: aggregate → compare → alerts → exportar (+ contracts linked to each executing unit) → validate → QA
          (data/serving: DuckDB + JSON)
@@ -111,8 +112,9 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
   Ley 27806 information request (Portal de Transparencia Estándar) or a Contraloría complaint (gob.pe/9260).
 - `/entidad/<id>` — an executing unit's budget, monthly execution, projects (each linked to its MEF investment record by CUI) and alerts.
   **"¿A quién le contrata?"**: the contracts it signed in SEACE (supplier and RUC, amount and final amount, procedure, number of
-  bidders, the signed contract and its amendments as PDFs, and what was bought line by line with quantities and unit prices), its
-  largest suppliers and the signals worth a question (single bidder, no competition, adicionales, terminated or annulled contracts).
+  participants, the signed contract and its amendments as PDFs, and what was bought line by line with quantities and unit prices,
+  each next to what the State usually pays for the same catalogue item), its largest suppliers and the signals worth a question
+  (single participant, no competition, a price 2–10× the usual, adicionales, extensions, terminated or annulled contracts).
   Each contract gets the budget's expense type it corresponds to, from the catalogue code of what it buys
   (`pipeline/etiquetas/bienes_gasto.csv`) or, for works, from its project's budget lines: so each expense type of an activity
   ("Combustibles", "Alimentos para programas sociales"…) opens the unit's contracts of that type, and each project its own
@@ -132,7 +134,7 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
 - [x] Pipeline: dual-format (pivoted + monthly rows) → lossless canonical Parquet, verified against the CSV
 - [x] Lake with one snapshot per MEF publication + budget change log; Hugging Face mirror
 - [x] Daily refresh (ETag check, chunked downloads) + GitHub Pages deploy + CI quality gates
-- [x] 76 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
+- [x] 78 browser checks on the built site with real data before every deploy (`apps/web/e2e/sitio.mjs`)
 - [x] Comparisons (PIA→PIM, publication→publication, year→year) by función, genérica, tema, departamento, nivel
 - [x] Alert rules R1–R8 on real data, incl. R8 "sin descripción": budget MEF publishes with a generic project code
       and no name or meta (S/ 2,651 M in Oct 2026, mostly defence)
@@ -144,6 +146,9 @@ Semantics: MEF amounts are exact `DECIMAL(18,2)`. `MONTO_DEVENGADO_<MES>` are mo
       the signed contract and amendments as PDFs and red flags; contracted amounts, not payments
 - [x] What exactly was bought (contract lines with quantity and unit price), the expense type each contract corresponds to
       (83% of them), and a page per supplier
+- [x] Unit prices against the State's usual price for the same item (363 comparable catalogue items); each project as a whole
+      from MEF's Banco de Inversiones (total vs approved cost, spending since it began, physical progress, the entity's latest
+      report and problems), since a year's budget is only that year's slice of a project (`pipeline/inversiones.py`)
 - [ ] Deep drill-down to line level in the browser (DuckDB-WASM over the Hugging Face Parquet, ~1 MB per entity)
 - [ ] Backfill 2012–2024; Perú Compras framework orders and small purchases (≤ 8 UIT); Etapa 2 (reclamos/Contraloría)
 

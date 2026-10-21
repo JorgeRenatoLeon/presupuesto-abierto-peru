@@ -118,6 +118,14 @@ export default function MetodologiaPage() {
 
       <section className="tarjeta seccion">
         <h2>Proyectos de inversión y señales</h2>
+        <p style={{ fontSize: 14, marginBottom: 8 }}>
+          El presupuesto de un año muestra solo la parte de cada obra que se paga ese año. Para ver la obra completa
+          usamos el <strong>Banco de Inversiones del MEF</strong> (datos abiertos «Detalle de inversiones» y «Formato 12B»,
+          actualizados cada semana): su costo total actualizado frente al aprobado, lo gastado desde el inicio, el avance
+          físico, cómo se ejecuta, dónde está, los laudos arbitrales y el último reporte de la entidad, con los problemas
+          que declara. Así, una obra de S/ 23 millones en su último año puede tener S/ 3 millones de presupuesto y
+          contratos de años anteriores por mucho más.
+        </p>
         <p style={{ fontSize: 14 }}>
           Cada proyecto de inversión se identifica por su código único (CUI) y lo agrupamos por la entidad que
           lo ejecuta; su ficha oficial está en el Sistema de Seguimiento de Inversiones del MEF. Desde junio,
@@ -149,7 +157,7 @@ export default function MetodologiaPage() {
           <a style={enlace} href="https://data.open-contracting.org/en/publication/135" target="_blank" rel="noopener">Open
           Contracting Partnership</a> (licencia CC BY 4.0) y la revisamos cada semana. De cada contrato mostramos el
           objeto, el proveedor y su RUC, el monto firmado y el final, la fecha, cómo se eligió al proveedor, cuántos
-          postores se presentaron y sus documentos: el contrato firmado y lo que vino después (adicionales,
+          proveedores participaron y sus documentos: el contrato firmado y lo que vino después (adicionales,
           ampliaciones, resoluciones, nulidades), que se descargan directamente del SEACE.
         </p>
         <p style={{ fontSize: 14, marginTop: 8 }}>
@@ -184,7 +192,13 @@ export default function MetodologiaPage() {
           impedimentos, está en la Ficha Única del Proveedor del OECE.
         </p>
         <p style={{ fontSize: 14, marginTop: 8 }}>
-          Las señales: <strong>«un solo postor»</strong> cuando a un concurso se presentó una sola empresa;{" "}
+          Las señales: <strong>«un solo participante»</strong> cuando en un concurso participó un solo proveedor (el SEACE
+          cuenta como participantes a los que se registraron en el procedimiento; no todos presentan oferta);{" "}
+          <strong>«precio alto»</strong> cuando algún producto costó entre 2 y 10 veces lo que el Estado suele pagar por el
+          mismo producto (mismo código del catálogo CUBSO y misma unidad, comparado con al menos 8 compras de 4 entidades
+          en el periodo, y solo en productos cuyos precios usuales son parecidos entre sí; más de 10 veces suele ser un
+          error al registrar la cantidad o la unidad y lo marcamos como «revisar»); <strong>«subió»</strong> cuando el monto
+          final supera en 25% o más lo firmado;{" "}
           <strong>«sin competencia»</strong> cuando el proveedor se eligió por contratación directa o exoneración;{" "}
           <strong>«adicional»</strong>, <strong>«resuelto»</strong>, <strong>«declarado nulo»</strong> y{" "}
           <strong>«obra intervenida»</strong> según los documentos registrados después de la firma. Son preguntas que

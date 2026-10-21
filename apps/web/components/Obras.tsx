@@ -36,13 +36,23 @@ export function ListaObras({ obras, conEntidad = false, vacio, sec }: {
             </div>
             <BarraProgreso avance={avance} tono={s?.clase === "alta" ? "bad" : undefined} />
             <div className="detalle">
-              <span>{fmtPct(avance)} ejecutado de {fmtSoles(o.pim)}</span>
+              <span>Este año: {fmtPct(avance)} gastado de {fmtSoles(o.pim)}</span>
               <a href={fichaInversion(o.cui)} target="_blank" rel="noopener">Ficha oficial · CUI {o.cui} ↗</a>
             </div>
             {o.dev_ano_ant ? (
               <div className="detalle"><span>El año pasado ejecutó {fmtSoles(o.dev_ano_ant)}</span></div>
             ) : null}
-            {sec && o.c ? <ContratosDeObra sec={sec} cui={o.cui} n={o.c[0]} monto={o.c[1]} /> : null}
+            {o.t?.[0] ? (
+              <div className="detalle obra-total">
+                <span>
+                  Obra completa: {fmtSoles(o.t[0])}
+                  {o.t[1] && o.t[0] / o.t[1] >= 1.3 ? <b className="sube"> (+{fmtPct(o.t[0] / o.t[1] - 1)} sobre lo aprobado)</b> : null}
+                  {o.t[2] != null ? ` · gastado desde el inicio: ${fmtPct(o.t[2] / o.t[0])}` : ""}
+                  {o.t[3] != null ? ` · avance físico ${fmtPct(o.t[3] / 100)}` : ""}
+                </span>
+              </div>
+            ) : null}
+            {sec && (o.c || o.t) ? <ContratosDeObra sec={sec} cui={o.cui} n={o.c?.[0] ?? 0} monto={o.c?.[1] ?? null} anual={o.pim} /> : null}
           </li>
         );
       })}

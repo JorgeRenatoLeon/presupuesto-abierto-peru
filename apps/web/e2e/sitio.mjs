@@ -65,11 +65,15 @@ await paso("municipality", async () => {
   if (!(await proyecto.locator(".detalle-item").count())) await proyecto.getByRole("button", { name: "¿En qué exactamente?" }).click();
   await proyecto.locator(".ct-del-proyecto").waitFor({ timeout: 15000 });
   check(true, "entity: a project's detail shows its own contracts (by CUI)");
+  await proyecto.locator(".obra-entera").waitFor({ timeout: 15000 });
+  check(await proyecto.locator(".obra-entera").getByText("Costo total").isVisible(),
+        "entity: a project's detail shows the whole project (total cost, spent since it began), not just this year");
   await sinScroll("entidad/300790 (detail open)");
   const nav = page.getByRole("navigation", { name: "Secciones de esta página" });
   await nav.getByRole("link", { name: "Obras" }).click();
   await page.waitForFunction(() => location.hash === "#obras");
   check(await page.locator("#obras h2").isVisible(), "entity: the section strip jumps to Obras");
+  check(await page.locator("#obras .obra-total").count() > 0, "entity: projects show their whole cost and progress, not just this year's budget");
   check(await nav.isVisible(), "entity: the section strip stays visible while scrolling");
 });
 
@@ -79,7 +83,7 @@ await paso("contracts", async () => {
   check(await sec.locator("h2").isVisible(), "contracts: «¿A quién le contrata?» on a municipality");
   check(await page.getByRole("navigation", { name: "Secciones de esta página" }).getByRole("link", { name: "A quién contrata" }).count() === 1,
         "contracts: the section strip links to it");
-  check(await sec.locator(".kpi").count() === 4 && await sec.getByText("Un solo postor", { exact: true }).first().isVisible(),
+  check(await sec.locator(".kpi").count() === 4 && await sec.getByText("Un solo participante", { exact: true }).first().isVisible(),
         "contracts: amount, suppliers, single bidder and no-competition figures");
   check(await sec.locator(".ct-top li").count() >= 1, "contracts: its largest suppliers are listed");
   const filas = sec.locator(".contratos .contrato");

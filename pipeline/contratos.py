@@ -489,18 +489,52 @@ def _por_texto(con) -> None:
         FROM _gasto1 g JOIN _todos c USING (ocid, contrato_id)""")
 
 
+# Unit prices compared across the State: the same catalogue item (16-digit CUBSO) and unit, goods
+# bought by the unit (2 or more), not land, vouchers or lump sums. An item counts when at least
+# PRECIO_MIN_COMPRAS purchases by PRECIO_MIN_COMPRADORES buyers exist and its usual prices are
+# close together (the middle half within 3x): a generic code covering different sizes or specs
+# ("DRONE", "JAULA ... APROX.") would compare apples and pears.
+PRECIO_MIN_COMPRAS, PRECIO_MIN_COMPRADORES = 8, 4
+
+
+def _precios(con, desde: int) -> None:
+    """_precios (cubso, unidad, mediana, n): the usual unit price of each comparable item."""
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _lpu AS
+        SELECT i.ocid, i.contrato_id, i.pos, i.cubso, lower(i.unidad) AS unidad, i.total / i.cantidad AS pu, c.comprador_id
+        FROM _it i JOIN _todos c USING (ocid, contrato_id)
+        WHERE c.categoria = 'goods' AND c.ano >= {desde} AND i.cubso IS NOT NULL AND i.cantidad >= 2 AND i.total > 0
+          AND NOT starts_with(coalesce(i.unspsc, ''), '95')
+          AND NOT regexp_matches(lower(coalesce(i.unidad, '')), 'servicio|global|lote')
+          AND NOT regexp_matches(upper(coalesce(i.cubso_desc, '')), 'VALE|TARJETA|CUP[OÓ]N|BONO|TICKET')""")
+    con.execute(f"""CREATE OR REPLACE TEMP TABLE _precios AS
+        SELECT cubso, unidad, median(pu) AS mediana, count(*) AS n FROM _lpu GROUP BY 1, 2
+        HAVING count(*) >= {PRECIO_MIN_COMPRAS} AND count(DISTINCT comprador_id) >= {PRECIO_MIN_COMPRADORES}
+           AND quantile_cont(pu, 0.75) <= 3 * quantile_cont(pu, 0.25)""")
+    # each contract's worst line: 2-10x the usual price is a signal; beyond, more likely a typo in
+    # the quantity or the unit than a price (diesel "at S/ 522 a gallon")
+    con.execute("""CREATE OR REPLACE TEMP TABLE _ratio AS
+        SELECT l.ocid, l.contrato_id, max(l.pu / p.mediana) AS ratio
+        FROM _lpu l JOIN _precios p USING (cubso, unidad) GROUP BY 1, 2""")
+
+
 def _items_por_contrato(con, tabla: str, lugares) -> dict[tuple, list]:
-    """(ocid, contrato_id) -> [[line, quantity, unit, amount], ..., n lines]: the largest lines of
-    what each contract of `tabla` bought, as the entity wrote them (else the catalogue's name)."""
+    """(ocid, contrato_id) -> [n lines, [[line, quantity, unit, amount, usual unit price, purchases
+    it comes from], ...]]: the lines of what each contract of `tabla` bought, as the entity wrote
+    them (else the catalogue's name); lines priced far above the usual first, then the largest."""
     out: dict[tuple, list] = {}
-    for ocid, cid, desc, cat_desc, cant, unidad, total, n in con.execute(f"""
+    for ocid, cid, desc, cat_desc, cant, unidad, total, mediana, n_precio, n in con.execute(f"""
             SELECT i.ocid, i.contrato_id, i.descripcion, i.cubso_desc, i.cantidad, i.unidad, i.total,
+                   CASE WHEN l.pu IS NOT NULL THEN p.mediana END, CASE WHEN l.pu IS NOT NULL THEN p.n END,
                    count(*) OVER (PARTITION BY i.ocid, i.contrato_id) AS n
             FROM _it i JOIN (SELECT DISTINCT ocid, contrato_id FROM {tabla}) k USING (ocid, contrato_id)
-            QUALIFY row_number() OVER (PARTITION BY i.ocid, i.contrato_id ORDER BY i.total DESC NULLS LAST, i.pos)
+            LEFT JOIN _lpu l ON l.ocid = i.ocid AND l.contrato_id = i.contrato_id AND l.pos = i.pos
+            LEFT JOIN _precios p ON p.cubso = l.cubso AND p.unidad = l.unidad
+            QUALIFY row_number() OVER (PARTITION BY i.ocid, i.contrato_id
+                                       ORDER BY coalesce(l.pu / p.mediana >= 2, false) DESC, i.total DESC NULLS LAST, i.pos)
                     <= {ITEMS_POR_CONTRATO}""").fetchall():
         lst = out.setdefault((ocid, cid), [])
-        lst.append([texto_objeto(desc or cat_desc, lugares, 160) or None, cant, unidad, total])
+        lst.append([texto_objeto(desc or cat_desc, lugares, 160) or None, cant, unidad, total,
+                    round(mediana, 2) if mediana else None, n_precio])
         if len(lst) == 1:
             lst.insert(0, n)  # first element: how many lines in all
     return {k: [v[0], v[1:]] for k, v in out.items()}
@@ -566,6 +600,7 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
                        cubso_desc VARCHAR, unspsc VARCHAR, unspsc_desc VARCHAR, descripcion VARCHAR, cantidad DOUBLE,
                        unidad VARCHAR, total DOUBLE)""")
     _gastos(con)
+    _precios(con, ano - 1)
     enlace = enlazar(con, "_todos")
     con.execute("CREATE OR REPLACE TEMP TABLE _enl (comprador_id VARCHAR, sec_ejec VARCHAR, como VARCHAR)")
     con.executemany("INSERT INTO _enl VALUES (?, ?, ?)", [[c, s, h] for c, (s, h) in enlace.items()])
@@ -582,14 +617,14 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         WITH k AS (SELECT ocid, contrato_id, sec_ejec, bool_or(propio) AS propio FROM (
                      SELECT ocid, contrato_id, sec_ejec, true AS propio FROM _todos JOIN _enl USING (comprador_id)
                      UNION ALL SELECT ocid, contrato_id, sec_ejec, false FROM _cx) GROUP BY ocid, contrato_id, sec_ejec)
-        SELECT k.sec_ejec, k.propio, c.*, g.gasto FROM k JOIN _todos c USING (ocid, contrato_id)
-        LEFT JOIN _gasto g USING (ocid, contrato_id)""")
+        SELECT k.sec_ejec, k.propio, c.*, g.gasto, r.ratio FROM k JOIN _todos c USING (ocid, contrato_id)
+        LEFT JOIN _gasto g USING (ocid, contrato_id) LEFT JOIN _ratio r USING (ocid, contrato_id)""")
     con.execute(f"CREATE OR REPLACE TEMP VIEW _cs AS SELECT * FROM _ct WHERE ano >= {ano - 1}")  # the summary's period
     lugares = lugares_conocidos(con)
 
     resumen = {}
     for (sec, n, monto, extra, proveedores, comp, un_postor, directo, resueltos, intervenidos, nulos, adicionales,
-         de_otros, monto_otros, desde, hasta, o, b, s_) in con.execute("""
+         de_otros, monto_otros, desde, hasta, o, b, s_, caros) in con.execute("""
         SELECT sec_ejec, count(*), sum(monto), sum(greatest(coalesce(monto_final, monto) - monto, 0)),
                count(DISTINCT proveedor_ruc), count(*) FILTER (via = 'competitivo' AND postores IS NOT NULL),
                count(*) FILTER (via = 'competitivo' AND postores = 1), sum(monto) FILTER (via = 'directo'),
@@ -598,9 +633,9 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
                count(*) FILTER (eventos LIKE '%adicional%' OR monto_final > monto * 1.005),
                count(*) FILTER (NOT propio), sum(monto) FILTER (NOT propio), min(fecha), max(fecha),
                sum(monto) FILTER (categoria = 'works'), sum(monto) FILTER (categoria = 'goods'),
-               sum(monto) FILTER (categoria = 'services')
+               sum(monto) FILTER (categoria = 'services'), count(*) FILTER (ratio BETWEEN 2 AND 10)
         FROM _cs GROUP BY sec_ejec""").fetchall():
-        resumen[sec] = {"n": n, "monto": monto, "extra": extra or None, "proveedores": proveedores,
+        resumen[sec] = {"n": n, "monto": monto, "extra": extra or None, "proveedores": proveedores, "precio_alto": caros,
                         "competitivos": comp, "un_postor": un_postor, "directo": directo, "resueltos": resueltos,
                         "intervenidos": intervenidos, "nulos": nulos, "con_adicionales": adicionales,
                         "de_otros": de_otros, "monto_otros": monto_otros, "desde": str(desde), "hasta": str(hasta),
@@ -671,6 +706,8 @@ def exportar(con, out: Path) -> tuple[dict, dict]:
         "compradores": con.execute("SELECT count(DISTINCT comprador_id) FROM _c").fetchone()[0],
         "compradores_vinculados": len(enlace), "por_cui": sum(1 for _, h in enlace.values() if h == "cui"),
         "con_tipo_de_gasto": con.execute("SELECT count(*) FROM _c JOIN _gasto g USING (ocid, contrato_id) WHERE g.gasto IS NOT NULL").fetchone()[0],
+        "precios_comparables": con.execute("SELECT count(*) FROM _precios").fetchone()[0],
+        "precio_alto": con.execute("SELECT count(*) FROM _c JOIN _ratio USING (ocid, contrato_id) WHERE ratio BETWEEN 2 AND 10").fetchone()[0],
         "proveedores": n_prov,
     }, ensure_ascii=False))
     print(f"  json: contratos/*.json ({len(por_sec)} units, {sum(len(v) for v in por_sec.values()):,} contracts shown), "
@@ -687,12 +724,13 @@ def _proveedores(con, out: Path, lugares, ano: int, usados: set[str]) -> int:
                                   WHERE proveedor_ruc <> '' GROUP BY 1""").fetchall())
     ent = dict(con.execute("SELECT sec_ejec, any_value(nombre) FROM dim_entidad GROUP BY 1").fetchall())
     con.execute("""CREATE OR REPLACE TEMP TABLE _cp AS
-        SELECT c.*, e.sec_ejec, g.gasto FROM _c c LEFT JOIN _enl e USING (comprador_id) LEFT JOIN _gasto g USING (ocid, contrato_id)
+        SELECT c.*, e.sec_ejec, g.gasto, r.ratio FROM _c c LEFT JOIN _enl e USING (comprador_id)
+        LEFT JOIN _gasto g USING (ocid, contrato_id) LEFT JOIN _ratio r USING (ocid, contrato_id)
         WHERE c.proveedor_ruc IS NOT NULL AND c.proveedor_ruc <> ''""")
     lineas = _items_por_contrato(con, "_cp", lugares)
     indice = []
     filas_ = con.execute("""SELECT proveedor_ruc, fecha, objeto, monto, monto_final, metodo, categoria, postores, cui,
-                                   doc_contrato, eventos, gasto, sec_ejec, comprador, via, ocid, contrato_id
+                                   doc_contrato, eventos, gasto, sec_ejec, comprador, via, ocid, contrato_id, ratio
                             FROM _cp ORDER BY proveedor_ruc, monto DESC NULLS LAST, fecha DESC, ocid, contrato_id""").fetchall()
     grupo: list = []
     for k, fila in enumerate(filas_ + [None]):
@@ -717,10 +755,11 @@ def _archivo_proveedor(carpeta: Path, id_: str, nombre: str | None, filas_: list
     metodos: dict[str, int] = {}
     por_gasto: dict[str, list] = {}
     c = []
-    n = monto = extra = comp = un_postor = directo = resueltos = nulos = intervenidos = adicionales = 0
+    n = monto = extra = comp = un_postor = directo = resueltos = nulos = intervenidos = adicionales = caros = 0
     fechas = []
     for (_, fecha, objeto, m_, final, metodo, categoria, postores, cui, doc, eventos, gasto, sec, comprador,
-         via, ocid, cid) in filas_:
+         via, ocid, cid, ratio) in filas_:
+        caros += ratio is not None and 2 <= ratio <= 10
         clave = (sec, ent.get(sec) or comprador or "") if sec else (None, comprador or "")
         e = entidades.setdefault(clave, [len(entidades), 0, 0.0])
         e[1] += 1; e[2] += m_ or 0
@@ -754,7 +793,8 @@ def _archivo_proveedor(carpeta: Path, id_: str, nombre: str | None, filas_: list
         "id": id_, "nombre": nombre, "tipo": tipo, "desde_ano": ano - 1,
         "r": {"n": n, "monto": monto, "extra": extra or None, "entidades": len(entidades), "competitivos": comp,
               "un_postor": un_postor, "directo": directo or None, "resueltos": resueltos, "nulos": nulos,
-              "intervenidos": intervenidos, "con_adicionales": adicionales, "desde": min(fechas), "hasta": max(fechas),
+              "intervenidos": intervenidos, "con_adicionales": adicionales, "precio_alto": caros,
+              "desde": min(fechas), "hasta": max(fechas),
               "mostrados": len(c)},
         "e": lista_ent, "g": sorted(([k, v[0], v[1]] for k, v in por_gasto.items()), key=lambda x: -x[2]),
         "m": list(metodos), "c": c,

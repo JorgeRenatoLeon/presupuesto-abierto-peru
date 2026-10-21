@@ -4,6 +4,8 @@ Runs after aggregate -> compare -> alerts and writes, under data/serving/json/:
   entidades.json, entidad/<sec_ejec>.json   search index + one file per executing unit
                                             (series, funciones, genéricas, obras, alertas)
   contratos/<sec_ejec>.json                 who it contracts with (contratos.py: OECE / SEACE)
+  obras/<sec_ejec>.json                     each project as a whole: total cost, all years' spending,
+                                            progress, latest report (inversiones.py: Banco de Inversiones)
   localidad/index.json, localidad/<dep>.json "Tu región": who spends what in each department
   auditar.json                              the audit agenda: stalled projects, year-end rush,
                                             court and arbitration payouts, sharp changes
@@ -22,6 +24,7 @@ from xml.sax.saxutils import escape
 import duckdb
 
 import contratos
+import inversiones
 from compare import ES_PROYECTO, SIN_DESCRIPCION
 from nombres import con_lugares, texto, lugares as _lugares
 from config import SERVING
@@ -81,7 +84,8 @@ def exportar() -> None:
                        .fetchone()[0])
 
     contratos_ent, contratos_obra = contratos.exportar(con, out) if tiene_obras else ({}, {})
-    _entidades(con, out, alertas, tiene_obras, contratos_ent, contratos_obra)
+    enteras = inversiones.exportar(con, out) if tiene_obras else {}
+    _entidades(con, out, alertas, tiene_obras, contratos_ent, contratos_obra, enteras)
     deps = _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, any_value(DEPARTAMENTO_META_NOMBRE) AS nombre
                          FROM gasto_wide WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS}
                          GROUP BY 1 ORDER BY 1""", [ano])
@@ -97,10 +101,10 @@ def exportar() -> None:
 # --- entities -----------------------------------------------------------------------
 
 def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: dict | None = None,
-               contratos_obra: dict | None = None) -> None:
+               contratos_obra: dict | None = None, enteras: dict | None = None) -> None:
     """entidades.json (search index) + one JSON per entity with series, breakdowns, projects, alerts
     and, when the contracts are in the lake, who it contracts with (summary; per project: [n, amount])."""
-    contratos_ent, contratos_obra = contratos_ent or {}, contratos_obra or {}
+    contratos_ent, contratos_obra, enteras = contratos_ent or {}, contratos_obra or {}, enteras or {}
     ent_dir = out / "entidad"
     ent_dir.mkdir(exist_ok=True)
 
@@ -181,6 +185,8 @@ def _entidades(con, out, alertas: list[dict], tiene_obras: bool, contratos_ent: 
         for obra in obras_ent:
             if (sec, obra["cui"]) in contratos_obra:
                 obra["c"] = contratos_obra[(sec, obra["cui"])]
+            if (sec, obra["cui"]) in enteras:  # the whole project: [updated cost, approved, spent in all years, progress]
+                obra["t"] = enteras[(sec, obra["cui"])]
         payload = {
             "info": ent,
             "series": _records(s.drop(columns=["sec_ejec"])),

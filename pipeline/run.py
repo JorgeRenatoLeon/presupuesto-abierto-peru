@@ -2,7 +2,7 @@
 
 Daily job (what CI runs):
   python run.py update     pull lake -> check MEF -> ingest new publications -> push lake ->
-                           refresh contracts (OECE, weekly) -> rebuild serving
+                           refresh contracts (OECE) and investment projects (MEF), weekly -> rebuild serving
 
 Individual steps:
   catalog | download | normalize | aggregate | compare | alerts | exportar | validate | qa | serving | pull | push |
@@ -20,7 +20,7 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Presupuesto Peru ETL")
     p.add_argument("command", choices=["update", "serving", "catalog", "download", "normalize", "aggregate",
                                         "compare", "alerts", "exportar", "validate", "qa", "pull", "push", "all",
-                                        "contratos"])
+                                        "contratos", "inversiones"])
     p.add_argument("--year", type=int)
     p.add_argument("--years", type=int, nargs="+")
     p.add_argument("--dataset", choices=["gasto", "ingreso", "ambos"], default="ambos",
@@ -82,6 +82,9 @@ def main() -> None:
     elif args.command == "contratos":
         import contratos
         contratos.actualizar(args.years or [_current_year() - 1, _current_year()], forzar=args.force)
+    elif args.command == "inversiones":
+        import inversiones
+        inversiones.actualizar(forzar=args.force)
     elif args.command == "pull":
         import hfsync
         hfsync.pull()
@@ -111,6 +114,7 @@ def _update(args, datasets: list[str], force: bool) -> None:
                 files.append(lake.changes_path(ds, y, pub))
         hfsync.push(files, "MEF: " + ", ".join(f"{ds} {y} publicado {lake.pub_date(p)}" for ds, y, p in nuevas))
     contratos_nuevos = _contratos(years, push=not args.no_push)
+    contratos_nuevos |= _inversiones(push=not args.no_push)
     _output("changed", bool(nuevas) or contratos_nuevos)
     if nuevas or force or contratos_nuevos:
         _serving(args)
@@ -132,6 +136,21 @@ def _contratos(years: list[int], push: bool) -> bool:
         return False
     if escritos and push:
         hfsync.push(escritos, "OECE: contratos " + ", ".join(p.stem for p in escritos if p.suffix == ".parquet"))
+    return bool(escritos)
+
+
+def _inversiones(push: bool) -> bool:
+    """Refresh each investment project's whole cost and progress (MEF Banco de Inversiones, weekly).
+    Best effort, like the contracts: the site keeps the last copy pulled from Hugging Face."""
+    import hfsync
+    import inversiones
+    try:
+        escritos = inversiones.actualizar()
+    except Exception as e:  # noqa: BLE001 - an extra source must not stop the budget update
+        print(f"  WARN inversiones: {e}")
+        return False
+    if escritos and push:
+        hfsync.push(escritos, "MEF: inversiones (Banco de Inversiones y Formato 12B)")
     return bool(escritos)
 
 

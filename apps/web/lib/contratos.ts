@@ -12,6 +12,8 @@ export type ContratosResumen = {
   /** amount awarded without competition (contratación directa, exoneración) */
   directo?: number | null;
   resueltos?: number; intervenidos?: number; nulos?: number; con_adicionales?: number;
+  /** contracts with a line priced 2 to 10 times the State's usual price for the same item */
+  precio_alto?: number;
   /** contracts another entity signed for one of this one's projects (CUI) */
   de_otros?: number; monto_otros?: number | null;
   desde: string | null; hasta: string | null;
@@ -23,8 +25,9 @@ export type ContratosResumen = {
   mostrados?: number; desde_ano?: number;
 };
 
-/** What was bought, line by line: [lines in all, [[line, quantity, unit, amount], …the largest ones]] */
-export type Lineas = [number, [string | null, number | null, string | null, number | null][]];
+/** What was bought, line by line: [lines in all, [[line, quantity, unit, amount, usual unit price of
+ *  the same item across the State, purchases it comes from], …]] (lines priced far above usual first) */
+export type Lineas = [number, [string | null, number | null, string | null, number | null, number | null, number | null][]];
 
 /** [date, object, supplier, amount, final amount, method, category, bidders, CUIs, signed contract,
  *  events "type:document,…", buyer, expense type, lines] — indexes into the file's lists */
@@ -47,6 +50,7 @@ export type ArchivoProveedor = {
   id: string; nombre: string | null; tipo: "empresa" | "persona" | "consorcio"; desde_ano: number;
   r: { n: number; monto: number | null; extra: number | null; entidades: number; competitivos: number; un_postor: number;
        directo: number | null; resueltos: number; nulos: number; intervenidos: number; con_adicionales: number;
+       precio_alto?: number;
        desde: string; hasta: string; mostrados: number };
   /** units it sold to: [executing unit (null: a buyer outside the budget), name, contracts, amount] */
   e: [string | null, string, number, number | null][];
@@ -90,6 +94,24 @@ export function cargarDatos<T>(url: string): Promise<T | null> {
   return pedidos.get(url) as Promise<T | null>;
 }
 
+/** obras/<sec>.json: each project as a whole (MEF Banco de Inversiones, Formato 12B) */
+export type ObraEntera = {
+  costo: number | null; viable: number | null; acumulado: number | null; fisico: number | null;
+  situacion: string | null; modalidad: string | null; inicio: string | null; fin: string | null;
+  ubicacion: [number, number] | null; beneficiarios: number | null; laudo: number | null; desde: string | null;
+  tipologia: string | null;
+  /** the entity's latest report: [date, situation, problem (null: none), next step] */
+  reporte: [string | null, string | null, string | null, string | null] | null;
+};
+
+/** How a unit price compares with what the State usually pays for the same item: 2-10x is a
+ *  signal; beyond, more likely a quantity or unit typed wrong than a price. */
+export function comparaPrecio(unitario: number | null, mediana: number | null): "alto" | "revisar" | null {
+  if (!unitario || !mediana) return null;
+  const r = unitario / mediana;
+  return r > 10 ? "revisar" : r >= 2 ? "alto" : null;
+}
+
 /** A document of the contract in SEACE (signed contract, amendments): downloads the PDF. */
 export const urlDocumento = (id: string) => `https://prod4.seace.gob.pe:9000/api/con/documentos/descargar/${id}`;
 
@@ -130,9 +152,9 @@ export const EVENTOS: Record<string, { texto: string; explica: string; tono: "al
   nulidad: { texto: "Declarado nulo", explica: "La entidad declaró nulo el contrato, por ejemplo por documentos falsos o vicios en el proceso.", tono: "alta" },
   resolucion: { texto: "Resuelto", explica: "El contrato terminó antes de cumplirse, por incumplimiento u otra causa.", tono: "alta" },
   intervencion: { texto: "Obra intervenida", explica: "La entidad tomó el control económico de la obra por atrasos o problemas del contratista.", tono: "alta" },
-  adicional: { texto: "Adicional", explica: "Se aprobó pagar más de lo firmado (adicional de obra o contrato complementario).", tono: "media" },
+  adicional: { texto: "Adicional", explica: "Se aprobó pagar más de lo firmado (adicional de obra o contrato complementario). La ley pone topes a lo que un contrato puede crecer: aumentos grandes merecen una explicación.", tono: "media" },
   reduccion: { texto: "Reducción", explica: "Se redujo lo contratado.", tono: "neutro" },
-  ampliacion: { texto: "Más plazo", explica: "Se amplió el plazo para cumplir el contrato.", tono: "neutro" },
+  ampliacion: { texto: "Más plazo", explica: "Se amplió el plazo para cumplir el contrato (cada ampliación tiene su documento).", tono: "neutro" },
 };
 
 export function eventosDe(s: string | null): { tipo: string; doc: string }[] {
