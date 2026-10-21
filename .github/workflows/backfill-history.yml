@@ -1,0 +1,61 @@
+name: Backfill history
+
+# Every night, a few more past years into the Hugging Face dataset until it holds everything the
+# sources still publish: MEF spending and revenue since 2009, OECE contracts since 2009 and purchase
+# orders since 2018 (pipeline/historia.py). At most one multi-GB MEF year per run. After each run the
+# dataset is kept under HF_LIMITE_GB (default 10): history of rewritten files is squashed first and,
+# only if the files themselves don't fit, the oldest backfilled year is pruned (its publisher still
+# serves it). The site keeps showing the current and previous year; history is for the open data.
+#
+# Shares the refresh-data concurrency group: it never pushes while the daily refresh is pushing.
+on:
+  schedule:
+    - cron: "15 8 * * *"   # 03:15 Lima, far from the daily refresh
+  workflow_dispatch:
+    inputs:
+      unidades:
+        description: "How many missing source-years to fetch (at most one MEF spending year)"
+        default: "3"
+      solo:
+        description: "Only these sources, space-separated (gasto ingreso contratos ordenes)"
+        required: false
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    # one closed MEF year: a 7-10 GB download at ~8 MB/s plus its conversion, ~40 min
+    timeout-minutes: 180
+    env:
+      HF_DATASET: ${{ vars.HF_DATASET || secrets.HF_DATASET }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_LIMITE_GB: ${{ vars.HF_LIMITE_GB || '10' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space (a closed MEF year is a 7-10 GB CSV)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pipeline/requirements*.txt
+
+      - name: Install pipeline
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Fetch the next missing years, push them, keep the dataset within budget
+        working-directory: pipeline
+        env:
+          UNIDADES: ${{ inputs.unidades || '3' }}
+          SOLO: ${{ inputs.solo }}
+        run: python run.py historia --unidades "$UNIDADES" ${SOLO:+--solo $SOLO}
