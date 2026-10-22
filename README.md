@@ -63,10 +63,11 @@ presupuesto-app/
 
 ## Cost: everything stays free
 
-- **GitHub Actions:** free for public repositories on standard hosted runners (this repo is public). If it ever
-  becomes private, GitHub Pro from the Student Pack includes 3,000 minutes and 1 GB of artifact storage per month,
-  and without a payment method GitHub blocks usage instead of charging. Expected use, under 300 min/month
-  (timings measured on GitHub runners in October 2026):
+- **GitHub Actions:** free for public repositories on standard hosted runners (this repo is public), so the current
+  year is ingested every day MEF republishes it and the site is never more than a day behind. If the repo ever becomes
+  private, GitHub Pro from the Student Pack includes 3,000 minutes per month: set `CADENCIA_DIAS["actual"]` back to 7
+  (the table below is that weekly setup, under 300 min/month; daily ingests take ~1,300 min/month).
+  Timings measured on GitHub runners in October 2026:
 
   | What | When | Minutes/month |
   |---|---|---|
@@ -79,7 +80,8 @@ presupuesto-app/
 
   `timeout-minutes: 120` caps a run against a slow MEF server; the deploy artifact (the ~570 MB site) is kept 1 day.
   To use less, raise `CADENCIA_DIAS` in `pipeline/config.py` or check fewer days in the workflow's `cron`.
-- **Hugging Face:** a free public dataset ("best effort" past the first few GB). Each weekly snapshot adds ~60–80 MB, the
+- **Hugging Face:** a free public dataset ("best effort" past the first few GB). One snapshot a week is kept for good
+  (`SNAPSHOT_DIAS`; the daily ingests only rewrite the latest file); each adds ~60–80 MB, the
   contracts ~16 MB a week, the purchase orders ~175 MB a year. The nightly **Backfill history** workflow
   (`.github/workflows/backfill-history.yml`, `pipeline/historia.py`) fetches past years a few at a time (MEF spending and
   revenue since 2009, contracts since 2009, orders since 2018; ~3.5 GB in all) and keeps the dataset under `HF_LIMITE_GB`

@@ -3,11 +3,14 @@ publication we ingested. Lives in data/lake/ and is mirrored to a Hugging Face d
 (hfsync.py) so CI runs share state and anyone can query it with DuckDB or pandas.
 
     gasto/2026.parquet                              latest publication (what the site shows)
-    snapshots/gasto/2026/20260903T200428Z.parquet   every publication, never rewritten
-    cambios/gasto/2026/20260903T200428Z.parquet     line-level changes vs the previous one
+    snapshots/gasto/2026/20260903T200428Z.parquet   a publication kept for good, never rewritten
+    cambios/gasto/2026/20260903T200428Z.parquet     line-level changes vs the previous snapshot
     manifest.json                                   source ETag/size/date, rows, totals
 
-MEF overwrites its files every month, so these snapshots are the only budget history there is.
+MEF overwrites its files every day, so these snapshots are the only budget history there is.
+The current year is ingested daily, and one publication a week is kept as a snapshot
+(config.SNAPSHOT_DIAS); the others only refresh the latest file ("snapshot": false in the
+manifest). Comparisons "since the last update" use a snapshot at least a week older.
 """
 import json
 import shutil
@@ -17,7 +20,7 @@ from pathlib import Path
 
 import duckdb
 
-from config import LAKE, CANON, MESES, ANOS_SITIO
+from config import LAKE, CANON, MESES, ANOS_SITIO, SNAPSHOT_DIAS
 
 DATASETS = ("gasto", "ingreso")
 
@@ -77,6 +80,46 @@ def previous_pub(m: dict, dataset: str, year: int, pub: str) -> str | None:
     return older[-1] if older else None
 
 
+def guardada(m: dict, dataset: str, year: int, pub: str) -> bool:
+    """Was this publication kept as a snapshot? (Before daily ingests, every one was.)"""
+    return m["datasets"][dataset][str(year)]["publications"][pub].get("snapshot", True)
+
+
+def snapshots(m: dict, dataset: str, year: int) -> list[str]:
+    return [p for p in publications(m, dataset, year) if guardada(m, dataset, year, p)]
+
+
+def _dias(a: str, b: str) -> float:
+    from datetime import datetime
+    f = lambda p: datetime.strptime(p, "%Y%m%dT%H%M%SZ")
+    return (f(b) - f(a)).total_seconds() / 86400
+
+
+# MEF stamps its files at a slightly different hour each day: "a week" tolerates a few hours
+_SEMANA = SNAPSHOT_DIAS - 0.25
+
+
+def guardar_snapshot(m: dict, dataset: str, year: int, pub: str) -> bool:
+    """Keep this publication for good? Past years always (they are ingested monthly at most);
+    the current year when no snapshot was kept in the week before it."""
+    from datetime import datetime, timezone
+    if year < datetime.now(timezone.utc).year:
+        return True
+    antes = [p for p in snapshots(m, dataset, year) if p < pub]
+    return not antes or _dias(antes[-1], pub) >= _SEMANA
+
+
+def base_comparacion(m: dict, dataset: str, year: int) -> str | None:
+    """The snapshot the latest publication is compared with ("since the last update"): the latest
+    one kept at least a week before it, so a daily refresh never shrinks the window to one day."""
+    pubs = publications(m, dataset, year)
+    if not pubs:
+        return None
+    previas = [p for p in snapshots(m, dataset, year) if p < pubs[-1]]
+    lejanas = [p for p in previas if _dias(p, pubs[-1]) >= _SEMANA]
+    return (lejanas or previas or [None])[-1]
+
+
 def years(m: dict, dataset: str) -> list[int]:
     return sorted(int(y) for y, e in m["datasets"].get(dataset, {}).items() if e.get("latest"))
 
@@ -93,24 +136,32 @@ def is_known(m: dict, dataset: str, year: int, source: dict) -> bool:
 
 
 def add_publication(m: dict, dataset: str, year: int, pub: str, parquet: Path,
-                    source: dict, stats: dict) -> Path:
-    """Store a normalized publication as an immutable snapshot; advance 'latest' if newer."""
-    snap = snapshot_path(dataset, year, pub)
-    snap.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(parquet), snap)
+                    source: dict, stats: dict, guardar: bool = True) -> Path:
+    """Store a normalized publication: as an immutable snapshot when `guardar`, else only as the
+    latest file (a daily refresh). Advance 'latest' if newer. Returns where it was written."""
     e = _entry(m, dataset, year)
+    nueva = pub >= e.get("latest", "")
+    if guardar:
+        destino = snapshot_path(dataset, year, pub)
+    elif nueva:
+        destino = latest_path(dataset, year)
+    else:
+        raise ValueError(f"{dataset} {year}: {pub} is older than the latest and not kept: nothing to store")
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(parquet), destino)
     e["publications"][pub] = {
         "source": {k: source.get(k) for k in ("name", "etag", "size", "last_modified")},
         "rows": stats["rows"], "mes_ult": stats["mes_ult"], "format": stats.get("format"),
-        "totals": stats["totals"],
+        "totals": stats["totals"], "snapshot": guardar,
         "ingested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
-    if pub >= e.get("latest", ""):
+    if nueva:
         e["latest"] = pub
-        latest = latest_path(dataset, year)
-        latest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(snap, latest)
-    return snap
+        if guardar:
+            latest = latest_path(dataset, year)
+            latest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(destino, latest)
+    return destino
 
 
 # --- views -----------------------------------------------------------------------

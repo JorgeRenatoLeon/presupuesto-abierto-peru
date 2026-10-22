@@ -57,16 +57,26 @@ def pull() -> None:
     for ds in lake.DATASETS:
         anos = lake.years(m, ds)[-ANOS_SITIO:]
         for y in anos:
-            pubs = lake.publications(m, ds, y)
-            for p in (pubs[-2:] if y == anos[-1] else pubs[-1:]):
+            ultima = lake.latest_pub(m, ds, y)
+            guardadas = lake.snapshots(m, ds, y)
+            # the snapshots a run needs: the base of the next diff and of "since the last update"
+            # (current year), the latest one (previous year)
+            necesarias = set(guardadas[-1:])
+            if y == anos[-1]:
+                necesarias |= set(guardadas[-2:]) | ({lake.base_comparacion(m, ds, y)} - {None})
+            for p in sorted(necesarias):
                 get(lake.rel(lake.snapshot_path(ds, y, p)))
                 n += 1
-            if m["datasets"][ds][str(y)]["publications"][pubs[-1]].get("cambios"):
-                get(lake.rel(lake.changes_path(ds, y, pubs[-1])))
-            # latest file == latest snapshot: copy instead of downloading it twice
+            if m["datasets"][ds][str(y)]["publications"][ultima].get("cambios"):
+                get(lake.rel(lake.changes_path(ds, y, ultima)))
             latest = lake.latest_path(ds, y)
             latest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(lake.snapshot_path(ds, y, lake.latest_pub(m, ds, y)), latest)
+            if lake.guardada(m, ds, y, ultima):  # latest file == a snapshot: copy, don't download it twice
+                if ultima not in necesarias:
+                    get(lake.rel(lake.snapshot_path(ds, y, ultima)))
+                shutil.copyfile(lake.snapshot_path(ds, y, ultima), latest)
+            else:  # a daily refresh: only the latest file has it
+                get(lake.rel(latest))
     # who the State contracts with (contratos.py): the site's years, and when they were fetched
     desde = max(lake.years(m, "gasto"), default=0) - (ANOS_SITIO - 1)
     # purchase orders (ordenes.py): the current year's months, which the site summarizes

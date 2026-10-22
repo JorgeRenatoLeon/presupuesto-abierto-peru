@@ -96,6 +96,8 @@ def _load_pivoted(con, dataset: str, cols: list[str]) -> None:
                           + f') AS "{c}"')
         else:
             raise SystemExit(f"{dataset}: amount column {c} missing from source")
+    # monthly commitments exist only in monthly-rows sources
+    montos += [f'NULL::{DEC} AS "{c}"' for c in spec.get("opcionales", [])]
     con.execute(f"CREATE TABLE canon AS SELECT {_dim_select(dataset, cols)}, {', '.join(montos)} FROM src")
 
 
@@ -109,6 +111,14 @@ def _montos_mensuales(dataset: str) -> dict[str, str]:
     return {"MONTO_PIA": "MONTO_PIA", "MONTO_PIM": "MONTO_PIM", "MONTO_RECAUDADO_ANUAL": "MONTO_RECAUDADO"}
 
 
+def _compromisos(dataset: str, cols: list[str]) -> dict[str, str]:
+    """canonical monthly commitment prefix <- monthly-rows source column (see config.GASTO_COMPROMISOS)."""
+    if dataset != "gasto":
+        return {}
+    pares = {"MONTO_COMPROMETIDO_ANUAL": "MONTO_COMPROMETIDO_ANUAL", "MONTO_COMPROMETIDO_MENSUAL": "MONTO_COMPROMETIDO"}
+    return {k: v for k, v in pares.items() if v in cols}
+
+
 def _load_monthly(con, dataset: str, cols: list[str]) -> None:
     spec = CANON[dataset]
     mes = "MES_EJE" if "MES_EJE" in cols else "MES_DOC"
@@ -118,11 +128,15 @@ def _load_monthly(con, dataset: str, cols: list[str]) -> None:
     dim_out = ", ".join(f'arg_max("{c}", mes) AS "{c}"' if c.endswith("_NOMBRE") else f'"{c}"'
                         for c in spec["dims"])
     montos = _montos_mensuales(dataset)
-    fuentes = sorted(set(montos.values()))
+    fuentes = sorted(set(montos.values()) | set(_compromisos(dataset, cols).values()))
     pivot = ", ".join(
         [f'sum("{src}") AS "{dst}"' for dst, src in montos.items() if dst != f"{flujo}_ANUAL"]
         + [f'coalesce(sum("{flujo}") FILTER (mes = {i + 1}), 0) AS "{flujo}_{m}"' for i, m in enumerate(MESES)]
-        + [f'sum("{flujo}") AS "{flujo}_ANUAL"'])
+        + [f'sum("{flujo}") AS "{flujo}_ANUAL"']
+        + [f'coalesce(sum("{src}") FILTER (mes = {i + 1}), 0) AS "{dst}_{m}"'
+           for dst, src in _compromisos(dataset, cols).items() for i, m in enumerate(MESES)]
+        + [f'NULL::{DEC} AS "{c}"' for c in spec.get("opcionales", [])
+           if not any(c.startswith(f"{dst}_") for dst in _compromisos(dataset, cols))])
     con.execute(f"""
         CREATE TABLE canon AS
         WITH m AS (SELECT {_dim_select(dataset, cols)}, CAST("{mes}" AS INTEGER) AS mes,
@@ -154,6 +168,13 @@ def _verify(con, dataset: str, cols: list[str], fmt: str) -> dict:
         totals[canon_col] = str(b)
     for c in spec["montos"]:  # record the remaining columns too (month columns, derived annuals)
         totals.setdefault(c, str(con.execute(f'SELECT sum("{c}") FROM canon').fetchone()[0] or 0))
+    if fmt != "pivoted":  # monthly commitments: the twelve months add up to the CSV's total
+        for dst, src in _compromisos(dataset, cols).items():
+            a = con.execute(f'SELECT sum(CAST("{src}" AS DECIMAL(38,6))) FROM src').fetchone()[0] or 0
+            b = con.execute("SELECT " + " + ".join(f'coalesce(sum("{dst}_{m}"), 0)' for m in MESES) + " FROM canon").fetchone()[0] or 0
+            if a != b:
+                raise SystemExit(f"{dataset}: monthly {dst} adds up to {b}, the CSV to {a}")
+            totals[f"{dst}_MESES"] = str(b)
     return {"rows": n_canon, "totals": totals}
 
 

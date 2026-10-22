@@ -160,7 +160,8 @@ def compare() -> dict | None:
         return None
     ano = anos[-1]
     pubs = lake.publications(m, "gasto", ano)
-    pub, prev = pubs[-1], (pubs[-2] if len(pubs) > 1 else None)
+    # "since the last update": the snapshot kept at least a week before the latest publication
+    pub, prev = pubs[-1], lake.base_comparacion(m, "gasto", ano)
     mes_ult = m["datasets"]["gasto"][str(ano)]["publications"][pub]["mes_ult"]
     ant = ano - 1 if (ano - 1) in anos else None
 

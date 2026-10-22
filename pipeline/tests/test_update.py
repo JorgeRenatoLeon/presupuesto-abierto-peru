@@ -31,14 +31,14 @@ def sin_red(monkeypatch):
 
 
 def test_republished_file_waits_for_the_cadence(monkeypatch, sin_red):
-    monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=2))
+    monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=0.3))
     monkeypatch.setattr(U, "resolve_source", lambda ds, y: SRC)
     assert U.update([AHORA.year], ["gasto"]) == []
-    assert sin_red == [], "a re-stamped 8 GB file must not be downloaded again within the cadence"
+    assert sin_red == [], "a file re-stamped the same day must not be downloaded again (daily cadence)"
 
 
 def test_republished_file_is_ingested_after_the_cadence(monkeypatch, sin_red):
-    monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=8))
+    monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=1))
     monkeypatch.setattr(U, "resolve_source", lambda ds, y: SRC)
     monkeypatch.setattr(U.Path, "unlink", lambda self, missing_ok=False: None)
     U.update([AHORA.year], ["gasto"])

@@ -135,6 +135,24 @@ await paso("what contracts buy, by expense type", async () => {
   await sinScroll("entidad/300790#tipo-de-gasto (contracts open)");
 });
 
+await paso("this month: spending and commitments", async () => {
+  await page.goto(`${BASE}/entidad/1061/#este-mes`);  // Despacho Presidencial
+  const sec = page.locator("#este-mes");
+  if (!(await sec.count())) { check(true, "este mes: no monthly commitments in this data"); return; }
+  await sec.locator(".cambios-resumen").waitFor({ timeout: 15000 });
+  check(/gastó .* y registró compromisos anuales/.test(await sec.locator(".cambios-resumen").innerText()),
+        "este mes: what it spent and committed in the month");
+  check(/(Le falta pagar|No le queda|antes de fin de año)/.test(await sec.locator(".efecto").first().innerText()),
+        "este mes: commitments in monthly terms (what is left to pay, per month until December)");
+  const meses = sec.getByRole("group", { name: "Mes" }).getByRole("button");
+  await meses.first().click();
+  check(await meses.first().getAttribute("aria-pressed") === "true", "este mes: another month can be chosen");
+  const ver = sec.getByRole("button", { name: "Ver mes a mes" }).first();
+  await ver.click();
+  check(await sec.locator(".tabla-meses tbody tr").count() >= 2, "este mes: a line opens its month-by-month figures, to check against MEF");
+  await sinScroll("entidad/1061#este-mes");
+});
+
 await paso("purchases under way", async () => {
   const datos = await (await page.request.get(`${BASE}/data/contratos/301289.json`)).json();
   const p = datos.r.procesos ?? {};

@@ -49,13 +49,17 @@ def ingest(dataset: str, year: int, csv_files: list[Path], source: dict, m: dict
     stats = normalize(dataset, year, csv_files, tmp)
     prev = lake.previous_pub(m, dataset, year, pub)
     cordura(dataset, stats, m["datasets"][dataset][str(year)]["publications"][prev] if prev else None)
-    snap = lake.add_publication(m, dataset, year, pub, tmp, source, stats)
-    if prev:
+    # one publication a week is kept for good; the daily ones only refresh the latest file
+    guardar = lake.guardar_snapshot(m, dataset, year, pub)
+    base = ([p for p in lake.snapshots(m, dataset, year) if p < pub] or [None])[-1]
+    snap = lake.add_publication(m, dataset, year, pub, tmp, source, stats, guardar=guardar)
+    print(f"  {dataset} {year}: {pub} " + ("kept as a snapshot" if guardar else "refreshes the latest file (daily, not kept)"))
+    if guardar and base and lake.snapshot_path(dataset, year, base).exists():
         out = lake.changes_path(dataset, year, pub)
-        summary = diff(dataset, lake.snapshot_path(dataset, year, prev), snap, out)
-        m["datasets"][dataset][str(year)]["publications"][pub]["cambios"] = {"respecto_a": prev, **summary}
+        summary = diff(dataset, lake.snapshot_path(dataset, year, base), snap, out)
+        m["datasets"][dataset][str(year)]["publications"][pub]["cambios"] = {"respecto_a": base, **summary}
         ln = summary["lineas"]
-        print(f"  changes vs {prev}: {ln['nueva']:,} new, {ln['eliminada']:,} removed, "
+        print(f"  changes vs {base}: {ln['nueva']:,} new, {ln['eliminada']:,} removed, "
               f"{ln['presupuesto_modificado']:,} re-budgeted lines -> {lake.rel(out)} ({out.stat().st_size/1e6:.1f} MB)")
     lake.save_manifest(m)
     return pub

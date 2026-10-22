@@ -26,10 +26,13 @@ DICTIONARY_FILE = "Gastos_Diccionario.csv"
 DICTIONARY_FILE_INGRESOS = "Ingresos_Diccionario.csv"
 
 
-# Since October 2026 MEF publishes only the *-Diario files (gasto: 8-10 GB, re-stamped daily);
-# the *-Devengado-Mensual / *-Mensual files return 404. The daily job is a few HEAD requests;
-# a dataset-year is downloaded again only after this many days since its last ingest.
-CADENCIA_DIAS = {"actual": 7, "anterior": 30}
+# Since October 2026 MEF publishes only the *-Diario files (gasto: 8-10 GB, re-stamped daily).
+# The current year is ingested every day MEF republishes it (the site stays up to date; GitHub
+# Actions is free for this public repo); the previous year, which barely moves, monthly.
+CADENCIA_DIAS = {"actual": 0.75, "anterior": 30}
+# Of the daily ingests, one a week is kept for good as a snapshot (the budget's history); the
+# others only refresh the latest file, so Hugging Face storage grows weekly, not daily.
+SNAPSHOT_DIAS = 7
 
 
 def source_files(dataset: str, year: int, prefer_diario: bool = False) -> list[str]:
@@ -89,6 +92,14 @@ GASTO_MONTOS = (
     + [f"MONTO_DEVENGADO_{m}" for m in MESES]
     + ["MONTO_DEVENGADO_ANUAL", "MONTO_GIRADO_ANUAL"]
 )
+# Commitments by month (monthly-rows sources only; NULL for older pivoted files). Two different
+# things in SIAF, both summed over the month's rows:
+#   MONTO_COMPROMETIDO_ANUAL_<MES>   annual commitments registered that month: obligations signed
+#                                    (a contract or an order for the whole year counts in full)
+#   MONTO_COMPROMETIDO_MENSUAL_<MES> the part of the commitments falling due that month
+# The first sums to MONTO_COMPROMETIDO_ANUAL over the year.
+GASTO_COMPROMISOS = ([f"MONTO_COMPROMETIDO_ANUAL_{m}" for m in MESES]
+                     + [f"MONTO_COMPROMETIDO_MENSUAL_{m}" for m in MESES])
 INGRESO_DIMS = [
     "ANO_EJE", "NIVEL_GOBIERNO", "NIVEL_GOBIERNO_NOMBRE", "SECTOR", "SECTOR_NOMBRE",
     "PLIEGO", "PLIEGO_NOMBRE", "SEC_EJEC", "EJECUTORA", "EJECUTORA_NOMBRE",
@@ -108,8 +119,8 @@ INGRESO_MONTOS = (
 # of the line key and of classifier paths, so it is filled in rather than left NULL.
 TIPO_TRANSACCION = {"gasto": ("2", "GASTOS PRESUPUESTARIOS"), "ingreso": ("1", "INGRESOS PRESUPUESTARIOS")}
 CANON = {
-    "gasto": {"dims": GASTO_DIMS, "montos": GASTO_MONTOS, "flujo": "MONTO_DEVENGADO"},
-    "ingreso": {"dims": INGRESO_DIMS, "montos": INGRESO_MONTOS, "flujo": "MONTO_RECAUDADO"},
+    "gasto": {"dims": GASTO_DIMS, "montos": GASTO_MONTOS, "flujo": "MONTO_DEVENGADO", "opcionales": GASTO_COMPROMISOS},
+    "ingreso": {"dims": INGRESO_DIMS, "montos": INGRESO_MONTOS, "flujo": "MONTO_RECAUDADO", "opcionales": []},
 }
 # Codes identify a line item; names are attributes of the codes.
 def line_key(dataset: str) -> list[str]:

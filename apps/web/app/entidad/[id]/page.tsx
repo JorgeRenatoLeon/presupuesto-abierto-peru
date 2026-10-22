@@ -18,6 +18,7 @@ import { Bandas, type Banda } from "@/components/Bandas";
 import { ResumenContratos, ListaContratos, ComprasEnCurso } from "@/components/Contratos";
 import { RutaDinero, pasosEntidad } from "@/components/RutaDinero";
 import { VistasGasto } from "@/components/VistasGasto";
+import { CambiosDelMes } from "@/components/CambiosDelMes";
 import { CifrasOrdenes, PanelOrdenes } from "@/components/Ordenes";
 import type { ResumenOrdenes, FuenteOrdenes } from "@/lib/ordenes";
 import type { ContratosResumen, NombresGasto } from "@/lib/contratos";
@@ -87,6 +88,8 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
   const { info, series, funciones, genericas, obras = [], n_obras = 0, alertas: alertasEntidad = [], contratos, n_items, ordenes } =
     JSON.parse(raw) as Payload;
   const fuenteOrdenes = loadOptional<FuenteOrdenes>("ordenes/fuente.json");
+  // month by month with commitments (pipeline exportar._meses), when the data has them
+  const hayMeses = existsSync(join(DATA_DIR, "mes", `${params.id}.json`));
   const fuenteContratos = loadOptional<FuenteContratos>("contratos/fuente.json");
   const todosGastos = fuenteContratos ? loadOptional<NombresGasto>("contratos/gastos.json") : null;
   // only the names this page's summary uses travel in its payload
@@ -155,6 +158,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
       <IndiceSecciones secciones={[
         { id: "resumen", titulo: "Cuánto tiene" },
         ...(alertasEntidad.length ? [{ id: "alertas", titulo: `Alertas (${alertasEntidad.length})` }] : []),
+        ...(hayMeses ? [{ id: "este-mes", titulo: "Este mes" }] : []),
         { id: "en-que", titulo: "En qué lo gasta" },
         { id: "obras", titulo: "Obras" },
         ...(fuenteContratos ? [{ id: "contratos", titulo: "A quién contrata" }] : []),
@@ -200,6 +204,17 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
           <div style={{ display: "grid", gap: 10 }}>
             {alertasEntidad.slice(0, 5).map((a, i) => <AlertaCard key={i} alerta={a} enEntidad />)}
           </div>
+        </section>
+      ) : null}
+
+      {hayMeses ? (
+        <section className="seccion tarjeta" id="este-mes">
+          <h2>¿Qué cambió este mes?</h2>
+          <p className="sub">
+            Lo que gastó cada mes y los compromisos que firmó, por tipo de gasto, según el MEF. Un compromiso (un contrato,
+            una orden, la planilla del año) no es gasto del mes: se muestra lo que significa por mes hasta diciembre.
+          </p>
+          <CambiosDelMes sec={info.sec_ejec} />
         </section>
       ) : null}
 

@@ -770,3 +770,18 @@ p a { overflow-wrap: anywhere; }
   .brand-texto, .siguiendo-texto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .siguiendo-enlace { padding: 8px; }
 }
+
+/* "¿Qué cambió este mes?": spending month against month, commitments in monthly terms */
+.efecto { font-size: 14px; color: var(--texto); max-width: 72ch; margin: 4px 0 10px; }
+.efecto b { color: var(--texto-fuerte); }
+.efecto .sube, .cambio-fila .sube { color: var(--naranja); }
+.cambio-fila .baja { color: var(--verde); }
+.cambios-resumen { font-size: 15px; color: var(--texto); margin: 10px 0 4px; max-width: 72ch; }
+.cambios-resumen b { color: var(--amarillo); }
+.cambio-fila .efecto { margin: 2px 0 0; font-size: 13.5px; }
+.tabla-meses-caja { overflow-x: auto; margin: 4px 0 6px; }
+.tabla-meses { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+.tabla-meses th, .tabla-meses td { padding: 5px 8px; border-bottom: 1px solid var(--regla); text-align: right; white-space: nowrap; }
+.tabla-meses th[scope="row"], .tabla-meses thead th:first-child { text-align: left; color: var(--texto-fuerte); }
+.tabla-meses thead th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-suave); font-weight: 700; }
+.tab[aria-pressed="true"] { background: var(--amarillo); color: var(--negro); border-color: var(--amarillo); }

@@ -29,7 +29,7 @@ import inversiones
 import ordenes
 from compare import ES_PROYECTO, SIN_DESCRIPCION
 from nombres import con_lugares, texto, lugares as _lugares
-from config import SERVING
+from config import SERVING, MESES
 from lake import register_views
 
 DEPARTAMENTOS = "BETWEEN '01' AND '25'"  # '0' = no location, '98' = abroad
@@ -89,6 +89,7 @@ def exportar() -> None:
     enteras = inversiones.exportar(con, out) if tiene_obras else {}
     ordenes_ent = ordenes.exportar(con, out) if tiene_obras else {}
     _entidades(con, out, alertas, tiene_obras, contratos_ent, contratos_obra, enteras, ordenes_ent)
+    _meses(con, out, resumen, ano)
     deps = _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, any_value(DEPARTAMENTO_META_NOMBRE) AS nombre
                          FROM gasto_wide WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS}
                          GROUP BY 1 ORDER BY 1""", [ano])
@@ -99,6 +100,76 @@ def exportar() -> None:
     _temas(con, out)
     _feeds(out, alertas, resumen, deps)
     con.close()
+
+
+# --- month by month: spending and commitments ---------------------------------------
+
+def _meses(con, out, resumen: dict | None, ano: int) -> None:
+    """json/mes/<sec>.json: each unit's month by month, per expense type, of the three things
+    SIAF records: accrued spending (devengado), annual commitments registered that month
+    (obligations signed: a contract for the whole year counts in full the month it is signed) and
+    the monthly commitment. With the period it covers, so the page can put a commitment in monthly
+    terms: what is committed and not yet spent, over the months left in the year.
+      {"corte", "transcurridos", "restantes", "m" (months), "t": totals, "l": [[clas, pim, dev, comp, mens]]}
+    Only when the lake's file has monthly commitments (monthly-rows sources)."""
+    carpeta = out / "mes"
+    for viejo in carpeta.glob("*.json"):
+        viejo.unlink()
+    cols = {c for (c,) in con.execute("SELECT column_name FROM (DESCRIBE gasto_wide)").fetchall()}
+    if f"MONTO_COMPROMETIDO_ANUAL_{MESES[0]}" not in cols:
+        print("  json: mes/*.json skipped (the lake's file has no monthly commitments yet)")
+        return
+    from compare import dias_cubiertos
+    import calendar
+    pub = (resumen or {}).get("publicacion", {}).get("id")
+    mes_ult = (resumen or {}).get("mes_ult") or con.execute(
+        "SELECT max(mes) FROM fact_entidad_mes WHERE ano = ?", [ano]).fetchone()[0]
+    cubiertos, dias = dias_cubiertos(pub, ano, mes_ult) if pub else (calendar.monthrange(ano, mes_ult)[1],) * 2
+    corte = f"{ano}-{mes_ult:02d}-{max(cubiertos, 1):02d}"
+    transcurridos = (mes_ult - 1) + cubiertos / dias
+    restantes = 12 - transcurridos
+    hay = lambda prefijo: " OR ".join(f'sum(coalesce("{prefijo}_{m}", 0)) <> 0' for m in MESES[:mes_ult])
+    meses = lambda prefijo: ", ".join(f'round(sum(coalesce("{prefijo}_{m}", 0)))' for m in MESES[:mes_ult])
+    # an expense type's whole budget (all its metas), listed when it moved at all this year
+    filas = con.execute(f"""
+        SELECT SEC_EJEC, TIPO_TRANSACCION || '.' || GENERICA || '.' || SUBGENERICA || '.' || SUBGENERICA_DET || '.'
+                 || ESPECIFICA || '.' || ESPECIFICA_DET AS clas, round(sum(MONTO_PIM)),
+               [{meses("MONTO_DEVENGADO")}], [{meses("MONTO_COMPROMETIDO_ANUAL")}], [{meses("MONTO_COMPROMETIDO_MENSUAL")}]
+        FROM gasto_wide WHERE ANO_EJE = {ano} GROUP BY 1, 2
+        HAVING {hay("MONTO_DEVENGADO")} OR {hay("MONTO_COMPROMETIDO_ANUAL")} OR {hay("MONTO_COMPROMETIDO_MENSUAL")}
+        ORDER BY 1, 3 DESC""").fetchall()
+    pim_total = dict(con.execute(f"SELECT SEC_EJEC, round(sum(MONTO_PIM)) FROM gasto_wide WHERE ANO_EJE = {ano} GROUP BY 1").fetchall())
+    por_sec: dict[str, list] = {}
+    for sec, clas, pim, dev, comp, mens in filas:
+        por_sec.setdefault(sec, []).append([clas, int(pim or 0), [int(x) for x in dev], [int(x) for x in comp], [int(x) for x in mens]])
+    carpeta.mkdir(parents=True, exist_ok=True)
+    suma = lambda filas_, i: [sum(f[i][k] for f in filas_) for k in range(mes_ult)]
+    for sec, lineas in por_sec.items():
+        visibles = _lineas_del_mes(lineas, mes_ult)
+        resto = [f for f in lineas if f[0] not in visibles]
+        datos = {"corte": corte, "transcurridos": round(transcurridos, 3), "restantes": round(restantes, 3), "m": mes_ult,
+                 "t": [int(pim_total.get(sec) or 0), suma(lineas, 2), suma(lineas, 3), suma(lineas, 4)],
+                 "l": [f for f in lineas if f[0] in visibles]}
+        if resto:  # the rest, summed, so the lines always add up to the totals
+            datos["o"] = [len(resto), sum(f[1] for f in resto), suma(resto, 2), suma(resto, 3), suma(resto, 4)]
+        _write(carpeta / f"{sec}.json", datos)
+    print(f"  json: mes/*.json ({len(por_sec)} units, month by month with commitments, data to {corte})")
+
+
+MES_TOP_MENSUAL = 12  # lines kept per month (the last three) by spending change or commitments...
+MES_TOP_ANUAL = 25    # ...and by size over the year; the rest is summed
+
+
+def _lineas_del_mes(lineas: list, mes_ult: int) -> set[str]:
+    """The expense types a unit's month-by-month view can list: those that moved most in each of
+    the last three months (spending against the month before, commitments) and the largest of
+    the year. Keeps the files small (2,900 units) without hiding what changed."""
+    claves: set[str] = set()
+    for i in range(max(0, mes_ult - 3), mes_ult):
+        mov = lambda f: max(abs(f[2][i] - (f[2][i - 1] if i else 0)), f[3][i], f[4][i] - (f[4][i - 1] if i else 0))
+        claves |= {f[0] for f in sorted(lineas, key=mov, reverse=True)[:MES_TOP_MENSUAL] if mov(f) > 0}
+    claves |= {f[0] for f in sorted(lineas, key=lambda f: sum(f[2]) + abs(sum(f[3])), reverse=True)[:MES_TOP_ANUAL]}
+    return claves
 
 
 # --- entities -----------------------------------------------------------------------

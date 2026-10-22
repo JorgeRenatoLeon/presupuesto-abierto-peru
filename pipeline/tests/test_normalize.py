@@ -36,7 +36,8 @@ def test_pivoted_gasto_is_lossless(tmp_path):
     assert stats["rows"] == 21
     # canonical schema, in canonical order, whatever the source had
     got = [r[0] for r in con.execute(f"DESCRIBE SELECT * FROM read_parquet('{out}')").fetchall()]
-    assert got == CANON["gasto"]["dims"] + CANON["gasto"]["montos"]
+    assert got == CANON["gasto"]["dims"] + CANON["gasto"]["montos"] + CANON["gasto"]["opcionales"], \
+        "a pivoted source has no monthly commitments: the columns exist, empty"
 
 
 def test_monthly_rows_gasto_is_pivoted(tmp_path):

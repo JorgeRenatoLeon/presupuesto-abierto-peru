@@ -116,24 +116,43 @@ def _update(args, datasets: list[str], force: bool) -> None:
     years = args.years or ([args.year] if args.year else [today.year, today.year - 1])
     print(f"Checking MEF for {datasets} {years}")
     nuevas = update(years, datasets, keep_raw=args.keep_raw, ignorar_cadencia=args.ignore_cadence)
+    m = lake.load_manifest()
+    guardadas = [(ds, y, p) for ds, y, p in nuevas if lake.guardada(m, ds, y, p)]
     if nuevas and not args.no_push:
-        # capture the snapshot first: MEF overwrites its files, the site can be rebuilt later
+        # capture the snapshot first: MEF overwrites its files, the site can be rebuilt later; a daily
+        # refresh pushes only the latest file (one snapshot a week is kept for good)
         files = []
         for ds, y, pub in nuevas:
-            files += [lake.snapshot_path(ds, y, pub), lake.latest_path(ds, y)]
-            if lake.changes_path(ds, y, pub).exists():
-                files.append(lake.changes_path(ds, y, pub))
-        hfsync.push(files, "MEF: " + ", ".join(f"{ds} {y} publicado {lake.pub_date(p)}" for ds, y, p in nuevas))
+            files.append(lake.latest_path(ds, y))
+            if (ds, y, pub) in guardadas:
+                files.append(lake.snapshot_path(ds, y, pub))
+                if lake.changes_path(ds, y, pub).exists():
+                    files.append(lake.changes_path(ds, y, pub))
+        hfsync.push(files, "MEF: " + ", ".join(
+            f"{ds} {y} publicado {lake.pub_date(p)}{'' if (ds, y, p) in guardadas else ' (diario)'}" for ds, y, p in nuevas))
     contratos_nuevos = _contratos(years, push=not args.no_push)
     contratos_nuevos |= _ordenes(years, push=not args.no_push)
     contratos_nuevos |= _inversiones(push=not args.no_push)
     _output("changed", bool(nuevas) or contratos_nuevos)
+    _output("snapshot", bool(guardadas))  # a publication kept for good: the workflow records it in the repo
     if nuevas or force or contratos_nuevos:
         _serving(args)
     else:
         print("No new MEF publications: serving layer left as is (use --force to rebuild).")
-    if nuevas:
+    if guardadas:  # the digest goes out weekly, with each kept snapshot
         _notificar()
+    if not args.no_push:
+        _mantener()
+
+
+def _mantener() -> None:
+    """Keep the Hugging Face dataset within its storage budget (historia.mantener): the daily
+    refresh rewrites the latest files, whose old versions pile up in the repo's history."""
+    try:
+        import historia
+        historia.mantener()
+    except Exception as e:  # noqa: BLE001 - housekeeping must not fail the update
+        print(f"  WARN storage check: {e}")
 
 
 def _contratos(years: list[int], push: bool) -> bool:
