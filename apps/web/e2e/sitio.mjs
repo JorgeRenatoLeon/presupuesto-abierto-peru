@@ -174,7 +174,8 @@ await paso("purchase orders", async () => {
   check(await page.getByRole("navigation", { name: "De dónde a dónde va su presupuesto" }).getByRole("link", { name: /Compra con órdenes/ }).count() === 1,
         "orders: the money map has a step for them");
   const filas = sec.locator(".contratos .contrato.orden");
-  await filas.first().waitFor({ timeout: 15000 });
+  await sec.scrollIntoViewIfNeeded();  // the list loads when the section comes into view
+  await filas.first().waitFor({ timeout: 30000 });
   check(await filas.count() >= 5 && await sec.locator(".ct-gastos .ct-gasto-fila").count() >= 2,
         `orders: how it buys, what, and its largest orders (${await filas.count()} rows)`);
   const grupo = sec.locator(".ct-gastos").nth(1).locator("button.ct-gasto-fila").first();
@@ -238,7 +239,10 @@ await paso("budget without description", async () => {
   await page.goto(`${BASE}/entidad/472/#en-que`);  // Fuerza Aérea del Perú: S/ 2,061 M under the generic code
   await page.locator("details summary", { hasText: /Defensa y seguridad/i }).first().click();
   await page.locator(".badge.sin-descripcion").first().waitFor();
-  check(await page.getByText("Sin nombre en los datos del MEF").first().isVisible(), "FAP: the nameless project is labelled, not left blank");
+  // MEF's daily file leaves its name blank, the monthly-format file calls it "PROYECTOS": either way it is flagged
+  const marcado = page.locator(".items li.sin-desc").first();
+  check(await marcado.locator(".badge.sin-descripcion").isVisible() && (await marcado.locator(".item-nombre").innerText()).trim().length > 0,
+        "FAP: the project with no description is flagged and labelled, not left blank");
   await page.getByRole("button", { name: "¿Qué se sabe de este presupuesto?" }).first().click();
   await page.locator(".aviso-sd").first().waitFor();
   check(await page.getByText(/transporte aéreo/i).first().isVisible(), "FAP: the detail shows what is public (expense types)");

@@ -116,8 +116,10 @@ def _meses(con, out, resumen: dict | None, ano: int) -> None:
     for viejo in carpeta.glob("*.json"):
         viejo.unlink()
     cols = {c for (c,) in con.execute("SELECT column_name FROM (DESCRIBE gasto_wide)").fetchall()}
-    if f"MONTO_COMPROMETIDO_ANUAL_{MESES[0]}" not in cols:
-        print("  json: mes/*.json skipped (the lake's file has no monthly commitments yet)")
+    # a monthly-format source (*-Devengado-Mensual) has no monthly commitments: the columns are there, empty
+    if f"MONTO_COMPROMETIDO_ANUAL_{MESES[0]}" not in cols or not con.execute(
+            f'SELECT count(*) FROM gasto_wide WHERE ANO_EJE = {ano} AND "MONTO_COMPROMETIDO_ANUAL_{MESES[0]}" IS NOT NULL').fetchone()[0]:
+        print("  json: mes/*.json skipped (this year's file has no monthly commitments)")
         return
     from compare import dias_cubiertos
     import calendar

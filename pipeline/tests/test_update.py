@@ -32,14 +32,14 @@ def sin_red(monkeypatch):
 
 def test_republished_file_waits_for_the_cadence(monkeypatch, sin_red):
     monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=0.3))
-    monkeypatch.setattr(U, "resolve_source", lambda ds, y: SRC)
+    monkeypatch.setattr(U, "resolve_source", lambda ds, y, **kw: SRC)
     assert U.update([AHORA.year], ["gasto"]) == []
     assert sin_red == [], "a file re-stamped the same day must not be downloaded again (daily cadence)"
 
 
 def test_republished_file_is_ingested_after_the_cadence(monkeypatch, sin_red):
     monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=1))
-    monkeypatch.setattr(U, "resolve_source", lambda ds, y: SRC)
+    monkeypatch.setattr(U, "resolve_source", lambda ds, y, **kw: SRC)
     monkeypatch.setattr(U.Path, "unlink", lambda self, missing_ok=False: None)
     U.update([AHORA.year], ["gasto"])
     assert ("fetch", SRC["name"]) in sin_red
@@ -47,7 +47,7 @@ def test_republished_file_is_ingested_after_the_cadence(monkeypatch, sin_red):
 
 def test_unreachable_server_fails_the_run(monkeypatch, sin_red):
     monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=8))
-    def caida(ds, y):
+    def caida(ds, y, **kw):
         raise IOError("MEF server: could not check")
     monkeypatch.setattr(U, "resolve_source", caida)
     with pytest.raises(IOError):
@@ -56,7 +56,7 @@ def test_unreachable_server_fails_the_run(monkeypatch, sin_red):
 
 def test_no_file_anywhere_fails_the_run(monkeypatch, sin_red):
     monkeypatch.setattr(U.lake, "load_manifest", lambda: {"datasets": {}})
-    monkeypatch.setattr(U, "resolve_source", lambda ds, y: None)
+    monkeypatch.setattr(U, "resolve_source", lambda ds, y, **kw: None)
     with pytest.raises(SystemExit):
         U.update([AHORA.year, AHORA.year - 1], ["gasto", "ingreso"])
 
@@ -113,3 +113,18 @@ def test_ingesting_two_publications_writes_the_change_log(tmp_path, monkeypatch)
     assert sorted(pubs) == [p1, p2] and m["datasets"]["gasto"]["2024"]["latest"] == p2
     assert pubs[p2]["cambios"]["lineas"] == {"nueva": 0, "eliminada": 0, "presupuesto_modificado": 1}
     assert (tmp_path / "cambios" / "gasto" / "2024" / f"{p2}.parquet").exists()
+
+
+def test_the_current_year_comes_from_the_daily_file(monkeypatch, sin_red):
+    """MEF posts a monthly-format file now and then (22 Oct 2026, a month behind and without monthly
+    commitments): the current year must still come from the daily file, the previous one need not."""
+    from config import source_files
+    assert source_files("gasto", AHORA.year, prefer_diario=True)[0] == f"{AHORA.year}-Gasto-Diario.csv"
+    assert source_files("ingreso", AHORA.year, prefer_diario=True)[0] == f"{AHORA.year}-Ingreso-Diario.csv"
+    assert source_files("gasto", AHORA.year - 1)[0] == f"{AHORA.year - 1}-Gasto-Devengado-Mensual.csv"
+    pedidos = []
+    monkeypatch.setattr(U.lake, "load_manifest", lambda: _manifest(dias_desde_ingesta=0.3))
+    monkeypatch.setattr(U, "resolve_source", lambda ds, y, prefer_diario=False: pedidos.append((y, prefer_diario)) or SRC)
+    monkeypatch.setattr(U.lake, "is_known", lambda *a: True)  # only which file is asked for matters here
+    U.update([AHORA.year, AHORA.year - 1], ["gasto"])
+    assert pedidos == [(AHORA.year, True), (AHORA.year - 1, False)]

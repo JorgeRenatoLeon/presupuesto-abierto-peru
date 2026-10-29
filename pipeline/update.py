@@ -81,7 +81,8 @@ def update(years: list[int], datasets: list[str], keep_raw: bool = False,
     actual = datetime.now(timezone.utc).year
     for ds in datasets:
         for year in years:
-            src = resolve_source(ds, year)  # raises if the server can't be checked
+            # the current year from the daily file (see config.source_files); raises if the server can't be checked
+            src = resolve_source(ds, year, prefer_diario=year >= actual)
             if not src:
                 print(f"  {ds} {year}: no file on the MEF server")
                 continue

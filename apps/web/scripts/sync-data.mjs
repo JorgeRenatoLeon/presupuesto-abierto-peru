@@ -1,5 +1,5 @@
 // Copies pipeline JSON outputs into public/data before build.
-import { cpSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -7,11 +7,15 @@ const here = dirname(fileURLToPath(import.meta.url));
 const src = join(here, "..", "..", "..", "data", "serving", "json");
 const dest = join(here, "..", "public", "data");
 
-mkdirSync(dest, { recursive: true });
 if (existsSync(src)) {
+  // a fresh copy: files the pipeline no longer writes (a unit's month file, a dropped supplier)
+  // must not survive from an earlier build
+  rmSync(dest, { recursive: true, force: true });
+  mkdirSync(dest, { recursive: true });
   cpSync(src, dest, { recursive: true });
   console.log(`sync-data: copied ${src} -> public/data`);
 } else {
+  mkdirSync(dest, { recursive: true });
   console.warn(`sync-data: ${src} not found — keeping existing public/data`);
 }
 
