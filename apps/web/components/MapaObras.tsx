@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 // tile usage: https://operations.osmfoundation.org/policies/tiles/ (attribution, no bulk use)
 import { fmtSoles, fmtPct, fmtNombre, fichaInversion, urlDatos, withBase } from "@/lib/types";
 import { cargarDatos, plano } from "@/lib/contratos";
+import { urlObra } from "@/lib/buscar";
 
 /** mapa/indice.json: [department code, name, projects located, with no spending this year] */
 type Indice = [string, string, number, number][];
@@ -32,13 +33,15 @@ export function MapaObras() {
   const [q, setQ] = useState("");
   const [listo, setListo] = useState(false);
 
-  // ?dep=08 shows a department; ?sec=301289 (with its dep) an entity's projects
+  // ?dep=08 shows a department; ?sec=301289 (with its dep) an entity's projects; ?q=2408189 one project
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const d = p.get("dep");
     if (d && /^\d{2}$/.test(d)) setDep(d);
     const s = p.get("sec");
     if (s && /^\d{1,6}$/.test(s)) setSec(s);
+    const b = p.get("q")?.trim();
+    if (b) setQ(b);
     cargarDatos<Indice>(urlDatos("mapa/indice.json")).then((i) => setIndice(i ?? []));
   }, []);
 
@@ -168,7 +171,11 @@ function ficha(f: Fila, entidad: string): HTMLElement {
   if (costo) linea("span", `Costo total: ${fmtSoles(costo)}${gastado != null ? ` · gastado desde el inicio: ${fmtPct(gastado)}` : ""}`);
   if (fisico != null) linea("span", `Avance físico: ${fmtPct(fisico / 100)}`);
   linea("span", `Este año: ${fmtSoles(dev)} gastado de ${fmtSoles(pim)}`, senal === 1 || senal === 2 ? "parado" : undefined);
-  if (problema) linea("span", "La entidad reporta un problema: míralo en su ficha.", "parado");
+  if (problema) linea("span", "La entidad reporta un problema: míralo en la obra.", "parado");
+  const toda = document.createElement("a");
+  toda.href = withBase(urlObra(sec, cui));
+  toda.textContent = "Ver la obra: contratos, órdenes y reportes";
+  div.appendChild(toda);
   const ficha = document.createElement("a");
   ficha.href = fichaInversion(cui);
   ficha.target = "_blank";

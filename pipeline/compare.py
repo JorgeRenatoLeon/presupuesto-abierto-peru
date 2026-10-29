@@ -152,6 +152,71 @@ def dias_cubiertos(pub: str, ano: int, mes_ult: int) -> tuple[int, int]:
     return (fecha.day - 1, dias) if (fecha.year, fecha.month) == (ano, mes_ult) else (dias, dias)
 
 
+CAMBIOS_TOP = 6   # per category, mode and direction: the activities/projects that moved most
+# a category's change, explained by what moved inside it (the "etiqueta" dimension groups by
+# classifier tags and is left out)
+CAMBIOS_DIMENSIONES = ("funcion", "generica", "departamento", "nivel")
+_ITEM = f"""CASE WHEN {ES_PROYECTO} THEN 'proyecto' ELSE 'actividad' END AS tipo,
+    CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO ELSE ACTIVIDAD_ACCION_OBRA END AS codigo,
+    CASE WHEN {ES_PROYECTO} THEN PRODUCTO_PROYECTO_NOMBRE ELSE ACTIVIDAD_ACCION_OBRA_NOMBRE END AS item,
+    SEC_EJEC AS sec, EJECUTORA_NOMBRE AS ejecutora"""
+
+
+def archivo_nodo(id_: str) -> str:
+    """Node id -> file name: '22/047/0103' -> '22-047-0103' (ids never contain '-')."""
+    return id_.replace("/", "-")
+
+
+def _cambios_adentro(con, out_dir) -> None:
+    """comparar/cambios/<dim>/<node>.json: for each category and each of the three comparisons, the
+    activities and projects (of a given unit) whose budget rose or fell most inside it: what a
+    "+S/ 313 M in Vías nacionales" is made of.
+      {"aprobado" | "publicacion" | "anual": {"s": [n that rose, how much, n that fell, how much],
+                                              "f": [[tipo, name, sec, unit, CUI or null, before, after], ...]}}
+    ("f": increases first, then decreases, each by size; "s" counts all of them, so a page can say how
+    much of the change the rows listed explain)."""
+    n_archivos = 0
+    for dim_id in CAMBIOS_DIMENSIONES:
+        dim = DIMENSIONES[dim_id]
+        carpeta = out_dir / "cambios" / dim_id
+        for viejo in carpeta.glob("*.json"):
+            viejo.unlink()
+        carpeta.mkdir(parents=True, exist_ok=True)
+        por_nodo: dict[str, dict[str, list]] = {}
+        for n in range(1, len(dim["niveles"]) + 1):
+            ident = _id(dim, n)
+            fuente = lambda src, pia, pim, prv, ant: f"""SELECT {ident} AS id, {_ITEM}, {pia} AS pia, {pim} AS pim,
+                {prv} AS pim_prv, {ant} AS pia_ant FROM {src}"""
+            con.execute(f"""CREATE OR REPLACE TEMP TABLE _ci AS
+                SELECT id, sec, tipo, codigo, any_value(item) AS item, any_value(ejecutora) AS ejecutora,
+                       sum(pia) AS pia, sum(pim) AS pim, sum(pim_prv) AS pim_prv, sum(pia_ant) AS pia_ant
+                FROM ({fuente('cur', 'MONTO_PIA', 'MONTO_PIM', '0', '0')}
+                      UNION ALL {fuente('prv', '0', '0', 'MONTO_PIM', '0')}
+                      UNION ALL {fuente('ant', '0', '0', '0', 'MONTO_PIA')})
+                WHERE id IS NOT NULL GROUP BY 1, 2, 3, 4""")
+            for modo, antes, despues in (("aprobado", "pia", "pim"), ("publicacion", "pim_prv", "pim"),
+                                         ("anual", "pia_ant", "pia")):
+                for id_, n_sube, sube, n_baja, baja in con.execute(f"""
+                        SELECT id, count(*) FILTER (d > 0), coalesce(sum(d) FILTER (d > 0), 0),
+                               count(*) FILTER (d < 0), coalesce(sum(d) FILTER (d < 0), 0)
+                        FROM (SELECT id, {despues} - {antes} AS d FROM _ci) WHERE d <> 0 GROUP BY 1""").fetchall():
+                    por_nodo.setdefault(id_, {})[modo] = {
+                        "s": [n_sube, int(round(float(sube))), n_baja, int(round(float(baja)))], "f": []}
+                for id_, tipo, item, sec, ejecutora, codigo, a, d in con.execute(f"""
+                        SELECT id, tipo, item, sec, ejecutora, codigo, {antes}, {despues} FROM _ci
+                        WHERE {despues} - {antes} <> 0
+                        QUALIFY row_number() OVER (PARTITION BY id, sign({despues} - {antes})
+                                                   ORDER BY abs({despues} - {antes}) DESC, sec, codigo) <= {CAMBIOS_TOP}
+                        ORDER BY id, sign({despues} - {antes}) DESC, abs({despues} - {antes}) DESC""").fetchall():
+                    por_nodo[id_][modo]["f"].append(
+                        [tipo, item, sec, ejecutora, codigo if tipo == "proyecto" else None,
+                         int(round(float(a or 0))), int(round(float(d or 0)))])
+        for id_, modos in por_nodo.items():
+            (carpeta / f"{archivo_nodo(id_)}.json").write_text(json.dumps(modos, ensure_ascii=False, separators=(",", ":")))
+            n_archivos += 1
+    print(f"  comparar: cambios/*/*.json ({n_archivos} categories, what moved inside each)")
+
+
 def compare() -> dict | None:
     m = lake.load_manifest()
     anos = lake.years(m, "gasto")
@@ -217,6 +282,7 @@ def compare() -> dict | None:
         FROM c FULL OUTER JOIN p ON c.SEC_EJEC = p.SEC_EJEC""")
     _obras(con, mes_ult)
     _sin_descripcion(con)
+    _cambios_adentro(con, out_dir)
 
     pub_info = lambda p: {"id": p, "fecha": lake.pub_date(p),
                           "mes_ult": m["datasets"]["gasto"][str(ano)]["publications"][p]["mes_ult"]}

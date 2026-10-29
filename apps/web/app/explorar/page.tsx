@@ -2,6 +2,7 @@ import {
   load, latestYear,
   type ResumenAnual, type PorFuncion, type PorDepartamento, type EntidadIndex,
 } from "@/lib/data";
+import Link from "next/link";
 import { Explorador } from "@/components/Explorador";
 
 export const metadata = { title: "Explorar — Presupuesto Abierto Perú" };
@@ -18,7 +19,8 @@ export default function ExplorarPage() {
     <div className="pagina">
       <section className="hero">
         <h1>Explorar el gasto público{ano ? ` · ${ano}` : ""}</h1>
-        <p>Compara cuánto se ha gastado y qué tan avanzada va la ejecución en cada mirada del presupuesto.</p>
+        <p>Compara cuánto se ha gastado y qué tan avanzada va la ejecución en cada mirada del presupuesto.
+          ¿Buscas algo en concreto? <Link href="/buscar/" className="enlace-texto">Busca una entidad, una obra, un proveedor o un producto</Link>.</p>
       </section>
       <Explorador funciones={funciones} departamentos={departamentos} entidades={entidades} />
     </div>

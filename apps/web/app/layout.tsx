@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Anton, Archivo } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
-import { TopNav, BottomNav, EnlaceSiguiendo } from "@/components/Nav";
+import { TopNav, BottomNav, EnlaceBuscar, EnlaceSiguiendo } from "@/components/Nav";
 import { loadOptional, type ComparacionResumen } from "@/lib/data";
 import { MESES } from "@/lib/types";
 
@@ -39,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="header-derecha">
               {corte ? <span className="corte-cabecera" title="Fecha de los datos del MEF">{corte}</span> : null}
               <TopNav />
+              <EnlaceBuscar />
               <EnlaceSiguiendo />
             </div>
           </div>
@@ -50,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {" · "}<Link href="/metodologia/">Metodología y fuentes</Link>{" · "}<Link href="/glosario/">Glosario</Link>
           {" · "}<Link href="/ingresos/">Ingresos del Estado</Link>{" · "}<Link href="/guia/">Guía</Link>
           <br />
-          <Link href="/mapa/">Mapa de obras</Link>{" · "}<Link href="/proveedores/">Proveedores del Estado</Link>
+          <Link href="/buscar/">Buscar</Link>{" · "}<Link href="/mapa/">Mapa de obras</Link>{" · "}<Link href="/proveedores/">Proveedores del Estado</Link>
           {" · "}<Link href="/productos/">Precios del Estado</Link>{" · "}<Link href="/seguimiento/">Siguiendo</Link>
         </footer>
         <BottomNav />

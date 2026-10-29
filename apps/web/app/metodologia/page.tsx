@@ -97,6 +97,12 @@ export default function MetodologiaPage() {
           corrientes: no descuentan la inflación.
         </p>
         <p style={{ fontSize: 14, marginTop: 8 }}>
+          Cada función, tipo de gasto, departamento y nivel de gobierno se abre en <strong>qué subió y qué bajó
+          adentro</strong>: las actividades y los proyectos, de cada entidad, cuyo presupuesto más cambió en la misma
+          comparación, con cuántos subieron y bajaron en total. Si un mismo proyecto (su CUI) sube en una entidad y
+          baja en otra, el dinero se trasladó entre ellas: no es gasto nuevo.
+        </p>
+        <p style={{ fontSize: 14, marginTop: 8 }}>
           Los <Link href="/comparar/etiqueta/" style={enlace}>temas</Link> (obras por contrata, pagos a
           empresas y proveedores privados, laudos arbitrales…) agrupan partidas del clasificador de gastos
           con reglas públicas que cualquiera puede revisar en el repositorio del proyecto. El clasificador

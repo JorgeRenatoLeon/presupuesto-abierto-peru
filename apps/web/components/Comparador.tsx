@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ComparacionDimension, ComparacionResumen, Medida, NodoComparacion } from "@/lib/types";
 import { fmtSoles, fmtDelta, fmtVariacion, fmtFecha, corteDatos, fmtNombre, DIMENSIONES_EXPLICADAS } from "@/lib/types";
 import { BotonExplicar, PanelExplicacion } from "@/components/Explicacion";
 import { SeguirBoton } from "@/components/SeguirBoton";
+import { CambiosAdentro, CON_CAMBIOS } from "@/components/CambiosAdentro";
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 
 type Modo = "aprobado" | "publicacion" | "anual";
@@ -52,6 +53,12 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
   const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
   const [busqueda, setBusqueda] = useState("");
   const [explicado, setExplicado] = useState<string | null>(null);
+  const [adentro, setAdentro] = useState<string | null>(null);
+  // /comparar/funcion/?q=salud: arriving from the site search
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q")?.trim();
+    if (q) setBusqueda(q);
+  }, []);
   const explicable = DIMENSIONES_EXPLICADAS.has(data.dimension);
   const modo = modos.find((m) => m.id === modoId)!;
 
@@ -138,9 +145,16 @@ export function Comparador({ data, resumen }: { data: ComparacionDimension; resu
                 <span>{fmtSoles(n.dev_ano_ant_periodo)} → {fmtSoles(n.devengado)} ({fmtVariacion(n.dev_ano_ant_periodo, n.devengado)})</span>
               </div>
             ) : null}
+            {CON_CAMBIOS.has(data.dimension) && d !== 0 ? (
+              <button type="button" className="enlace-explicar cmp-adentro" aria-expanded={adentro === n.id}
+                      onClick={() => setAdentro(adentro === n.id ? null : n.id)}>
+                {adentro === n.id ? "Ocultar lo que cambió adentro" : "Ver qué subió y qué bajó adentro"}
+              </button>
+            ) : null}
           </div>
         </div>
         {explicado === n.id ? <PanelExplicacion dimension={data.dimension} id={n.id} /> : null}
+        {adentro === n.id ? <CambiosAdentro dimension={data.dimension} id={n.id} modo={modoId} nombre={fmtNombre(n.nombre)} /> : null}
         {abierto && !conRuta ? <ul className="cmp-lista">{ordenar(hs).map((h) => fila(h, profundidad + 1))}</ul> : null}
       </li>
     );

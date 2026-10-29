@@ -11,6 +11,8 @@ Runs after aggregate -> compare -> alerts and writes, under data/serving/json/:
                                             court and arbitration payouts, sharp changes
   alertas/resumen.json, alertas/<REGLA>.json, alertas/departamento/<dep>.json
                                             alert lists the alerts page loads on demand
+  buscar/obras-<k>.json                     every project of the year, for the site search and the
+                                            project page (16 parts by unit: a page loads one)
   seguimiento/temas.json                    top-level categories for the watchlist
   feeds/*.xml                               RSS: follow alerts without an account
 Small files fetched only when needed keep pages light on mobile data.
@@ -35,6 +37,7 @@ from lake import register_views
 DEPARTAMENTOS = "BETWEEN '01' AND '25'"  # '0' = no location, '98' = abroad
 TOP_OBRAS_ENTIDAD = 40
 TOP_ITEMS_FUNCION = 5  # an entity's largest activities/projects shown under each of its funciones
+BUSCAR_PARTES = 16    # buscar/obras-<int(sec) % 16>.json
 TOP_METAS = 4          # per activity/project: its main targets (metas), the rest counted and summed;
                        # its expense types go whole (the page shows the largest and opens the rest)
 
@@ -90,6 +93,8 @@ def exportar() -> None:
     ordenes_ent = ordenes.exportar(con, out) if tiene_obras else {}
     _entidades(con, out, alertas, tiene_obras, contratos_ent, contratos_obra, enteras, ordenes_ent)
     _meses(con, out, resumen, ano)
+    if tiene_obras:
+        _buscar_obras(con, out)
     deps = _rows(con, f"""SELECT DEPARTAMENTO_META AS codigo, any_value(DEPARTAMENTO_META_NOMBRE) AS nombre
                          FROM gasto_wide WHERE ANO_EJE = ? AND DEPARTAMENTO_META {DEPARTAMENTOS}
                          GROUP BY 1 ORDER BY 1""", [ano])
@@ -100,6 +105,36 @@ def exportar() -> None:
     _temas(con, out)
     _feeds(out, alertas, resumen, deps)
     con.close()
+
+
+def _buscar_obras(con, out) -> None:
+    """buscar/obras-<k>.json: every project with a budget or spending this year, for the search and
+    the project page. Split by unit (int(sec) % BUSCAR_PARTES): a search loads all parts at once, a
+    project's page only its unit's. {"f": functions, "d": [[code, department]], "e": {sec: unit name},
+    "o": [[CUI, sec, name, function, department, PIM, spent, PIM in the previous publication,
+           spent last year, signal], ...]} (function and department: positions in "f" and "d")."""
+    carpeta = out / "buscar"
+    for viejo in carpeta.glob("obras-*.json"):
+        viejo.unlink()
+    filas = con.execute("""SELECT cui, sec_ejec, nombre, funcion, [dept, dept_nombre], pim, devengado, pim_pub_ant,
+                                  dev_ano_ant, senal, entidad FROM obras WHERE pim > 0 OR devengado > 0
+                           ORDER BY pim DESC NULLS LAST, sec_ejec, cui""").fetchall()
+    funciones = sorted({f[3] for f in filas if f[3]})
+    deptos = sorted({tuple(f[4]) for f in filas if f[4][1]})
+    fi, di = {f: i for i, f in enumerate(funciones)}, {d: i for i, d in enumerate(deptos)}
+    redondo = lambda v: None if v is None else int(round(float(v)))
+    partes: list[list] = [[] for _ in range(BUSCAR_PARTES)]
+    unidades: list[dict] = [{} for _ in range(BUSCAR_PARTES)]
+    for cui, sec, nombre, funcion, dept, pim, dev, pim_ant, dev_ant, senal, entidad in filas:
+        unidades[int(sec) % BUSCAR_PARTES].setdefault(sec, entidad)
+        partes[int(sec) % BUSCAR_PARTES].append(
+            [cui, sec, nombre, fi.get(funcion), di.get(tuple(dept)), redondo(pim), redondo(dev), redondo(pim_ant),
+             redondo(dev_ant), senal])
+    carpeta.mkdir(parents=True, exist_ok=True)
+    for k, obras in enumerate(partes):
+        (carpeta / f"obras-{k}.json").write_text(json.dumps({"f": funciones, "d": [list(d) for d in deptos], "e": unidades[k], "o": obras},
+                                                            ensure_ascii=False, separators=(",", ":")))
+    print(f"  json: buscar/obras-*.json ({len(filas):,} projects in {BUSCAR_PARTES} parts)")
 
 
 # --- month by month: spending and commitments ---------------------------------------

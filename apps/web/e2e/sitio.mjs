@@ -289,6 +289,52 @@ await paso("comparator", async () => {
   await sinScroll("comparar/funcion");
 });
 
+await paso("what changed inside a category", async () => {
+  await page.goto(`${BASE}/comparar/funcion/?q=vias nacionales`);
+  const fila = page.locator(".cmp-fila", { hasText: /V[ií]as nacionales/ }).first();
+  await fila.waitFor({ timeout: 15000 });
+  await fila.getByRole("button", { name: /Ver qué subió y qué bajó adentro/ }).click();
+  const panel = page.locator(".cambios-adentro").first();
+  await panel.waitFor({ timeout: 15000 });
+  check(await panel.locator(".cambios-lista li").count() >= 2, "comparar: a category opens the activities and projects that rose and fell inside it");
+  check(/subi(ó|eron)/.test(await panel.locator(".cambios-resumen").innerText()), "comparar: ... and says how many rose and fell in all");
+  check(await panel.locator(".cambios-lista a[href*='obra/?sec=']").count() >= 1, "comparar: a project that changed links to its page");
+  await sinScroll("comparar/cambios");
+});
+
+await paso("site search", async () => {
+  await page.goto(`${BASE}/`);
+  await page.getByRole("link", { name: "Buscar", exact: true }).first().click();
+  await page.waitForURL(/buscar\//);
+  const campo = page.getByLabel("Buscar en el presupuesto");
+  const despacho = page.locator(".busca-resultados a[href$='entidad/1061/']");
+  await campo.fill("despacho presidencial");
+  await despacho.first().waitFor({ timeout: 15000 });
+  check(true, "buscar: the header search finds the Despacho Presidencial");
+  await campo.fill("palacio");
+  await despacho.first().waitFor({ timeout: 15000 });
+  check(true, "buscar: «palacio» finds it too");
+  await campo.fill("anillo vial periferico");
+  const obra = page.locator(".busca-resultados a[href*='obra/?sec=']").first();
+  await obra.waitFor({ timeout: 30000 });
+  check(true, "buscar: projects by name");
+  await sinScroll("buscar");
+  await obra.click();
+  await page.waitForURL(/obra\/\?sec=/);
+  await page.locator(".obra-titulo").waitFor({ timeout: 15000 });
+  check(/anillo vial/i.test(await page.locator(".obra-titulo").innerText()), "obra: the project's own page");
+  check(await page.getByRole("heading", { name: "Este año" }).isVisible(), "obra: this year's budget and spending");
+  await page.locator(".ct-del-proyecto").first().waitFor({ timeout: 15000 });
+  check(true, "obra: the project as a whole and its contracts");
+  await sinScroll("obra");
+  await page.goto(`${BASE}/buscar/?q=petroperu`);
+  await page.locator(".busca-resultados a[href*='proveedor/?id=20100128218']").first().waitFor({ timeout: 20000 });
+  check(true, "buscar: suppliers by their common name (Petroperú)");
+  await page.goto(`${BASE}/buscar/?q=cusco`);
+  await page.locator(".busca-resultados a[href$='localidad/08/']").first().waitFor({ timeout: 15000 });
+  check(true, "buscar: ?q= on arrival; places: the region of Cusco");
+});
+
 await paso("product prices", async () => {
   await page.goto(`${BASE}/productos/`);
   check(await page.locator(".ranking-prov li").count() > 5, "precios: the most bought products are ranked");

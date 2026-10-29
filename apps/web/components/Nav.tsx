@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, MapPin, ArrowLeftRight, Eye, TriangleAlert, Search, Star, type LucideIcon } from "lucide-react";
+import { House, MapPin, ArrowLeftRight, Eye, TriangleAlert, Compass, Search, Star, type LucideIcon } from "lucide-react";
 
 // the six that fit the mobile bottom bar; the rest live in the desktop top bar
 const principales: { href: string; etiqueta: string; icono: LucideIcon }[] = [
@@ -11,7 +11,7 @@ const principales: { href: string; etiqueta: string; icono: LucideIcon }[] = [
   { href: "/comparar/", etiqueta: "Qué cambió", icono: ArrowLeftRight },
   { href: "/auditar/", etiqueta: "Vigilar", icono: Eye },
   { href: "/alertas/", etiqueta: "Alertas", icono: TriangleAlert },
-  { href: "/explorar/", etiqueta: "Explorar", icono: Search },
+  { href: "/explorar/", etiqueta: "Explorar", icono: Compass },
 ];
 // Ingresos and Guía live in the footer and on the pages that need them
 // (Precios and Glosario: footer, and linked from the pages that use them)
@@ -32,6 +32,18 @@ export function TopNav() {
         </Link>
       ))}
     </nav>
+  );
+}
+
+/** Search: always one tap away (header), on mobile and desktop. */
+export function EnlaceBuscar() {
+  const pathname = usePathname();
+  const aqui = activo(pathname, "/buscar/");
+  return (
+    <Link href="/buscar/" className={`siguiendo-enlace ${aqui ? "activo" : ""}`} aria-label="Buscar">
+      <Search className="icono-linea" aria-hidden strokeWidth={2.4} />
+      <span className="siguiendo-texto" aria-hidden>Buscar</span>
+    </Link>
   );
 }
 

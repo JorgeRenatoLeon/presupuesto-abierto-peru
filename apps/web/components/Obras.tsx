@@ -6,6 +6,7 @@ import Link from "next/link";
 import { fmtSoles, fmtPct, fichaInversion, type Obra, fmtNombre } from "@/lib/types";
 import { BarraProgreso } from "@/components/ui";
 import { ContratosDeObra } from "@/components/Contratos";
+import { urlObra } from "@/lib/buscar";
 
 /** Signals computed by the pipeline (compare._obras): same words everywhere on the site. */
 export const SENAL_OBRA: Record<string, { texto: string; clase: "alta" | "media" }> = {
@@ -24,9 +25,10 @@ export function ListaObras({ obras, conEntidad = false, vacio, sec }: {
       {obras.map((o) => {
         const avance = o.pim ? (o.devengado ?? 0) / o.pim : null;
         const s = o.senal ? SENAL_OBRA[o.senal] : null;
+        const unidad = o.sec_ejec ?? sec;
         return (
           <li key={`${o.sec_ejec ?? ""}-${o.cui}`} className="obra">
-            <div className="obra-nombre">{fmtNombre(o.nombre)}</div>
+            <div className="obra-nombre">{unidad ? <Link href={urlObra(unidad, o.cui)}>{fmtNombre(o.nombre)}</Link> : fmtNombre(o.nombre)}</div>
             <div className="obra-meta">
               {s ? <span className={`badge ${s.clase}`}>{s.texto}</span> : null}
               {conEntidad && o.entidad
