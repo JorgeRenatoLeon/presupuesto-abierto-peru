@@ -14,8 +14,10 @@ function ritmo(avance: number, esperado: number): { texto: string; tono: "ok" | 
 /** Budget and spending, never as a bare line: labelled amounts, a bar that carries its own
  *  percentage, a tick where the calendar says spending should be by now and, on main rows, what is
  *  left to spend and a verdict in words. No hooks: works in server and client components. */
-export function MontoPar({ pim, devengado, esperado, compacto = false }: {
+export function MontoPar({ pim, devengado, esperado, compacto = false, conPresupuesto = true }: {
   pim: number | null | undefined; devengado: number | null | undefined; esperado?: number | null; compacto?: boolean;
+  /** false where the budget is already the heading's amount */
+  conPresupuesto?: boolean;
 }) {
   const avance = pim ? Math.max(0, (devengado ?? 0) / pim) : null;
   const falta = pim != null ? Math.max(pim - (devengado ?? 0), 0) : null;
@@ -23,7 +25,7 @@ export function MontoPar({ pim, devengado, esperado, compacto = false }: {
   return (
     <span className={`monto-par ${compacto ? "compacto" : ""}`}>
       <span className="mp-cifras">
-        <span className="mp-cifra"><span className="mp-etq">Presupuesto</span> <b>{fmtSoles(pim)}</b></span>
+        {conPresupuesto ? <span className="mp-cifra"><span className="mp-etq">Presupuesto</span> <b>{fmtSoles(pim)}</b></span> : null}
         <span className="mp-cifra"><span className="mp-etq">Gastado</span> <b>{fmtSoles(devengado)}</b></span>
         {!compacto && falta != null ? <span className="mp-cifra"><span className="mp-etq">Falta gastar</span> <b>{fmtSoles(falta)}</b></span> : null}
       </span>

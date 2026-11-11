@@ -12,7 +12,7 @@ import { Migas } from "@/components/Migas";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
 import { IndiceSecciones } from "@/components/IndiceSecciones";
 import { MontoPar } from "@/components/MontoPar";
-import { Bandas } from "@/components/Bandas";
+import { Titulo } from "@/components/Titulo";
 
 const PROV_DIR = join(DATA_DIR, "localidad", "prov");
 
@@ -54,11 +54,7 @@ export default async function ProvinciaPage(props: { params: Promise<{ codigo: s
     <div className="pagina">
       <Migas pasos={[{ href: `/localidad/${p.dept}/`, texto: dep }, { href: `/localidad/${p.dept}/${p.codigo.slice(2)}/`, texto: `Provincia de ${nombre}` }]} />
       <section className="hero">
-        <Bandas etiqueta={`Provincia de ${nombre}`} bandas={[
-          { texto: "Provincia de", color: "fucsia", chica: true },
-          { texto: nombre, color: "amarillo", grande: true },
-          { texto: `${p.distritos.length} municipalidades · ${fmtSoles(p.gasto.pim)}`, color: "verde", chica: true },
-        ]} />
+        <Titulo texto={`Provincia de ${nombre}`} monto={`${p.distritos.length} municipalidades · ${fmtSoles(p.gasto.pim)}`} />
         <p>
           Las {p.distritos.length} municipalidades de la provincia y las demás entidades con sede en ella, en {p.ano}
           {p.publicacion ? `, según la publicación del MEF del ${fmtFecha(p.publicacion.fecha)}` : ""} (datos {corte}).

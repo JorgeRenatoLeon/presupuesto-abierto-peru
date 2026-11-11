@@ -150,7 +150,10 @@ export const fmtSoles = (v: number | null | undefined): string => {
   if (v == null) return "—";
   const abs = Math.abs(v);
   if (abs >= 1e9) return `S/ ${(v / 1e9).toLocaleString("es-PE", { maximumFractionDigits: 1 })} mil millones`;
-  if (abs >= 1e6) return `S/ ${(v / 1e6).toLocaleString("es-PE", { maximumFractionDigits: 1 })} millones`;
+  if (abs >= 1e6) {
+    const n = (v / 1e6).toLocaleString("es-PE", { maximumFractionDigits: 1 });
+    return `S/ ${n} ${n === "1" || n === "-1" ? "millón" : "millones"}`;
+  }
   return `S/ ${v.toLocaleString("es-PE", { maximumFractionDigits: 0 })}`;
 };
 

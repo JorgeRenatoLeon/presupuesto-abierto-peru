@@ -1,19 +1,20 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import {
-  load, loadOptional, latestYear, fmtSoles, fmtPct, interpretarAvance, corteDatos,
+  load, loadOptional, latestYear, fmtSoles, corteDatos,
   type ResumenAnual, type SerieNacional, type PorFuncion, type Alerta,
   type IngresoResumen, type ContrasteMensual, type LocalidadIndice, type Auditoria, type AlertasResumen,
   type ComparacionResumen,
 } from "@/lib/data";
 import { GraficoContraste } from "@/components/Grafico";
-import { KpiCard, Lectura } from "@/components/ui";
+import { KpiCard } from "@/components/ui";
 import { GraficoMensual } from "@/components/Grafico";
+import { MontoPar } from "@/components/MontoPar";
 import { AlertaCard } from "@/components/AlertaCard";
 import { RepartoPorCien } from "@/components/Reparto";
 import { SelectorRegion } from "@/components/SelectorRegion";
 import { BuscaMunicipalidad } from "@/components/BuscaMunicipalidad";
-import { Bandas } from "@/components/Bandas";
+import { Titulo } from "@/components/Titulo";
 
 export default function Home() {
   const resumen = load<ResumenAnual[]>("resumen_anual.json");
@@ -27,10 +28,10 @@ export default function Home() {
 
   const actual = latestYear(resumen);
   const ano = actual?.ano;
-  const avance = actual?.pim && actual.devengado_ytd != null ? actual.devengado_ytd / actual.pim : null;
+  // what the year's changes added to (or took from) the budget Congress approved
+  const cambioAno = actual?.pim != null && actual.pia != null ? actual.pim - actual.pia : null;
   const cmp = loadOptional<ComparacionResumen>("comparar/resumen.json");
   const esperado = actual ? (cmp?.ano === actual.ano ? cmp.avance_esperado : undefined) ?? actual.mes_ult / 12 : null;
-  const lectura = actual ? interpretarAvance(avance, actual.mes_ult, esperado) : null;
   const corte = actual ? corteDatos(actual.mes_ult, cmp?.ano === actual.ano ? cmp.publicacion.fecha : null, actual.ano) : "";
 
   const serieAno = serie.filter((s) => s.ano === ano).map((s) => ({ mes: s.mes, valor: s.devengado }));
@@ -42,11 +43,7 @@ export default function Home() {
   return (
     <div className="pagina">
       <section className="hero">
-        <Bandas bandas={[
-          { texto: "¿En qué se gasta", color: "fucsia", chica: true },
-          { texto: "el dinero del Perú?", color: "amarillo" },
-          ...(actual ? [{ texto: `${fmtSoles(actual.pim)} · ${actual.ano}`, color: "verde" as const, chica: true }] : []),
-        ]} etiqueta="¿En qué se gasta el dinero del Perú?" />
+        <Titulo texto="¿En qué se gasta el dinero del Perú?" monto={actual ? `${fmtSoles(actual.pim)} · ${actual.ano}` : null} />
         <p>
           Seguimiento del presupuesto público con datos oficiales del MEF{ano ? ` — año ${ano}` : ""}
           {actual ? `, actualizado ${corte}` : ""}.
@@ -55,11 +52,8 @@ export default function Home() {
 
       {actual ? (
         <>
-          <section className="kpis kpis-2">
-            <KpiCard etiqueta={`Gastado ${corte}`} valor={fmtSoles(actual.devengado_ytd)}
-                     nota={`De ${fmtSoles(actual.pim)} vigentes; el Congreso aprobó ${fmtSoles(actual.pia)}`} />
-            <KpiCard etiqueta="Avance de ejecución" valor={fmtPct(avance)}
-                     nota={`Esperado a la fecha: ${fmtPct(esperado)}`} />
+          <section className="avance-pais" aria-label={`Cuánto se gastó ${corte}`}>
+            <MontoPar pim={actual.pim} devengado={actual.devengado_ytd} esperado={esperado} conPresupuesto={false} />
           </section>
 
           {departamentos.length ? (
@@ -72,11 +66,12 @@ export default function Home() {
             </section>
           ) : null}
 
-          {lectura ? <Lectura tono={lectura.tono}>{lectura.texto}</Lectura> : null}
-
           <section className="seccion tarjeta">
             <h2>¿A dónde va cada S/ 100?</h2>
-            <p className="sub">De cada S/ 100 del presupuesto vigente {ano}, por función del Estado.</p>
+            <p className="sub">
+              De cada S/ 100 del presupuesto vigente {ano}, por función del Estado.
+              {cambioAno != null ? ` El Congreso aprobó ${fmtSoles(actual.pia)}; los cambios del año ${cambioAno >= 0 ? "sumaron" : "restaron"} ${fmtSoles(Math.abs(cambioAno))}.` : ""}
+            </p>
             <RepartoPorCien partes={funcionesAno} href="/comparar/funcion/" />
             <div style={{ marginTop: 10 }}>
               <Link className="tab" href="/comparar/funcion/">¿Cómo cambió cada función? <ArrowRight className="icono-linea" aria-hidden /></Link>
@@ -86,7 +81,7 @@ export default function Home() {
           {auditoria?.obras_sin_avance ? (
             <section className="seccion tarjeta">
               <h2>Qué vale la pena vigilar</h2>
-              <div className="kpis" style={{ marginTop: 6 }}>
+              <div className="kpis kpis-filas" style={{ marginTop: 6 }}>
                 <KpiCard etiqueta="Proyectos sin avance" valor={fmtSoles(auditoria.obras_sin_avance.pim)}
                          nota={`${auditoria.obras_sin_avance.n.toLocaleString("es-PE")} proyectos sin gasto ${corte}`} />
                 {auditoria.gasto_diciembre ? (

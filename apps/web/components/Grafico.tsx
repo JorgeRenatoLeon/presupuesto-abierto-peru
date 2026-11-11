@@ -37,15 +37,15 @@ export function GraficoContraste({
                 <title>{`${MESES[mes]} — Gasto: ${fmtSoles(p!.gasto)}`}</title>
               </rect>
             ) : null}
-            <text x={padL + (mes - 1) * bw + bw / 2} y={H - 22} textAnchor="middle"
+            <text x={padL + (mes - 1) * bw + bw / 2} y={H - 8} textAnchor="middle"
                   fontSize="11" className={`rotulo ${mes % 2 === 0 ? "mes-par" : ""}`}>{MESES[mes].slice(0, 3)}</text>
           </g>
         );
       })}
     </svg>
     <p className="leyenda-html">
-      <span><span className="chip verde" aria-hidden />Ingresos (recaudado)</span>
-      <span><span className="chip amarillo" aria-hidden />Gasto (devengado)</span>
+      <span><span className="chip turquesa" aria-hidden />Ingresos (recaudado)</span>
+      <span><span className="chip anil" aria-hidden />Gasto (devengado)</span>
     </p>
     </>
   );

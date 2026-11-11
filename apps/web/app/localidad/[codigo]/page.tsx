@@ -11,7 +11,7 @@ import { ListaEntidades } from "@/components/ListaEntidades";
 import { SeguirBoton } from "@/components/SeguirBoton";
 import { DesgloseFunciones } from "@/components/DesgloseFunciones";
 import { IndiceSecciones } from "@/components/IndiceSecciones";
-import { Bandas } from "@/components/Bandas";
+import { Titulo } from "@/components/Titulo";
 
 // No `dynamicParams = false`: with output "export" only generated paths exist anyway, and
 // Next 14's dev server rejects it with a misleading "missing generateStaticParams()" error.
@@ -57,11 +57,7 @@ export default async function LocalidadPage(props: { params: Promise<{ codigo: s
         <Link href="/localidad/" style={{ color: "var(--rojo)", fontWeight: 600 }}><ArrowLeft className="icono-linea" aria-hidden /> Todas las regiones</Link>
       </nav>
       <section className="hero">
-        <Bandas etiqueta={`${nombre}: ¿cómo se usa el presupuesto?`} bandas={[
-          { texto: "¿Cómo se usa el presupuesto en", color: "fucsia", chica: true },
-          { texto: `${nombre}?`, color: "amarillo", grande: true },
-          { texto: `${fmtSoles(d.gasto.pim)} · ${d.ano}`, color: "verde", chica: true },
-        ]} />
+        <Titulo texto={`¿Cómo se usa el presupuesto en ${nombre}?`} monto={`${fmtSoles(d.gasto.pim)} · ${d.ano}`} />
         <p>
           Todo lo que el Estado gasta en {nombre} en {d.ano}
           {d.publicacion ? `, según la publicación del MEF del ${fmtFecha(d.publicacion.fecha)}` : ""}

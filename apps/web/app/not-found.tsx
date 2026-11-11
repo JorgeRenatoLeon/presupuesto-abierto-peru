@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Bandas } from "@/components/Bandas";
+import { Titulo } from "@/components/Titulo";
 import { BuscaMunicipalidad } from "@/components/BuscaMunicipalidad";
 
 export const metadata = { title: "Página no encontrada — Presupuesto Abierto Perú" };
@@ -11,10 +11,7 @@ export default function NoEncontrada() {
   return (
     <div className="pagina">
       <section className="hero">
-        <Bandas etiqueta="Esta página no existe" bandas={[
-          { texto: "Esta página", color: "fucsia", chica: true },
-          { texto: "no existe", color: "amarillo" },
-        ]} />
+        <Titulo texto="Esta página no existe" />
         <p>
           Puede que el enlace esté incompleto o que la entidad ya no tenga presupuesto este año. Busca tu
           municipalidad o vuelve al inicio.

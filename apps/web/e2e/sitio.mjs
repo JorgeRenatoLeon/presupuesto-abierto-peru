@@ -32,7 +32,7 @@ const listo = () => page.waitForFunction(() => !document.body.innerText.includes
 
 await paso("home", async () => {
   await page.goto(`${BASE}/`);
-  check(await page.locator(".franja .franja-seg").count() >= 5, "home: budget split drawn as one ink band");
+  check(await page.locator(".khipu .khipu-colgante").count() >= 5, "home: budget split drawn as a khipu of cords");
   const soles = await page.locator(".reparto-valor").allInnerTexts();
   check(soles.reduce((a, s) => a + Number(s.replace(/\D/g, "")), 0) === 100, `home: shares add up to exactly 100 (${soles.join(", ")})`);
   await sinScroll("home");

@@ -8,30 +8,39 @@ Ordinary citizens on a phone, often outdoors, with no budget vocabulary. When ne
 they come first: plain language first, the official term second, the raw code last. Journalists
 and watchdogs get the detail one tap deeper.
 
-## The world: a *cartel chicha*
+## The world: a *khipu*
 
-The budget is announced like a chicha poster: the question and the number a citizen needs, set
-in stacked fluorescent bands on a near-black ground, readable from across the street. It refuses
-the usual white civic dashboard of same-size cards.
+The State's accounts kept the way the Tawantinsuyu kept them: on undyed cotton, a slate main cord
+and dyed cords hanging from it, each cord's length the money, its knots the units. It refuses
+both the usual white civic dashboard of rounded cards and the dark neon poster the site used
+before (too hard to read outdoors, in condensed capitals, with every section shouting).
 
-- **One ink, one job.** Fucsia `#ff2e88` = identity and attention; amarillo `#ffe600` = amounts
-  and the primary action; verde `#00d26a` = on pace, increases; naranja `#ff8a00` = behind,
-  cuts; celeste `#3ee0ff` = explanations and links. Ground `#0e0e10`, rules `#34343c`.
-- **No red.** Being behind schedule is a reason to ask, not an error or an accusation.
-- **Printed marks.** Flat ink, 1px rules (2px for emphasis), no shadows, no rounded corners.
-- **Type.** Anton (self-hosted) for bands, page titles and section tabs; Archivo for reading,
-  with tabular figures so amounts line up.
-- **Dark only.** The poster is black; contrast meets WCAG AA throughout.
+- **Light ground.** Cotton white `#fafaf7`; white `#ffffff` for open panels and fields; a
+  tinted `#f0f2ee` for insets; rules `#dde1dc`. Most visitors read on a cheap phone in daylight.
+- **Colour does jobs.** Slate `#22303a` is the shell (header), the primary action and the
+  selected state. The natural dyes only name the parts of a split, always in this order:
+  añil `#2b5ea7`, cochinilla `#b0306a`, q'olle `#b07a0c`, maíz morado `#6b4aa0`, turquesa
+  `#008a7a`, then "las demás" in undyed grey. Green `#2c7646` only means on pace or up; achiote
+  `#b0441a` only behind or down (a reason to ask, not an accusation). Links are añil `#23508f`.
+  No brown, nothing that could pass for a government site, not the wiphala's seven colours.
+- **Type.** Alegreya Sans (Huerta Tipográfica, self-hosted) in sentence case, body at 17px,
+  with tabular lining figures so amounts line up. No condensed capitals anywhere.
+- **Calm structure.** Modules open with a plain heading under a 1px rule; panels are white with
+  a hairline and soft 8px corners; no shadows except the map's floating popup.
+- Contrast meets WCAG AA throughout; the dye order was checked with a palette validator for
+  colour-blind separation of neighbours (worst ΔE 10.2) and 3:1 against the ground.
 
 ## Signature pieces
 
-- **Band stack** (`components/Bandas.tsx`): the page's question and number as stacked bands,
-  e.g. "¿En qué se gasta / el dinero del Perú? / S/ 289.8 mil millones · 2026".
-- **Ink split** (`components/Franja.tsx`): any budget split is one stacked band of colour
-  segments, with the rows below as its legend. Ink order fucsia, amarillo, verde, celeste,
-  naranja (then "las demás" in grey) was checked for colour-blind separation of neighbours.
-- **Section tabs:** every section is headed by its own yellow band.
-- **Route always visible:** Perú › región › provincia › distrito (`components/Migas.tsx`).
+- **Khipu** (`components/Khipu.tsx`): any budget split is drawn as cords hanging from one main
+  cord, each labelled with its share, with a knot every round amount ("cada nudo: S/ 20 mil
+  millones"); the rows below are its legend, each with a dot in its cord's dye.
+- **The expected point is a knot:** progress cords (`components/MontoPar.tsx`) mark where
+  spending should be by today as a dark knot on the cord.
+- **Page title** (`components/Titulo.tsx`): one plain sentence, with the amount it is about on
+  its own line beneath it.
+- **Route always visible:** Perú › región › provincia › distrito (`components/Migas.tsx`); only
+  the level you are on is filled.
 
 ## Words
 
@@ -44,7 +53,7 @@ the usual white civic dashboard of same-size cards.
 
 ## Motion
 
-One authored moment: bands and split segments wipe in once, left to right (clip-path, 520 ms,
+One authored moment: the cords of a khipu drop from the main cord once (clip-path, 620 ms,
 exponential ease-out, short stagger). Nothing else animates; reduced-motion turns it off.
 Buttons give press feedback (`scale(0.97)`); hover styles only apply to real pointers.
 
@@ -52,4 +61,5 @@ Buttons give press feedback (`scale(0.97)`); hover styles only apply to real poi
 
 Paper wireframes (mobile-first, bottom navigation, "busca tu municipalidad" as the emotional
 entry point, alerts as shareable texts) became a first web version in red on warm neutrals. In
-October 2026 it was redesigned into the chicha world above, keeping those structural decisions.
+October 2026 it became a dark *cartel chicha* poster; in November 2026, because that was hard to
+read, it was rethemed into the light khipu world above, keeping the same structure.

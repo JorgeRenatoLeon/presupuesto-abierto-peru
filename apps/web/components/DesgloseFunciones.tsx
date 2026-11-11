@@ -6,14 +6,14 @@ import { ChevronDown } from "lucide-react";
 import { fmtSoles, fmtNombre } from "@/lib/types";
 import { Explicable } from "@/components/Explicacion";
 import { ItemsAlAbrir } from "@/components/ItemsAlAbrir";
-import { Franja, tinta } from "@/components/Franja";
+import { Khipu, tinta } from "@/components/Khipu";
 import { MontoPar, LeyendaBarra } from "@/components/MontoPar";
 import { ContratosDeGasto } from "@/components/Contratos";
 import { CerrarPanel } from "@/components/CerrarPanel";
 
 export type FuncionEntidad = { codigo: string; funcion: string; pim?: number | null; devengado: number };
 
-/** Budget by función (or genérica): one ink band for the split, then a row per category with its
+/** Budget by función (or genérica): a khipu for the split, then a row per category with its
  *  budget and spending labelled. Each row opens, with no JavaScript, what the entity itself pays for
  *  there (activities and projects, each with "¿En qué exactamente?") and the MEF definition. */
 export function DesgloseFunciones({ funciones, sec, dimension = "funcion", esperado, contratos = false, ordenes = false }: {
@@ -31,7 +31,7 @@ export function DesgloseFunciones({ funciones, sec, dimension = "funcion", esper
   const conItems = !!sec && dimension === "funcion";
   return (
     <>
-      <Franja segmentos={segs} etiqueta={conPim ? "Reparto del presupuesto" : "Reparto de lo gastado"} />
+      <Khipu segmentos={segs} etiqueta={conPim ? "Reparto del presupuesto" : "Reparto de lo gastado"} />
       {conPim ? <LeyendaBarra esperado={esperado} /> : null}
       <ul className="desglose">
         {orden.map((f, i) => (

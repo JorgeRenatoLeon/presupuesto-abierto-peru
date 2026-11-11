@@ -191,4 +191,4 @@ Known follow-ups:
   through `overrides`).
 - Alert thresholds are first calibrations on 2026 data, pending review with the team.
 
-Design: `docs/design-notes.md` (the chicha visual system; tokens in `apps/web/app/globals.css`). ⚠️ Never commit `data/` or `.env`. The old `typescript-express-api/` prototype is deprecated (rotate its Cloudant credentials before any push).
+Design: `docs/design-notes.md` (the khipu visual system; tokens in `apps/web/app/globals.css`). ⚠️ Never commit `data/` or `.env`. The old `typescript-express-api/` prototype is deprecated (rotate its Cloudant credentials before any push).

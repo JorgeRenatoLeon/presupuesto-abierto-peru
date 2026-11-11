@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { fmtSoles, fmtNombre } from "@/lib/types";
-import { Franja, tinta } from "@/components/Franja";
+import { Khipu, tinta } from "@/components/Khipu";
 
 type Parte = { id: string; nombre: string; monto: number };
 
@@ -18,7 +18,7 @@ export function partesDeCien(montos: number[], total = 100): number[] {
   return base;
 }
 
-/** Part-to-whole: one stacked ink band (top 5 + the rest) and the ranked rows as its legend. */
+/** Part-to-whole: a khipu (top 5 + the rest) and the ranked rows as its legend. */
 export function RepartoPorCien({ partes, maximo = 8, href }: { partes: Parte[]; maximo?: number; href?: string }) {
   const ordenadas = [...partes].filter((p) => p.monto > 0).sort((a, b) => b.monto - a.monto);
   if (!ordenadas.length) return <div className="vacio">Sin datos disponibles todavía.</div>;
@@ -30,7 +30,7 @@ export function RepartoPorCien({ partes, maximo = 8, href }: { partes: Parte[]; 
   const soles = partesDeCien(filas.map((f) => f.monto));
   return (
     <>
-    <Franja segmentos={filas.slice(0, 5).concat(filas.length > 5 ? [{ id: "resto", nombre: "Las demás",
+    <Khipu segmentos={filas.slice(0, 5).concat(filas.length > 5 ? [{ id: "resto", nombre: "Las demás",
       monto: filas.slice(5).reduce((a, f) => a + f.monto, 0) }] : [])} etiqueta="Reparto del presupuesto por función" />
     <div className="reparto" role="list">
       {filas.map((f, i) => {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Alerta } from "@/lib/types";
-import { MESES } from "@/lib/types";
+import { MESES, fmtLugar } from "@/lib/types";
 import { ArrowRight, Check, Share2 } from "lucide-react";
 
 export function AlertaCard({ alerta, enEntidad = false, nueva = false }: {
@@ -32,8 +32,8 @@ export function AlertaCard({ alerta, enEntidad = false, nueva = false }: {
       <div className="cabecera">
         {nueva ? <span className="badge nueva">Nueva</span> : null}
         <span className={`badge ${alerta.severidad}`}>{alerta.severidad === "alta" ? "Prioridad alta" : "Atención"}</span>
-        {alerta.nivel ? <span className="badge neutro">{alerta.nivel}</span> : null}
-        {alerta.departamento ? <span className="badge neutro">{alerta.departamento}</span> : null}
+        {alerta.nivel ? <span className="badge neutro">{fmtLugar(alerta.nivel)}</span> : null}
+        {alerta.departamento ? <span className="badge neutro">{fmtLugar(alerta.departamento)}</span> : null}
         {alerta.mes ? <span className="badge neutro">{MESES[alerta.mes]} {alerta.ano}</span> : <span className="badge neutro">{alerta.ano}</span>}
       </div>
       <p>{alerta.mensaje}</p>

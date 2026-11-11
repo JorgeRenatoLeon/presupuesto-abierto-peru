@@ -1,9 +1,11 @@
 import { fmtSoles, fmtPct, fmtNombre } from "@/lib/types";
-import { TINTAS } from "@/components/Franja";
+import { TINTAS } from "@/components/Khipu";
 
-/** A step's bar: the parts of the budget it is about, in ink order (decorative: the note says it). */
+/** A step's small khipu: the parts of the budget it is about, in dye order (decorative: the note says it). */
 type Tramo = { parte: number; tinta: string };
-export type Paso = { href: string; verbo: string; cifra: string; nota?: string | null; tramos?: Tramo[] };
+/** A step's progress cord: the share spent, and where the calendar says it should be by now. */
+type Progreso = { avance: number; esperado?: number | null };
+export type Paso = { href: string; verbo: string; cifra: string; nota?: string | null; tramos?: Tramo[]; progreso?: Progreso };
 
 /** The page's map: how the money goes from the budget to the areas it is split into, to the
  *  activities and projects that use it and, in part, to the suppliers it is contracted with. Each
@@ -19,9 +21,17 @@ export function RutaDinero({ pasos }: { pasos: Paso[] }) {
               <span className="ruta-texto">
                 <span className="ruta-verbo">{p.verbo}</span>
                 <b>{p.cifra}</b>
+                {p.progreso ? (
+                  <span className="ruta-progreso" aria-hidden>
+                    <span style={{ width: `${Math.min(p.progreso.avance, 1) * 100}%` }} />
+                    {p.progreso.esperado != null ? <i style={{ left: `${Math.min(p.progreso.esperado, 1) * 100}%` }} /> : null}
+                  </span>
+                ) : null}
                 {p.tramos?.length ? (
-                  <span className="ruta-barra" aria-hidden>
-                    {p.tramos.map((t, k) => <span key={k} className={t.tinta} style={{ flexGrow: t.parte }} />)}
+                  <span className="ruta-khipu" aria-hidden>
+                    {p.tramos.map((t, k) => (
+                      <span key={k} className={t.tinta} style={{ "--largo": t.parte / Math.max(...p.tramos!.map((x) => x.parte)) } as React.CSSProperties} />
+                    ))}
                   </span>
                 ) : null}
                 {p.nota ? <small>{p.nota}</small> : null}
@@ -37,8 +47,8 @@ export function RutaDinero({ pasos }: { pasos: Paso[] }) {
 const plural = (n: number, uno: string, varios: string) => `${n.toLocaleString("es-PE")} ${n === 1 ? uno : varios}`;
 
 /** The steps of an entity, from its figures; a step without data is left out. */
-export function pasosEntidad({ pim, avance, ano, funciones, items, contratos, ordenes }: {
-  pim: number | null; avance: number | null; ano: number;
+export function pasosEntidad({ pim, avance, esperado, ano, funciones, items, contratos, ordenes }: {
+  pim: number | null; avance: number | null; esperado?: number | null; ano: number;
   /** its areas (funciones), largest first, with their budget */
   funciones: { nombre: string; pim: number }[];
   /** [activities, projects, budget of the activities, budget of the projects] */
@@ -52,7 +62,7 @@ export function pasosEntidad({ pim, avance, ano, funciones, items, contratos, or
   const pasos: Paso[] = [{
     href: "#resumen", verbo: `Tiene para ${ano}`, cifra: fmtSoles(pim),
     nota: avance != null ? `Lleva gastado el ${fmtPct(avance)}` : null,
-    tramos: avance != null ? [{ parte: Math.min(avance, 1), tinta: "verde" }, { parte: Math.max(1 - avance, 0), tinta: "otras" }] : undefined,
+    progreso: avance != null ? { avance, esperado } : undefined,
   }];
   if (funciones.length && total) {
     const tramos: Tramo[] = funciones.slice(0, 5).map((f, i) => ({ parte: Math.max(f.pim, 0) / total, tinta: TINTAS[i] }));
@@ -73,7 +83,7 @@ export function pasosEntidad({ pim, avance, ano, funciones, items, contratos, or
       nota: proyectos
         ? `${fmtSoles(enActividades)} en su trabajo de cada año y ${fmtSoles(enProyectos)} en obras (${Math.round((enProyectos / suma) * 100)}%)`
         : "Su trabajo de cada año: no tiene obras este año",
-      tramos: proyectos ? [{ parte: enActividades / suma, tinta: "amarillo" }, { parte: enProyectos / suma, tinta: "verde" }] : undefined,
+      tramos: proyectos ? [{ parte: enActividades / suma, tinta: "anil" }, { parte: enProyectos / suma, tinta: "turquesa" }] : undefined,
     });
   }
   if (contratos?.n) {

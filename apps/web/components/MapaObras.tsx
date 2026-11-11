@@ -51,9 +51,9 @@ export function MapaObras() {
     import("leaflet").then((L) => {
       if (!vivo || !caja.current || mapa.current) return;
       const m = L.map(caja.current, { preferCanvas: true, zoomControl: true, attributionControl: true }).setView(CENTRO_PERU, 5);
-      // OpenStreetMap's own tiles (no key; light use with attribution), darkened in CSS to sit in the page
+      // OpenStreetMap's own tiles (no key; light use with attribution), quieted in CSS so the dots lead
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 18, className: "teselas-oscuras",
+        maxZoom: 18, className: "teselas-suaves",
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       }).addTo(m);
       capa.current = L.layerGroup().addTo(m);
@@ -101,8 +101,8 @@ export function MapaObras() {
         const radio = f[5] ? Math.max(3, Math.min(11, Math.log10(f[5]) - 3)) : 3;
         const parado = f[8] === 1 || f[8] === 2;
         const c = L.circleMarker([f[0], f[1]], {
-          radius: radio, weight: 1, color: "#0e0e10", fillOpacity: 0.85,
-          fillColor: parado ? "#ff8a00" : "#ffe600",
+          radius: radio, weight: 1, color: "#ffffff", fillOpacity: 0.9,
+          fillColor: parado ? "#b0441a" : "#2b5ea7",
         });
         c.bindPopup(() => ficha(f, entidad), { maxWidth: 300 });
         marcas.push(c);
@@ -143,8 +143,8 @@ export function MapaObras() {
       </p>
       <div ref={caja} className="mapa-caja" role="region" aria-label="Mapa de obras" />
       <p className="leyenda-html">
-        <span><span className="chip amarillo" aria-hidden />Obra con gasto este año</span>
-        <span><span className="chip naranja" aria-hidden />Sin gasto (o casi) este año</span>
+        <span><span className="chip anil" aria-hidden />Obra con gasto este año</span>
+        <span><span className="chip atraso" aria-hidden />Sin gasto (o casi) este año</span>
         <span>El tamaño del círculo crece con el costo total de la obra. Toca uno para ver su ficha.</span>
       </p>
     </div>

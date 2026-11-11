@@ -14,7 +14,7 @@ import { AlertaCard } from "@/components/AlertaCard";
 import { ListaObras } from "@/components/Obras";
 import { MasObras } from "@/components/MasObras";
 import { SeguirBoton } from "@/components/SeguirBoton";
-import { Bandas, type Banda } from "@/components/Bandas";
+import { Titulo } from "@/components/Titulo";
 import { ResumenContratos, ListaContratos, ComprasEnCurso } from "@/components/Contratos";
 import { RutaDinero, pasosEntidad } from "@/components/RutaDinero";
 import { VistasGasto } from "@/components/VistasGasto";
@@ -69,14 +69,6 @@ type Payload = {
 };
 type FuenteContratos = { anos: number[]; hasta?: string | null; contratos: number; vinculados: number };
 
-/** "MUNICIPALIDAD DISTRITAL DE OLLANTAYTAMBO" -> a small band for the kind of entity and a big
- *  one for the place; any other entity keeps its full name (smaller when long). */
-function nombreEnBandas(nombre: string, pim: number | null, ano: number): Banda[] {
-  const m = nombre.match(/^(MUNICIPALIDAD (?:DISTRITAL|PROVINCIAL|METROPOLITANA) DE)\s+(.+)$/i);
-  const monto = { texto: `${fmtSoles(pim)} · ${ano}`, color: "verde" as const, chica: true };
-  if (m) return [{ texto: m[1], color: "fucsia", chica: true }, { texto: fmtLugar(m[2]), color: "amarillo", grande: m[2].length <= 16 }, monto];
-  return [{ texto: fmtLugar(nombre), color: "amarillo", chica: nombre.length > 28 }, monto];
-}
 
 export default async function EntidadPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params; // Next 16: route params arrive as a promise
@@ -136,7 +128,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
         <Migas pasos={[{ href: "/explorar/", texto: "Entidades" }]} />
       )}
       <section className="hero">
-        <Bandas etiqueta={info.nombre} bandas={nombreEnBandas(info.nombre, pim, ano)} />
+        <Titulo texto={fmtLugar(info.nombre)} monto={`${fmtSoles(pim)} · ${ano}`} />
         <p>
           {[info.nivel ? fmtLugar(info.nivel) : null, info.pliego, info.dist && info.dist !== info.prov ? fmtLugar(info.dist) : null,
             info.prov ? fmtLugar(info.prov) : null, info.dept ? fmtLugar(info.dept) : null].filter((x) => x && x.trim()).join(" · ")}
@@ -148,7 +140,7 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
       </section>
 
       <RutaDinero pasos={pasosEntidad({
-        pim, avance, ano,
+        pim, avance, esperado, ano,
         funciones: [...funcAno].sort((a, b) => (b.pim ?? 0) - (a.pim ?? 0)).map((f) => ({ nombre: f.funcion, pim: f.pim ?? 0 })),
         items: n_items ?? [0, n_obras, 0, 0],
         contratos: contratos?.n ? { n: contratos.n, monto: contratos.monto, proveedores: contratos.proveedores ?? null, periodo } : null,
@@ -182,13 +174,17 @@ export default async function EntidadPage(props: { params: Promise<{ id: string 
             <h3 className="subtitulo" id="comparacion">Frente a las otras municipalidades de {fmtLugar(prov!.nombre)}</h3>
             <p className="sub">
               Puesto <strong>{puesto} de {ranking.length}</strong> por avance de ejecución {corte} (qué parte de su
-              presupuesto ya gastó). Promedio de la provincia: {fmtPct(avanceProv)}.
+              presupuesto ya gastó). Promedio de la provincia: {fmtPct(avanceProv)}. El nudo marca lo esperado a la
+              fecha ({fmtPct(esperado)}).
             </p>
             <ol className="ranking">
               {ranking.map((m) => (
                 <li key={m.sec_ejec} className={m.sec_ejec === info.sec_ejec ? "propio" : ""}>
                   <Link href={`/entidad/${m.sec_ejec}/`}>{fmtLugar(m.distrito ?? m.nombre)}</Link>
-                  <span className="barra"><span style={{ width: `${Math.min(100, ((m.devengado ?? 0) / (m.pim ?? 1)) * 100)}%` }} /></span>
+                  <span className="barra">
+                    <span style={{ width: `${Math.min(100, ((m.devengado ?? 0) / (m.pim ?? 1)) * 100)}%` }} />
+                    {esperado != null ? <i className="barra-marca" style={{ left: `${Math.min(esperado, 1) * 100}%` }} /> : null}
+                  </span>
                   <span className="cifra">{fmtPct((m.devengado ?? 0) / (m.pim ?? 1))}</span>
                 </li>
               ))}
