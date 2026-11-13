@@ -910,9 +910,390 @@
         }
        }
       }
+     },
+     "20261106T141227Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"20f93723b-65f9c33bca0f3\"",
+       "size": 8851255867,
+       "last_modified": "Fri, 06 Nov 2026 14:12:27 GMT"
+      },
+      "rows": 2618286,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "295510613291.00",
+       "MONTO_CERTIFICADO_ANUAL": "272285174760.47",
+       "MONTO_COMPROMETIDO_ANUAL": "254753626321.07",
+       "MONTO_DEVENGADO_ANUAL": "219857918545.37",
+       "MONTO_GIRADO_ANUAL": "215900125814.73",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846389538.26",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561371734.53",
+       "MONTO_DEVENGADO_JULIO": "21752947361.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497865614.18",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726557232.92",
+       "MONTO_DEVENGADO_OCTUBRE": "19899529244.15",
+       "MONTO_DEVENGADO_NOVIEMBRE": "3451591221.69",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "254753626321.07",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "231325996110.70"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-07T03:16:19Z"
+     },
+     "20261107T134122Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"211c10d4b-65fafe264695c\"",
+       "size": 8887799115,
+       "last_modified": "Sat, 07 Nov 2026 13:41:22 GMT"
+      },
+      "rows": 2624635,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "297437526307.00",
+       "MONTO_CERTIFICADO_ANUAL": "273209986382.39",
+       "MONTO_COMPROMETIDO_ANUAL": "255445625567.07",
+       "MONTO_DEVENGADO_ANUAL": "220745742080.22",
+       "MONTO_GIRADO_ANUAL": "216786718792.39",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846389538.26",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561371734.53",
+       "MONTO_DEVENGADO_JULIO": "21752947361.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497866550.78",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726561869.51",
+       "MONTO_DEVENGADO_OCTUBRE": "19901914263.96",
+       "MONTO_DEVENGADO_NOVIEMBRE": "4337024163.54",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "255445625567.07",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "232164355371.57"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-08T02:55:22Z"
+     },
+     "20261108T135512Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"211dff5fc-65fc431b7fe57\"",
+       "size": 8889824764,
+       "last_modified": "Sun, 08 Nov 2026 13:55:12 GMT"
+      },
+      "rows": 2625012,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "297449641559.00",
+       "MONTO_CERTIFICADO_ANUAL": "273114794408.48",
+       "MONTO_COMPROMETIDO_ANUAL": "255365457583.95",
+       "MONTO_DEVENGADO_ANUAL": "220774203515.96",
+       "MONTO_GIRADO_ANUAL": "216818459604.46",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846389538.26",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561371734.53",
+       "MONTO_DEVENGADO_JULIO": "21752947351.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497866550.78",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726561882.92",
+       "MONTO_DEVENGADO_OCTUBRE": "19901916498.32",
+       "MONTO_DEVENGADO_NOVIEMBRE": "4365483361.51",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "255365457583.95",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "232186563744.36"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-09T03:10:31Z"
+     },
+     "20261109T135640Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"211f03c51-65fd854c9115f\"",
+       "size": 8890891345,
+       "last_modified": "Mon, 09 Nov 2026 13:56:40 GMT"
+      },
+      "rows": 2625306,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "297464281539.00",
+       "MONTO_CERTIFICADO_ANUAL": "273117381213.56",
+       "MONTO_COMPROMETIDO_ANUAL": "255329743191.71",
+       "MONTO_DEVENGADO_ANUAL": "220781926905.00",
+       "MONTO_GIRADO_ANUAL": "216840406619.42",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846389538.26",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561371734.53",
+       "MONTO_DEVENGADO_JULIO": "21752947361.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497866550.78",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726561882.92",
+       "MONTO_DEVENGADO_OCTUBRE": "19901921498.32",
+       "MONTO_DEVENGADO_NOVIEMBRE": "4373201740.55",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "255329743191.71",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "232193521880.89"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-10T05:05:24Z"
+     },
+     "20261110T134803Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"21436d417-65fec53d3445d\"",
+       "size": 8929072151,
+       "last_modified": "Tue, 10 Nov 2026 13:48:03 GMT"
+      },
+      "rows": 2631437,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "299681932782.00",
+       "MONTO_CERTIFICADO_ANUAL": "274588872160.31",
+       "MONTO_COMPROMETIDO_ANUAL": "256882268080.07",
+       "MONTO_DEVENGADO_ANUAL": "222016278606.53",
+       "MONTO_GIRADO_ANUAL": "217957669004.95",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846389538.26",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561371734.53",
+       "MONTO_DEVENGADO_JULIO": "21752947361.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497866550.78",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726561882.92",
+       "MONTO_DEVENGADO_OCTUBRE": "19902498066.34",
+       "MONTO_DEVENGADO_NOVIEMBRE": "5606976874.06",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "256882268080.07",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "233659590663.18"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-11T03:14:21Z"
+     },
+     "20261111T134909Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"216cfbf0f-66000759534bb\"",
+       "size": 8972648207,
+       "last_modified": "Wed, 11 Nov 2026 13:49:09 GMT"
+      },
+      "rows": 2637946,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "300113853258.00",
+       "MONTO_CERTIFICADO_ANUAL": "275318951292.55",
+       "MONTO_COMPROMETIDO_ANUAL": "257648458332.72",
+       "MONTO_DEVENGADO_ANUAL": "223035351019.70",
+       "MONTO_GIRADO_ANUAL": "218869716124.99",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846390602.76",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561371734.53",
+       "MONTO_DEVENGADO_JULIO": "21752947361.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497863867.02",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726557882.92",
+       "MONTO_DEVENGADO_OCTUBRE": "19903047540.66",
+       "MONTO_DEVENGADO_NOVIEMBRE": "6625505432.17",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "257648458332.72",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "234790411252.36"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-12T04:19:46Z"
+     },
+     "20261112T141315Z": {
+      "source": {
+       "name": "2026-Gasto-Diario.csv",
+       "etag": "\"2196d335f-66014e99c70b0\"",
+       "size": 9016521567,
+       "last_modified": "Thu, 12 Nov 2026 14:13:15 GMT"
+      },
+      "rows": 2643991,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "257561619143.00",
+       "MONTO_PIM": "300359874296.00",
+       "MONTO_CERTIFICADO_ANUAL": "276507973235.41",
+       "MONTO_COMPROMETIDO_ANUAL": "259135585067.54",
+       "MONTO_DEVENGADO_ANUAL": "224073549477.88",
+       "MONTO_GIRADO_ANUAL": "219883253028.41",
+       "MONTO_DEVENGADO_ENERO": "21917558425.02",
+       "MONTO_DEVENGADO_FEBRERO": "23897578201.23",
+       "MONTO_DEVENGADO_MARZO": "19846330646.82",
+       "MONTO_DEVENGADO_ABRIL": "20050910678.53",
+       "MONTO_DEVENGADO_MAYO": "19255619292.97",
+       "MONTO_DEVENGADO_JUNIO": "19561376554.53",
+       "MONTO_DEVENGADO_JULIO": "21752947394.89",
+       "MONTO_DEVENGADO_AGOSTO": "28497870521.78",
+       "MONTO_DEVENGADO_SEPTIEMBRE": "21726561882.92",
+       "MONTO_DEVENGADO_OCTUBRE": "19903293793.45",
+       "MONTO_DEVENGADO_NOVIEMBRE": "7663502085.74",
+       "MONTO_DEVENGADO_DICIEMBRE": "0",
+       "MONTO_COMPROMETIDO_ANUAL_MESES": "259135585067.54",
+       "MONTO_COMPROMETIDO_MENSUAL_MESES": "235999683764.93"
+      },
+      "snapshot": true,
+      "ingested_at": "2026-11-13T03:50:52Z",
+      "cambios": {
+       "respecto_a": "20261105T140822Z",
+       "lineas": {
+        "nueva": 30877,
+        "eliminada": 393,
+        "presupuesto_modificado": 83334
+       },
+       "campos_modificados": {
+        "MONTO_PIM": 83334,
+        "MONTO_CERTIFICADO_ANUAL": 83793,
+        "MONTO_COMPROMETIDO_ANUAL": 89911,
+        "MONTO_DEVENGADO_FEBRERO": 2,
+        "MONTO_DEVENGADO_MARZO": 4,
+        "MONTO_DEVENGADO_MAYO": 5,
+        "MONTO_DEVENGADO_JUNIO": 9,
+        "MONTO_DEVENGADO_JULIO": 22,
+        "MONTO_DEVENGADO_AGOSTO": 51,
+        "MONTO_DEVENGADO_SEPTIEMBRE": 65,
+        "MONTO_DEVENGADO_OCTUBRE": 533,
+        "MONTO_DEVENGADO_NOVIEMBRE": 99382,
+        "MONTO_DEVENGADO_ANUAL": 99759,
+        "MONTO_GIRADO_ANUAL": 114373
+       },
+       "meses_cerrados_revisados": {
+        "2": {
+         "lineas": 2,
+         "neto": "0.00"
+        },
+        "3": {
+         "lineas": 4,
+         "neto": "-58891.44"
+        },
+        "5": {
+         "lineas": 5,
+         "neto": "-15000.00"
+        },
+        "6": {
+         "lineas": 9,
+         "neto": "-30170.00"
+        },
+        "7": {
+         "lineas": 22,
+         "neto": "-52552.00"
+        },
+        "8": {
+         "lineas": 51,
+         "neto": "-2089593.97"
+        },
+        "9": {
+         "lineas": 65,
+         "neto": "-1494769.12"
+        },
+        "10": {
+         "lineas": 533,
+         "neto": "-17508941.83"
+        },
+        "11": {
+         "lineas": 99382,
+         "neto": "4092310991.77"
+        }
+       },
+       "totales": {
+        "MONTO_PIA": {
+         "antes": "257561619143.00",
+         "despues": "257561619143.00"
+        },
+        "MONTO_PIM": {
+         "antes": "293652554101.00",
+         "despues": "300359874296.00"
+        },
+        "MONTO_CERTIFICADO_ANUAL": {
+         "antes": "271677824915.65",
+         "despues": "276507973235.41"
+        },
+        "MONTO_COMPROMETIDO_ANUAL": {
+         "antes": "254174370098.58",
+         "despues": "259135585067.54"
+        },
+        "MONTO_DEVENGADO_ENERO": {
+         "antes": "21917558425.02",
+         "despues": "21917558425.02"
+        },
+        "MONTO_DEVENGADO_FEBRERO": {
+         "antes": "23897578201.23",
+         "despues": "23897578201.23"
+        },
+        "MONTO_DEVENGADO_MARZO": {
+         "antes": "19846389538.26",
+         "despues": "19846330646.82"
+        },
+        "MONTO_DEVENGADO_ABRIL": {
+         "antes": "20050910678.53",
+         "despues": "20050910678.53"
+        },
+        "MONTO_DEVENGADO_MAYO": {
+         "antes": "19255619292.97",
+         "despues": "19255619292.97"
+        },
+        "MONTO_DEVENGADO_JUNIO": {
+         "antes": "19561371734.53",
+         "despues": "19561376554.53"
+        },
+        "MONTO_DEVENGADO_JULIO": {
+         "antes": "21752947361.89",
+         "despues": "21752947394.89"
+        },
+        "MONTO_DEVENGADO_AGOSTO": {
+         "antes": "28497865614.18",
+         "despues": "28497870521.78"
+        },
+        "MONTO_DEVENGADO_SEPTIEMBRE": {
+         "antes": "21726548632.92",
+         "despues": "21726561882.92"
+        },
+        "MONTO_DEVENGADO_OCTUBRE": {
+         "antes": "19898527144.27",
+         "despues": "19903293793.45"
+        },
+        "MONTO_DEVENGADO_NOVIEMBRE": {
+         "antes": "2953762876.20",
+         "despues": "7663502085.74"
+        },
+        "MONTO_DEVENGADO_DICIEMBRE": {
+         "antes": "0.00",
+         "despues": "0.00"
+        },
+        "MONTO_DEVENGADO_ANUAL": {
+         "antes": "219359079500.00",
+         "despues": "224073549477.88"
+        },
+        "MONTO_GIRADO_ANUAL": {
+         "antes": "215410047523.85",
+         "despues": "219883253028.41"
+        }
+       }
+      }
      }
     },
-    "latest": "20261105T140822Z"
+    "latest": "20261112T141315Z"
    },
    "2025": {
     "publications": {
@@ -2354,9 +2735,335 @@
         }
        }
       }
+     },
+     "20261106T140124Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"162e30c4-65f9c0c3a42a4\"",
+       "size": 372125892,
+       "last_modified": "Fri, 06 Nov 2026 14:01:24 GMT"
+      },
+      "rows": 186982,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "123428248537.00",
+       "MONTO_RECAUDADO_ANUAL": "114207305257.56",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7596932270.72",
+       "MONTO_RECAUDADO_MAYO": "7134230190.77",
+       "MONTO_RECAUDADO_JUNIO": "6087365902.74",
+       "MONTO_RECAUDADO_JULIO": "14398939005.63",
+       "MONTO_RECAUDADO_AGOSTO": "14217738329.82",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6316703205.19",
+       "MONTO_RECAUDADO_OCTUBRE": "3867158488.87",
+       "MONTO_RECAUDADO_NOVIEMBRE": "278304110.89",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-07T03:17:02Z"
+     },
+     "20261107T140128Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"16505533-65fb02a4d7af3\"",
+       "size": 374363443,
+       "last_modified": "Sat, 07 Nov 2026 14:01:28 GMT"
+      },
+      "rows": 187208,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "123824793709.00",
+       "MONTO_RECAUDADO_ANUAL": "114603172408.47",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7596932270.72",
+       "MONTO_RECAUDADO_MAYO": "7134230190.77",
+       "MONTO_RECAUDADO_JUNIO": "6087365902.74",
+       "MONTO_RECAUDADO_JULIO": "14439566343.20",
+       "MONTO_RECAUDADO_AGOSTO": "14229272993.59",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6333736036.65",
+       "MONTO_RECAUDADO_OCTUBRE": "4139770396.85",
+       "MONTO_RECAUDADO_NOVIEMBRE": "332364521.02",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-08T02:56:05Z"
+     },
+     "20261108T140127Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"165e684b-65fc4480c0c69\"",
+       "size": 375285835,
+       "last_modified": "Sun, 08 Nov 2026 14:01:27 GMT"
+      },
+      "rows": 187295,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "123837014045.00",
+       "MONTO_RECAUDADO_ANUAL": "114674138194.13",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7596932270.72",
+       "MONTO_RECAUDADO_MAYO": "7134230190.77",
+       "MONTO_RECAUDADO_JUNIO": "6087365902.74",
+       "MONTO_RECAUDADO_JULIO": "14467262947.85",
+       "MONTO_RECAUDADO_AGOSTO": "14234331871.68",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6348161248.67",
+       "MONTO_RECAUDADO_OCTUBRE": "4158240816.77",
+       "MONTO_RECAUDADO_NOVIEMBRE": "337679192.00",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-09T03:11:41Z"
+     },
+     "20261109T140109Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"16672191-65fd864d5ebce\"",
+       "size": 375857553,
+       "last_modified": "Mon, 09 Nov 2026 14:01:09 GMT"
+      },
+      "rows": 187373,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "123847342848.00",
+       "MONTO_RECAUDADO_ANUAL": "114731722673.52",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7596932270.72",
+       "MONTO_RECAUDADO_MAYO": "7134230190.77",
+       "MONTO_RECAUDADO_JUNIO": "6087365902.74",
+       "MONTO_RECAUDADO_JULIO": "14493103557.23",
+       "MONTO_RECAUDADO_AGOSTO": "14243063958.93",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6357654647.92",
+       "MONTO_RECAUDADO_OCTUBRE": "4169359097.77",
+       "MONTO_RECAUDADO_NOVIEMBRE": "340079294.51",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-10T05:06:01Z"
+     },
+     "20261110T140108Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"1682202c-65fec82990858\"",
+       "size": 377626668,
+       "last_modified": "Tue, 10 Nov 2026 14:01:08 GMT"
+      },
+      "rows": 187551,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "124954863293.00",
+       "MONTO_RECAUDADO_ANUAL": "114921811571.20",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7597052844.25",
+       "MONTO_RECAUDADO_MAYO": "7134369778.43",
+       "MONTO_RECAUDADO_JUNIO": "6087499244.01",
+       "MONTO_RECAUDADO_JULIO": "14513938113.52",
+       "MONTO_RECAUDADO_AGOSTO": "14271194768.95",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6379900857.09",
+       "MONTO_RECAUDADO_OCTUBRE": "4257683519.02",
+       "MONTO_RECAUDADO_NOVIEMBRE": "370238693.00",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-11T03:15:10Z"
+     },
+     "20261111T140159Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"169c989a-66000a37a9ef2\"",
+       "size": 379361434,
+       "last_modified": "Wed, 11 Nov 2026 14:01:59 GMT"
+      },
+      "rows": 187685,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "125398994429.00",
+       "MONTO_RECAUDADO_ANUAL": "115448047248.69",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7597053763.87",
+       "MONTO_RECAUDADO_MAYO": "7134615609.67",
+       "MONTO_RECAUDADO_JUNIO": "6087499847.58",
+       "MONTO_RECAUDADO_JULIO": "14528766492.53",
+       "MONTO_RECAUDADO_AGOSTO": "14272368954.78",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6383334288.38",
+       "MONTO_RECAUDADO_OCTUBRE": "4478589592.56",
+       "MONTO_RECAUDADO_NOVIEMBRE": "655884946.39",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": false,
+      "ingested_at": "2026-11-12T04:20:39Z"
+     },
+     "20261112T140153Z": {
+      "source": {
+       "name": "2026-Ingreso-Diario.csv",
+       "etag": "\"16b5ac0e-66014c0f40164\"",
+       "size": 381004814,
+       "last_modified": "Thu, 12 Nov 2026 14:01:53 GMT"
+      },
+      "rows": 187822,
+      "mes_ult": 11,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "86322078932.00",
+       "MONTO_PIM": "125679310597.00",
+       "MONTO_RECAUDADO_ANUAL": "115623472399.24",
+       "MONTO_RECAUDADO_ENERO": "30516774522.61",
+       "MONTO_RECAUDADO_FEBRERO": "15969338592.54",
+       "MONTO_RECAUDADO_MARZO": "7823820637.78",
+       "MONTO_RECAUDADO_ABRIL": "7597053763.87",
+       "MONTO_RECAUDADO_MAYO": "7134615609.67",
+       "MONTO_RECAUDADO_JUNIO": "6087499847.58",
+       "MONTO_RECAUDADO_JULIO": "14529084185.71",
+       "MONTO_RECAUDADO_AGOSTO": "14275276204.98",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "6385170878.66",
+       "MONTO_RECAUDADO_OCTUBRE": "4595394207.61",
+       "MONTO_RECAUDADO_NOVIEMBRE": "709443948.23",
+       "MONTO_RECAUDADO_DICIEMBRE": "0"
+      },
+      "snapshot": true,
+      "ingested_at": "2026-11-13T03:52:14Z",
+      "cambios": {
+       "respecto_a": "20261105T140216Z",
+       "lineas": {
+        "nueva": 1064,
+        "eliminada": 1,
+        "presupuesto_modificado": 1743
+       },
+       "campos_modificados": {
+        "MONTO_PIM": 1743,
+        "MONTO_RECAUDADO_ABRIL": 8,
+        "MONTO_RECAUDADO_MAYO": 8,
+        "MONTO_RECAUDADO_JUNIO": 7,
+        "MONTO_RECAUDADO_JULIO": 1372,
+        "MONTO_RECAUDADO_AGOSTO": 1526,
+        "MONTO_RECAUDADO_SEPTIEMBRE": 2128,
+        "MONTO_RECAUDADO_OCTUBRE": 9228,
+        "MONTO_RECAUDADO_NOVIEMBRE": 12254,
+        "MONTO_RECAUDADO_ANUAL": 22132
+       },
+       "meses_cerrados_revisados": {
+        "4": {
+         "lineas": 8,
+         "neto": "121493.15"
+        },
+        "5": {
+         "lineas": 8,
+         "neto": "325862.90"
+        },
+        "6": {
+         "lineas": 7,
+         "neto": "133944.84"
+        },
+        "7": {
+         "lineas": 1372,
+         "neto": "138257267.33"
+        },
+        "8": {
+         "lineas": 1526,
+         "neto": "38473946.52"
+        },
+        "9": {
+         "lineas": 2128,
+         "neto": "67261928.39"
+        },
+        "10": {
+         "lineas": 9228,
+         "neto": "805516805.52"
+        },
+        "11": {
+         "lineas": 12254,
+         "neto": "467602966.11"
+        }
+       },
+       "totales": {
+        "MONTO_PIA": {
+         "antes": "86322078932.00",
+         "despues": "86322078932.00"
+        },
+        "MONTO_PIM": {
+         "antes": "121135851575.00",
+         "despues": "125679310597.00"
+        },
+        "MONTO_RECAUDADO_ENERO": {
+         "antes": "30516774522.61",
+         "despues": "30516774522.61"
+        },
+        "MONTO_RECAUDADO_FEBRERO": {
+         "antes": "15969338592.54",
+         "despues": "15969338592.54"
+        },
+        "MONTO_RECAUDADO_MARZO": {
+         "antes": "7823820637.78",
+         "despues": "7823820637.78"
+        },
+        "MONTO_RECAUDADO_ABRIL": {
+         "antes": "7596932270.72",
+         "despues": "7597053763.87"
+        },
+        "MONTO_RECAUDADO_MAYO": {
+         "antes": "7134230190.77",
+         "despues": "7134615609.67"
+        },
+        "MONTO_RECAUDADO_JUNIO": {
+         "antes": "6087365902.74",
+         "despues": "6087499847.58"
+        },
+        "MONTO_RECAUDADO_JULIO": {
+         "antes": "14361685645.75",
+         "despues": "14529084185.71"
+        },
+        "MONTO_RECAUDADO_AGOSTO": {
+         "antes": "14204042833.80",
+         "despues": "14275276204.98"
+        },
+        "MONTO_RECAUDADO_SEPTIEMBRE": {
+         "antes": "6299926905.89",
+         "despues": "6385170878.66"
+        },
+        "MONTO_RECAUDADO_OCTUBRE": {
+         "antes": "3771874117.01",
+         "despues": "4595394207.61"
+        },
+        "MONTO_RECAUDADO_NOVIEMBRE": {
+         "antes": "205179165.61",
+         "despues": "709443948.23"
+        },
+        "MONTO_RECAUDADO_DICIEMBRE": {
+         "antes": "0.00",
+         "despues": "0.00"
+        },
+        "MONTO_RECAUDADO_ANUAL": {
+         "antes": "113971170785.22",
+         "despues": "115623472399.24"
+        }
+       }
+      }
      }
     },
-    "latest": "20261105T140216Z"
+    "latest": "20261112T140153Z"
    },
    "2025": {
     "publications": {
@@ -2982,8 +3689,78 @@
      }
     },
     "latest": "20261021T035712Z"
+   },
+   "2010": {
+    "publications": {
+     "20261021T035418Z": {
+      "source": {
+       "name": "2010-Ingreso.csv",
+       "etag": "\"25199e32-65e51b39a5a4c\"",
+       "size": 622435890,
+       "last_modified": "Wed, 21 Oct 2026 03:54:18 GMT"
+      },
+      "rows": 161159,
+      "mes_ult": 12,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "28664855697.00",
+       "MONTO_PIM": "51284036446.00",
+       "MONTO_RECAUDADO_ANUAL": "55063608692.78",
+       "MONTO_RECAUDADO_ENERO": "12293160621.83",
+       "MONTO_RECAUDADO_FEBRERO": "3132604502.68",
+       "MONTO_RECAUDADO_MARZO": "7847179676.35",
+       "MONTO_RECAUDADO_ABRIL": "2951869272.03",
+       "MONTO_RECAUDADO_MAYO": "2753427968.72",
+       "MONTO_RECAUDADO_JUNIO": "2860145279.12",
+       "MONTO_RECAUDADO_JULIO": "5817933263.16",
+       "MONTO_RECAUDADO_AGOSTO": "2583160273.48",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "2614496955.58",
+       "MONTO_RECAUDADO_OCTUBRE": "3369201338.24",
+       "MONTO_RECAUDADO_NOVIEMBRE": "5968035719.29",
+       "MONTO_RECAUDADO_DICIEMBRE": "2872393822.30"
+      },
+      "snapshot": true,
+      "ingested_at": "2026-11-06T16:07:12Z"
+     }
+    },
+    "latest": "20261021T035418Z"
+   },
+   "2009": {
+    "publications": {
+     "20261021T035223Z": {
+      "source": {
+       "name": "2009-Ingreso.csv",
+       "etag": "\"22818160-65e51acb71199\"",
+       "size": 578912608,
+       "last_modified": "Wed, 21 Oct 2026 03:52:23 GMT"
+      },
+      "rows": 146837,
+      "mes_ult": 12,
+      "format": "monthly",
+      "totals": {
+       "MONTO_PIA": "24922997884.00",
+       "MONTO_PIM": "44753470369.00",
+       "MONTO_RECAUDADO_ANUAL": "48215795573.85",
+       "MONTO_RECAUDADO_ENERO": "8521362700.46",
+       "MONTO_RECAUDADO_FEBRERO": "4164135581.85",
+       "MONTO_RECAUDADO_MARZO": "10998865047.92",
+       "MONTO_RECAUDADO_ABRIL": "2635038168.33",
+       "MONTO_RECAUDADO_MAYO": "2204237136.44",
+       "MONTO_RECAUDADO_JUNIO": "1844026979.09",
+       "MONTO_RECAUDADO_JULIO": "5574805250.91",
+       "MONTO_RECAUDADO_AGOSTO": "1944710048.06",
+       "MONTO_RECAUDADO_SEPTIEMBRE": "2423325718.87",
+       "MONTO_RECAUDADO_OCTUBRE": "2854327936.18",
+       "MONTO_RECAUDADO_NOVIEMBRE": "2271442507.69",
+       "MONTO_RECAUDADO_DICIEMBRE": "2779518498.05"
+      },
+      "snapshot": true,
+      "ingested_at": "2026-11-07T15:04:12Z"
+     }
+    },
+    "latest": "20261021T035223Z"
    }
   }
  },
- "updated_at": "2026-11-06T03:51:20Z"
+ "updated_at": "2026-11-13T03:52:16Z"
 }
