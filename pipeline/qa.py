@@ -111,11 +111,7 @@ def _coherence(rep: Report, year: int) -> dict:
     m = lake.load_manifest()
     vals["corte"] = {ds: datetime.strptime(p, "%Y%m%dT%H%M%SZ").date()
                      for ds in ("gasto", "ingreso") if (p := lake.latest_pub(m, ds, year))}
-    # every kept publication's PIM by date: CA's month-end PIM is checked against our file of that day
-    vals["pim_dia"] = {ds: {datetime.strptime(p, "%Y%m%dT%H%M%SZ").date(): float(pim)
-                            for p in lake.publications(m, ds, year)
-                            if (pim := m["datasets"][ds][str(year)]["publications"][p].get("totals", {}).get("MONTO_PIM"))}
-                       for ds in ("gasto", "ingreso")}
+    vals["pim_dia"] = _pim_por_dia(m, year)
     rep.add("coherencia", f"resumen_anual has year {year}", "PASS",
             f"mes_ult={mes_ult}, PIM=S/{pim/1e9:.1f}B, dev=S/{dev/1e9:.1f}B")
 
@@ -298,6 +294,16 @@ def _valor_ca(total: dict[str, float], nums: list[float], etiqueta: str, ours: f
     if etiqueta in total:
         return total[etiqueta]
     return min(nums, key=lambda v: abs(v - ours), default=None) if ours is not None else None
+
+
+def _pim_por_dia(m: dict, year: int) -> dict[str, dict[date, float]]:
+    """Every kept publication's PIM by date: CA's month-end PIM is checked against our file of that day."""
+    out: dict[str, dict[date, float]] = {}
+    for ds in ("gasto", "ingreso"):
+        pubs = m["datasets"].get(ds, {}).get(str(year), {}).get("publications", {})
+        out[ds] = {datetime.strptime(p, "%Y%m%dT%H%M%SZ").date(): float(t["totals"]["MONTO_PIM"])
+                   for p, t in sorted(pubs.items()) if t.get("totals", {}).get("MONTO_PIM")}
+    return out
 
 
 def _pim_al_corte(pim_dia: dict[date, float], corte_ca: date | None) -> tuple[date, float] | None:

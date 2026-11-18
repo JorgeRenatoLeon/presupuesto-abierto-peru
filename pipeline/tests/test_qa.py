@@ -56,3 +56,12 @@ def test_pim_is_checked_against_our_file_of_cas_cut_date(monkeypatch, tmp_path):
     # a Sunday cut: the Friday file stands in; nothing within 3 days falls back to today's file
     assert Q._pim_al_corte({date(2026, 5, 29): 1.0}, date(2026, 5, 31)) == (date(2026, 5, 29), 1.0)
     assert Q._pim_al_corte({date(2026, 5, 20): 1.0}, date(2026, 5, 31)) is None
+
+
+def test_pim_by_day_reads_the_manifest():
+    m = {"datasets": {"ingreso": {"2026": {"publications": {
+        "20261031T140124Z": {"totals": {"MONTO_PIM": "119692372605.00"}},
+        "20261117T140106Z": {"totals": {"MONTO_PIM": "126085382049.00"}},
+        "20261118T140106Z": {"rows": 0}}}}}}
+    assert Q._pim_por_dia(m, 2026) == {"gasto": {}, "ingreso": {date(2026, 10, 31): 119692372605.0,
+                                                               date(2026, 11, 17): 126085382049.0}}
