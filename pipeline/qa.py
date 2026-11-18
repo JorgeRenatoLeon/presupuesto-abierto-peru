@@ -10,14 +10,14 @@ Two layers, one command (`python run.py qa --year 2026`):
    (ingreso) with the page's TOTAL row, read by label (if MEF changes the layout,
    the closest number on the page). CA is a month-end snapshot (its note gives the
    date) while MEF's daily file runs ahead, so flows are summed over the months CA
-   covers. Unreachable page = SKIPPED (exit 0) unless --strict; a value mismatch = FAIL.
+   covers and PIM is checked against our own file of CA's cut date. Unreachable page = SKIPPED (exit 0) unless --strict; a value mismatch = FAIL.
 
 Output: console report + data/serving/qa_report.json (consumed by /metodologia later).
 """
 import json
 import re
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from html import unescape
 
 import duckdb
@@ -111,6 +111,11 @@ def _coherence(rep: Report, year: int) -> dict:
     m = lake.load_manifest()
     vals["corte"] = {ds: datetime.strptime(p, "%Y%m%dT%H%M%SZ").date()
                      for ds in ("gasto", "ingreso") if (p := lake.latest_pub(m, ds, year))}
+    # every kept publication's PIM by date: CA's month-end PIM is checked against our file of that day
+    vals["pim_dia"] = {ds: {datetime.strptime(p, "%Y%m%dT%H%M%SZ").date(): float(pim)
+                            for p in lake.publications(m, ds, year)
+                            if (pim := m["datasets"][ds][str(year)]["publications"][p].get("totals", {}).get("MONTO_PIM"))}
+                       for ds in ("gasto", "ingreso")}
     rep.add("coherencia", f"resumen_anual has year {year}", "PASS",
             f"mes_ult={mes_ult}, PIM=S/{pim/1e9:.1f}B, dev=S/{dev/1e9:.1f}B")
 
@@ -295,13 +300,22 @@ def _valor_ca(total: dict[str, float], nums: list[float], etiqueta: str, ours: f
     return min(nums, key=lambda v: abs(v - ours), default=None) if ours is not None else None
 
 
-def _comparar(rep: Report, nombre: str, ours: float | None, ca: float | None, nota: str | None) -> None:
+def _pim_al_corte(pim_dia: dict[date, float], corte_ca: date | None) -> tuple[date, float] | None:
+    """Our own file of CA's cut date (or the last one up to 3 days before it: no file on Sundays)."""
+    if not corte_ca:
+        return None
+    dias = [d for d in pim_dia if timedelta(0) <= corte_ca - d <= timedelta(days=3)]
+    return (max(dias), pim_dia[max(dias)]) if dias else None
+
+
+def _comparar(rep: Report, nombre: str, ours: float | None, ca: float | None, nota: str | None,
+              cual: str = "ours") -> None:
     """PASS within 0.5%; WARN up to 5% when `nota` explains a legitimate gap (PIA has none)."""
     if ours is None or ca is None:
         rep.add("consulta-amigable", nombre, "SKIP", "no local value" if ours is None else "not found on the page")
         return
     rel = abs(ca - ours) / ours if ours else 1.0
-    detalle = f"ours {ours:,.0f} vs CA {ca:,.0f} (Δ {rel*100:.2f}%)"
+    detalle = f"{cual} {ours:,.0f} vs CA {ca:,.0f} (Δ {rel*100:.2f}%)"
     if rel <= TOL_CA_REL:
         rep.add("consulta-amigable", f"{nombre} matches CA", "PASS", detalle)
     elif nota and rel <= TOL_CA_REL_CORTE:
@@ -325,8 +339,13 @@ def _reconcile(rep: Report, year: int, vals: dict) -> None:
         corte_ca, propio = _corte_ca(html), vals.get("corte", {}).get(lado)
         pia, pim = vals.get(k_pia), vals.get(k_pim)
         _comparar(rep, f"{lado} PIA", pia, _valor_ca(total, nums, "PIA", pia), None)
-        _comparar(rep, f"{lado} PIM", pim, _valor_ca(total, nums, "PIM", pim),
-                  f"PIM changes every day: CA's snapshot is from {corte_ca or '?'}, our file from {propio or '?'}")
+        # PIM changes every day: against our file of CA's own cut date it must match exactly (late in
+        # the year the budget grows several % in a week: 5.1% between 31 Oct and 17 Nov 2026)
+        if foto := _pim_al_corte(vals.get("pim_dia", {}).get(lado, {}), corte_ca):
+            _comparar(rep, f"{lado} PIM", foto[1], _valor_ca(total, nums, "PIM", foto[1]), None, f"our {foto[0]} file")
+        else:
+            _comparar(rep, f"{lado} PIM", pim, _valor_ca(total, nums, "PIM", pim),
+                      f"PIM changes every day: CA's snapshot is from {corte_ca or '?'}, our file from {propio or '?'}")
         valor, periodo, nota = _al_corte(vals.get(f"{flujo}_mes") or {}, year, corte_ca, propio)
         _comparar(rep, f"{lado} {flujo} {periodo}", valor, _valor_ca(total, nums, etiqueta, valor), nota)
 

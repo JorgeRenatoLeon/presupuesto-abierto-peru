@@ -38,3 +38,21 @@ def test_month_end_snapshot_is_compared_over_the_months_it_covers(monkeypatch, t
 def test_the_october_semantics_bug_still_fails(monkeypatch, tmp_path):
     r = _reconciliar(monkeypatch, tmp_path, {**OCT17, "pia": 41_722_256_508.0, "pim": 9_979_250_403.0})
     assert r["gasto PIA matches CA"]["status"] == "FAIL" and r["gasto PIM matches CA"]["status"] == "FAIL"
+
+
+def test_pim_is_checked_against_our_file_of_cas_cut_date(monkeypatch, tmp_path):
+    """17 Nov 2026: revenue PIM was 5.1% above CA's 31 Oct page, all of it budget added in November;
+    our 31 Oct file matched CA exactly. The check reads the file of CA's date, not today's."""
+    ca_pim = {lado: Q._total_ca((FIXTURES / f"ca_{lado}_2026-09-30.html").read_text())["PIM"] for lado in ("gasto", "ingreso")}
+    lejos = {**OCT17, "pim": ca_pim["gasto"] * 1.07, "ing_pim": ca_pim["ingreso"] * 1.07,
+             "pim_dia": {lado: {date(2026, 9, 29): ca_pim[lado] * 0.99, date(2026, 9, 30): ca_pim[lado],
+                                date(2026, 10, 17): ca_pim[lado] * 1.07} for lado in ("gasto", "ingreso")}}
+    r = _reconciliar(monkeypatch, tmp_path, lejos)
+    for lado in ("gasto", "ingreso"):
+        assert r[f"{lado} PIM matches CA"]["status"] == "PASS" and "2026-09-30 file" in r[f"{lado} PIM matches CA"]["detail"]
+    # a misread file of that same day still fails
+    mal = {**lejos, "pim_dia": {lado: {date(2026, 9, 30): ca_pim[lado] * 0.5} for lado in ("gasto", "ingreso")}}
+    assert _reconciliar(monkeypatch, tmp_path, mal)["ingreso PIM matches CA"]["status"] == "FAIL"
+    # a Sunday cut: the Friday file stands in; nothing within 3 days falls back to today's file
+    assert Q._pim_al_corte({date(2026, 5, 29): 1.0}, date(2026, 5, 31)) == (date(2026, 5, 29), 1.0)
+    assert Q._pim_al_corte({date(2026, 5, 20): 1.0}, date(2026, 5, 31)) is None
